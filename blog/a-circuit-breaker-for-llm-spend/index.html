@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Putting a circuit breaker on your language model spending, Anirban Kanjilal</title>
+<meta name="description" content="Language model spend is hard to bound because you do not know what a call costs until it returns. A runnable middleware that meters every call and refuses the ones you cannot afford, with budgets, rate limits, and a spend kill switch, mapped to OWASP and the FinOps Foundation.">
+<meta property="og:title" content="Putting a circuit breaker on your language model spending">
+<meta property="og:description" content="Budgets, rate limits, and a spend kill switch for language model applications, built with the discipline of a payments authorization system.">
+<meta property="og:type" content="article">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/site.css">
+</head>
+<body>
+
+<header class="bar">
+  <div class="wrap">
+    <a class="brand" href="/">akanjilal<span class="dot">.dev</span></a>
+    <nav class="nav" aria-label="Primary">
+      <a href="/#work">work</a>
+      <a href="/blog/">my blogs</a>
+      <a href="/#background">background</a>
+      <a class="ext" href="https://github.com/akanjilal-dev">github</a>
+      <a class="ext" href="https://www.linkedin.com/in/akanjilal/">linkedin</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <article class="article">
+    <div class="wrap">
+      <a class="back" href="/blog/">Back to writing</a>
+      <div class="article-head">
+        <div class="meta"><span>Cost</span><span>June 9, 2026</span><span>9 minute read</span></div>
+        <h1>Putting a circuit breaker on your language model spending</h1>
+        <p class="standfirst">The hardest thing about budgeting a language model call is that you do not know what it costs until after it has run. This is a small middleware you can read in one sitting that meters every call and refuses the ones you cannot afford, built with the same discipline I would bring to a payments system, where nobody is allowed to spend money the platform has not first authorised.</p>
+      </div>
+
+      <div class="prose">
+        <p>Most teams meet the cost of language models the way they meet a phone bill from a teenager, which is to say at the end of the month, with alarm. The model worked, the demo impressed everyone, the feature shipped, and then the invoice arrived and someone had to explain why a single runaway loop spent more in a weekend than the team spends on its entire database tier in a year. The uncomfortable truth is that this is not an accident or a billing error. It is the default behaviour of a system that was never told to stop.</p>
+
+        <p>The security community has now given this failure a name. In the 2025 edition of its <a href="https://genai.owasp.org/llm-top-10/">Top 10 for Large Language Model Applications</a>, the Open Worldwide Application Security Project lists <a href="https://genai.owasp.org/llmrisk/llm102025-unbounded-consumption/">Unbounded Consumption</a> as the tenth major risk, catalogued as the entry LLM10. The description reads like a list of the ways people get surprised by a bill. There are calls made with no limit on token or context length, so the model can generate an arbitrarily long and arbitrarily expensive response. There are inference endpoints with no rate limiting, so a single client can submit as many requests as it likes. There are calls with no timeout, so a request can hang and accrue cost during a provider outage. And there is the plainest failure of all, which is simply having no budget, no spending alert, and no usage tracking at all. Framed this way, unbounded consumption is not an exotic attack. It is the absence of the controls that every other part of your infrastructure already takes for granted.</p>
+
+        <h2>Why language model spend resists the usual tools</h2>
+
+        <p>If bounding spend were as simple as setting a limit, this would not be worth writing about. The difficulty is specific and it is worth stating plainly. With almost any other resource, you know the cost of an operation before you perform it. A database query has a plan you can inspect. A storage write has a size you can measure. A language model call does not work this way, because the price depends on how many tokens the model produces, and you do not know how many tokens the model will produce until it has already produced them. You are asked to authorise a purchase before anyone will tell you the price.</p>
+
+        <p>The pricing itself is straightforward once you see it. Providers bill per million tokens, with separate rates for the tokens you send and the tokens you receive, and the tokens you receive cost considerably more. The <a href="https://platform.claude.com/docs/en/about-claude/pricing">published rates for the Claude models</a> make the shape clear. At the time of writing, Claude Opus is five dollars per million input tokens and twenty five dollars per million output tokens. Claude Sonnet is three and fifteen. Claude Haiku is one and five. The five fold gap between the cheapest and the most capable model is the single biggest lever you have, and it is why the demo for this project prints the same request priced three ways, so the choice is visible at the moment you make it rather than at the end of the month.</p>
+
+        <p>There is a second lever that is easy to miss, which is caching. When a large part of your prompt repeats from one call to the next, a system prompt, a long document, a set of examples, the provider can cache it. A cached read is billed at roughly a tenth of the normal input rate, while writing something into the cache costs a little more than processing it once. Anthropic documents this in its <a href="https://platform.claude.com/docs/en/build-with-claude/prompt-caching">prompt caching guide</a>, where the savings on a stable prefix can reach about ninety percent. Any honest cost model has to account for these three prices, the fresh input, the cached read, and the cached write, or it will quietly misstate the bill for exactly the workloads that run most often.</p>
+
+        <h2>Four controls, and the order they run in</h2>
+
+        <p>The middleware I built for this, which lives in the <a href="https://github.com/akanjilal-dev/llm-cost-guardrails">llm-cost-guardrails</a> repository, is small on purpose. It is four controls and a piece of glue that runs them in the right order, and the whole thing runs offline with no keys, because the cost arithmetic does not need a real model to be correct. The four controls are these.</p>
+
+        <p>The first is cost estimation. It turns a count of tokens into a number of dollars, and it understands the cached read discount and the cache write premium described above. It is the foundation, because every other control begins by asking it the same question, which is what this call is going to cost.</p>
+
+        <p>The second is the per tenant budget. Each tenant, which might be a customer, a team, or a single application, has a cap, and the budget refuses any call that would carry that tenant past it. The interesting part is how it copes with not knowing the price in advance, and I will come back to that.</p>
+
+        <p>The third is rate limiting. Each tenant gets a limit on requests per minute and a limit on tokens per minute, enforced with the classic token bucket algorithm, where an allowance refills at a steady rate and each call draws it down. This mirrors how the providers meter you in the first place. Anthropic, for example, publishes <a href="https://platform.claude.com/docs/en/api/rate-limits">rate limits</a> as requests per minute and input and output tokens per minute, organised into usage tiers. Putting the same kind of limit in front of your own application means a single misbehaving client cannot exhaust the allowance that every other client depends on.</p>
+
+        <p>The fourth is the kill switch, and it is the one I would not ship without. It is a circuit breaker on spend. It watches total spending across a rolling window of time, and if that spending crosses a ceiling, it trips, and every call after that is refused until a human looks at the situation and resets it. The per tenant budgets are the locks on the individual doors. The kill switch is the master breaker for the building, for the case where something you did not anticipate is spending money through a door you forgot to lock.</p>
+
+        <p>The glue runs them in a deliberate order. First the kill switch, because if the building is on fire nothing else matters. Then the rate limit, because it is the cheapest check. Then the budget, which reserves the cost of the call. Only then does the actual request run. Every gate fails closed, which is the single most important property in the whole design. If any control says no, the call to the model never happens, so you are never charged for a request you were not allowed to make. A guardrail that lets the spend through and complains afterwards is not a guardrail. It is a logger.</p>
+
+        <h2>Reserve first, then reconcile</h2>
+
+        <p>This brings me back to the problem of not knowing the price in advance, because the budget is where it bites hardest. The solution is older than software, and anyone who has worked in payments will recognise it immediately. It is the authorisation hold.</p>
+
+        <p>When you hand your card to a hotel at check in, they do not yet know your final bill, so they place a hold for an estimated amount, enough to cover the room and a reasonable guess at extras. That money is set aside. You cannot spend it elsewhere, and the hotel cannot spend it either, until you check out and the charge settles to the real figure. The budget in this middleware works exactly the same way. Before a call, it reserves the worst case cost, which is the full input plus the maximum number of output tokens the call is allowed to produce. After the call returns, it settles that hold to the actual cost, which is almost always lower because most responses are shorter than their ceiling.</p>
+
+        <pre><code>hold   = worst_case_cost(model, input_tokens, max_output_tokens)  <span class="c"># the authorisation hold</span>
+budgets.reserve(tenant, hold)        <span class="c"># refuses the call if the hold will not fit</span>
+result, usage = call()               <span class="c"># the real request runs</span>
+actual = estimate_cost(model, usage) <span class="c"># what it actually cost, from the returned token counts</span>
+budgets.reconcile(tenant, hold, actual)   <span class="c"># release the hold, record the truth</span></code></pre>
+
+        <p>The reason this matters is concurrency. A real application has many calls from the same tenant in flight at the same time, and if each one only checked the budget against money already spent, they would all see room and they would all proceed, and the tenant would sail past its cap. Reserving the worst case up front closes that gap. The held amounts count against the cap immediately, so a tenant can never authorise more work than its budget allows, no matter how many of its calls are running at once. And if a call fails, its hold is released and it is never charged, the same way an abandoned hotel booking quietly falls off your card.</p>
+
+        <h2>The industry has already moved here</h2>
+
+        <p>If this sounds like an edge concern, the numbers say otherwise. The FinOps Foundation, which is the body that defines the common practice for managing cloud spending, has made the management of artificial intelligence cost its leading forward looking priority and has built an entire <a href="https://www.finops.org/wg/finops-for-ai-overview/">FinOps for AI</a> body of work around it. In its <a href="https://data.finops.org/">State of FinOps research</a>, the share of organisations that say they are actively managing artificial intelligence spend has risen to the overwhelming majority in the space of two years, and the foundation went so far as to broaden its own mission statement from managing the value of cloud to managing the value of technology, precisely because spending on models had become too large to sit outside the discipline. The most telling finding is that the hardest part of the job is no longer reducing the number. It is proving that the spending bought something worth having. You cannot have that conversation at all until the spending is measured and bounded, which is what this kind of middleware is for.</p>
+
+        <div class="callout"><p>A useful way to make spending legible is to stop measuring it in dollars per month and start measuring it in dollars per outcome. A budget tells you that you spent four hundred dollars. A cost per outcome tells you that each resolved support ticket cost eleven cents, which is a number a finance team can actually reason about. The per tenant attribution in this middleware is the first step toward that view, and it pairs naturally with the billing analysis in my <a href="https://github.com/akanjilal-dev/ai-finops-agent">ai-finops-agent</a> project.</p></div>
+
+        <h2>The payments lens</h2>
+
+        <p>None of this is new thinking. It is old thinking applied to a new kind of resource. In a payments platform you assume that any request might be hostile or simply mistaken, so you authorise before you capture, you give every participant only the budget it needs, you put a limit in front of every endpoint, and you build a breaker you can pull when something you did not foresee starts moving money. A language model is just another component that can spend money on your behalf, faster than a human can watch and in amounts that compound quietly. It deserves the same seatbelt. The fact that it speaks fluent English does not make it any less capable of running up a bill, and twenty years of being accountable for other people's cloud invoices has taught me that the cost control you wish you had is always the one you decided to add later.</p>
+
+        <h2>What this is and is not</h2>
+
+        <p>This is a teaching grade middleware, and I want to be clear about its edges. The ledger and the limiters keep their state in memory, which is exactly right for understanding the controls and for a single process, and exactly wrong for a deployment spread across many processes, which needs a shared store such as Redis or a database. The pricing table carries published rates that will drift, so it should be re verified against the provider before anyone trusts a figure from it. And budgeting before a call needs an estimate of the input token count, for which you should use the provider's own token counting endpoint rather than guessing from the length of the text. What the project does give you is the shape of the controls, the order they belong in, and the one principle that matters more than any of them, which is to fail closed. Clone it, run the demonstration, and watch a runaway loop get stopped before it spends the money rather than after.</p>
+      </div>
+
+      <section class="prose refs">
+        <h2>References</h2>
+        <ol>
+          <li>OWASP, Top 10 for Large Language Model Applications (2025), entry LLM10 Unbounded Consumption.<span class="src">https://genai.owasp.org/llmrisk/llm102025-unbounded-consumption/</span></li>
+          <li>FinOps Foundation, FinOps for AI overview.<span class="src">https://www.finops.org/wg/finops-for-ai-overview/</span></li>
+          <li>FinOps Foundation, The State of FinOps research.<span class="src">https://data.finops.org/</span></li>
+          <li>Anthropic, Claude model pricing.<span class="src">https://platform.claude.com/docs/en/about-claude/pricing</span></li>
+          <li>Anthropic, Rate limits and usage tiers.<span class="src">https://platform.claude.com/docs/en/api/rate-limits</span></li>
+          <li>Anthropic, Prompt caching.<span class="src">https://platform.claude.com/docs/en/build-with-claude/prompt-caching</span></li>
+        </ol>
+      </section>
+
+      <div class="article-foot">
+        <div class="cta-row">
+          <a class="btn primary" href="https://github.com/akanjilal-dev/llm-cost-guardrails">Open llm-cost-guardrails</a>
+          <a class="btn" href="/blog/">More writing</a>
+        </div>
+      </div>
+    </div>
+  </article>
+</main>
+
+<footer>
+  <div class="wrap foot">
+    <div class="links">
+      <a href="https://github.com/akanjilal-dev">GitHub</a>
+      <a href="https://www.linkedin.com/in/akanjilal/">LinkedIn</a>
+      <a href="mailto:anirban.kanjilal@gmail.com">Email</a>
+    </div>
+    <div class="copy">© 2026 Anirban Kanjilal</div>
+  </div>
+</footer>
+
+</body>
+</html>
