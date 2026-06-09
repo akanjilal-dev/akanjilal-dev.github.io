@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Grover's algorithm on Amazon Braket, and what one search actually costs, Anirban Kanjilal</title>
+<meta name="description" content="A working two qubit Grover search you can run free on a simulator and, with one flag, on real quantum hardware. The interesting part is the error rate and the bill, with references to the original research and the Amazon hardware announcements.">
+<meta property="og:title" content="Grover's algorithm on Amazon Braket, and what one search actually costs">
+<meta property="og:description" content="A runnable quantum search, the noise of real hardware, and the bill most demonstrations never mention.">
+<meta property="og:type" content="article">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/site.css">
+</head>
+<body>
+
+<header class="bar">
+  <div class="wrap">
+    <a class="brand" href="/">akanjilal<span class="dot">.dev</span></a>
+    <nav class="nav" aria-label="Primary">
+      <a href="/#work">work</a>
+      <a href="/blog/">writing</a>
+      <a href="/#background">background</a>
+      <a class="ext" href="https://github.com/akanjilal-dev">github</a>
+      <a class="ext" href="https://www.linkedin.com/in/akanjilal/">linkedin</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <article class="article">
+    <div class="wrap">
+      <a class="back" href="/blog/">Back to writing</a>
+      <div class="article-head">
+        <div class="meta"><span>Quantum</span><span>June 9, 2026</span><span>10 minute read</span></div>
+        <h1>Grover's algorithm on Amazon Braket, and what one search actually costs</h1>
+        <p class="standfirst">This is a search over two qubits that you can run for free on a simulator and, with a single flag, on real superconducting or trapped ion hardware. The interesting part is not that it works. It is the gap between the simulator and the machine, and the line item it leaves on your cloud bill.</p>
+      </div>
+
+      <div class="prose">
+        <p>Grover's algorithm is the cleanest illustration I know of why quantum computing is different. Suppose you have an unstructured search problem. There is a function that says yes for exactly one input out of a large number and no for all the rest, and you have no clever index to exploit. Working classically, you check the candidates one at a time, which takes about half the total number of guesses on average. Grover's method finds the marked item in roughly the square root of that number of steps. For a space of four answers this means a single step, and on an ideal machine it lands on the correct answer with certainty. The original result was published by Lov Grover in 1996, in a paper titled <a href="https://arxiv.org/abs/quant-ph/9605043">A fast quantum mechanical algorithm for database search</a>, and it remains one of the most approachable entry points into the field.</p>
+
+        <p>That last phrase, on an ideal machine, is where honesty enters. The <a href="https://github.com/akanjilal-dev/quantum-on-braket">quantum-on-braket</a> repository lets you run the very same circuit two ways, on a perfect local simulator and on a real quantum processor, and the difference between those two runs is the whole point of this article.</p>
+
+        <h2>One interface, a fleet of real machines</h2>
+
+        <p>What makes this practical today is that <a href="https://aws.amazon.com/braket/">Amazon Braket</a> has turned the act of reaching a quantum computer into an ordinary service call against a menu of real hardware. From one software library you can target trapped ion machines from IonQ, superconducting machines from IQM and Rigetti, and neutral atom machines from QuEra and AQT. The same library also understands the common community frameworks, so you are not locked into a single dialect.</p>
+
+        <p>The hardware on offer keeps growing. On the seventh of April 2026, Amazon <a href="https://aws.amazon.com/blogs/quantum-computing/amazon-braket-launches-rigetti-cepheus-1-108q-superconducting-device/">added Rigetti's Cepheus 1 108Q to Braket</a>, the first gate based device with more than one hundred qubits available on the service. It is built from twelve interconnected nine qubit chiplets tiled into a single processor, it was performing at a median two qubit gate fidelity of about ninety nine percent at launch, and it replaced the earlier Ankaa 3 system. Notably, it uses a controlled Z operation as its native two qubit gate, which is exactly the operation our small Grover circuit leans on.</p>
+
+        <p>For anyone learning, the most important detail is that the local state vector simulator is free. You develop and debug at no cost, and you pay only when you deliberately reach for real silicon. The repository defaults to the simulator and puts a spending guard in front of every hardware call, which I will come back to.</p>
+
+        <h2>A warm up, entanglement in two lines</h2>
+
+        <p>Before the search, here is the customary first program in quantum computing, a Bell pair, which is the maximally entangled state of two qubits.</p>
+
+        <pre><code>from braket.circuits import Circuit
+from braket.devices import LocalSimulator
+
+bell = Circuit().h(0).cnot(0, 1)        <span class="c"># put one qubit in superposition, then entangle</span>
+result = LocalSimulator().run(bell, shots=1000).result()
+print(result.measurement_counts)</code></pre>
+
+        <p>Measure it a thousand times and you get roughly five hundred readings of zero zero and five hundred of one one, and almost never the mixed outcomes. The two qubits are correlated, so reading one tells you the other. Hold that picture, because Grover's algorithm is the same machinery aimed at a goal.</p>
+
+        <h2>The search itself</h2>
+
+        <p>For a space of two qubits there are four possible answers, and Grover's method finds the one we mark in a single iteration. The circuit has two moving parts. An oracle flips the phase of the marked answer, quietly tagging it without yet changing how likely we are to measure it. Then a diffuser reflects every amplitude about the average, which turns that hidden phase tag into a towering probability for the marked state and almost nothing for the rest.</p>
+
+        <pre><code>def grover_2qubit(marked="11"):
+    circ = Circuit()
+    circ.h(0).h(1)                  <span class="c"># 1. equal superposition over all four answers</span>
+
+    <span class="c"># 2. oracle: flip the phase of the marked answer. A controlled Z marks</span>
+    <span class="c">#    one one, and the X gates rotate any other target into place and back.</span>
+    if marked[0] == "0": circ.x(0)
+    if marked[1] == "0": circ.x(1)
+    circ.cz(0, 1)
+    if marked[0] == "0": circ.x(0)
+    if marked[1] == "0": circ.x(1)
+
+    circ.h(0).h(1)                  <span class="c"># 3. diffuser: reflect about the average</span>
+    circ.x(0).x(1)
+    circ.cz(0, 1)
+    circ.x(0).x(1)
+    circ.h(0).h(1)
+    return circ</code></pre>
+
+        <p>Run it on the local simulator and the result is unambiguous.</p>
+
+        <pre><code>Measurement results (1000 shots):
+  |11&rangle;  1000  100.0%  ########################################</code></pre>
+
+        <p>One thousand shots, one thousand correct answers. On a perfect machine, Grover's algorithm at this scale does not miss.</p>
+
+        <h2>Now run it on a real machine</h2>
+
+        <p>Switching to hardware is a single line. You point the device at a machine's Amazon Resource Name instead of the simulator.</p>
+
+        <pre><code>from braket.aws import AwsDevice
+device = AwsDevice("arn:aws:braket:us-east-1::device/qpu/ionq/Forte-1")
+result = device.run(grover_2qubit("11"), shots=1000).result()</code></pre>
+
+        <p>The same circuit now runs on physical qubits, and the clean hundred percent blurs. The marked answer still dominates, which means the algorithm is working, but a few percent of the shots come back wrong, landing on outcomes that should have been impossible. That spread is not a bug in your code. It is the device's error rate made visible, the combined effect of imperfect gates, decoherence, and readout error. This is the texture of what John Preskill named the era of Noisy Intermediate Scale Quantum hardware in his widely cited 2018 essay, <a href="https://arxiv.org/abs/1801.00862">Quantum Computing in the NISQ era and beyond</a>. A two qubit Grover circuit turns out to be a pleasant little benchmark for how noisy a given machine is on a given day. In a real sense, the error rate is the result.</p>
+
+        <h2>The part most demonstrations skip, the bill</h2>
+
+        <p>Braket charges for hardware on a straightforward model. There is a fee each time you submit a task, plus a fee for every shot, and an option to reserve a machine by the hour if you need dedicated time. The current rates are published on the <a href="https://aws.amazon.com/braket/pricing/">Amazon Braket pricing page</a>. None of it is expensive at this scale, but it is real money, and it is the kind of detail that separates a science fair project from something you would let a team loose on. So the repository refuses to send anything to a quantum processor without telling you the likely cost first.</p>
+
+        <pre><code>def _estimate_cost(shots):
+    per_task, per_shot = 0.30, 0.01      <span class="c"># illustrative only, check current pricing</span>
+    est = per_task + per_shot * shots
+    print(f"about {shots} shots is roughly ${est:,.2f} per circuit")
+
+<span class="c"># and nothing runs on hardware until you type the word yes</span></code></pre>
+
+        <p>It is a small thing, and it is also the habit that twenty years of being accountable for other people's cloud bills burns into you. You make the cost visible at the moment of the decision, not at the end of the month. A spending guard in front of a quantum processor is the same instinct as a budget alarm in front of a fleet of accelerators. Frontier compute does not get a pass on financial discipline.</p>
+
+        <div class="callout"><p>Why bother with two qubits in a world that now has machines with more than one hundred of them? Because the small circuit is honest. You can verify the answer by hand, you can see the noise without it drowning the signal, and you can reason about every gate. Scale should come after understanding, not instead of it.</p></div>
+
+        <h2>Where this goes next</h2>
+
+        <p>Grover's algorithm is the teaching example. The method I find genuinely interesting for the kind of work I do is the Quantum Approximate Optimization Algorithm, because it targets the combinatorial optimization problems that real businesses care about, such as routing, scheduling, and portfolio selection. It is also a hybrid method that loops between a quantum circuit and a classical optimizer, which is exactly what the hybrid jobs feature on Braket is designed to run. That is the next entry in the repository, and the next article here.</p>
+
+        <p>Until then, clone the repository, run the demonstration, and watch a quantum search land for free. When you are ready to feel the noise, add the flag for a real machine and meet the hardware.</p>
+      </div>
+
+      <section class="prose refs">
+        <h2>References</h2>
+        <ol>
+          <li>Lov K. Grover, A fast quantum mechanical algorithm for database search (1996).<span class="src">https://arxiv.org/abs/quant-ph/9605043</span></li>
+          <li>John Preskill, Quantum Computing in the NISQ era and beyond (2018).<span class="src">https://arxiv.org/abs/1801.00862</span></li>
+          <li>Amazon Web Services, Amazon Braket product overview.<span class="src">https://aws.amazon.com/braket/</span></li>
+          <li>Amazon Web Services, Amazon Braket launches the Rigetti Cepheus 1 108Q superconducting device (April 2026).<span class="src">https://aws.amazon.com/blogs/quantum-computing/amazon-braket-launches-rigetti-cepheus-1-108q-superconducting-device/</span></li>
+          <li>Amazon Web Services, Amazon Braket pricing.<span class="src">https://aws.amazon.com/braket/pricing/</span></li>
+        </ol>
+      </section>
+
+      <div class="article-foot">
+        <div class="cta-row">
+          <a class="btn primary" href="https://github.com/akanjilal-dev/quantum-on-braket">Open quantum-on-braket</a>
+          <a class="btn" href="/blog/">More writing</a>
+        </div>
+      </div>
+    </div>
+  </article>
+</main>
+
+<footer>
+  <div class="wrap foot">
+    <div class="links">
+      <a href="https://github.com/akanjilal-dev">GitHub</a>
+      <a href="https://www.linkedin.com/in/akanjilal/">LinkedIn</a>
+      <a href="mailto:anirban.kanjilal@gmail.com">Email</a>
+    </div>
+    <div class="copy">© 2026 Anirban Kanjilal</div>
+  </div>
+</footer>
+
+</body>
+</html>

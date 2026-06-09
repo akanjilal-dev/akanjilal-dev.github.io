@@ -3,165 +3,15 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Anirban Kanjilal — Solutions Architect · Cloud, Security & Quantum</title>
-<meta name="description" content="Solutions architect taking AI and quantum out of the demo and into secure, cost-governed, regulated production. 20+ years in payments and cloud.">
-<meta property="og:title" content="Anirban Kanjilal — akanjilal.dev">
-<meta property="og:description" content="Frontier compute, made secure, cost-governed, and production-real.">
+<title>Anirban Kanjilal, Solutions Architect, Cloud, Security and Quantum</title>
+<meta name="description" content="Solutions architect taking artificial intelligence and quantum computing out of the demo and into secure, cost governed, production ready systems. More than twenty years in payments and cloud.">
+<meta property="og:title" content="Anirban Kanjilal, akanjilal.dev">
+<meta property="og:description" content="Frontier compute, made secure, cost governed, and production ready.">
 <meta property="og:type" content="profile">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-<style>
-  :root{
-    --paper:#F4F6FB;
-    --surface:#FFFFFF;
-    --ink:#10131C;
-    --muted:#586079;
-    --faint:#8B92A8;
-    --hairline:#DCE1EE;
-    --grid:rgba(16,19,28,0.035);
-    --accent:#4B3FE4;
-    --accent-ink:#3A2FC9;
-    --accent-soft:rgba(75,63,228,0.08);
-    --chip:#EDEFF7;
-    --live:#1F9D7A;
-    --maxw:1080px;
-  }
-  @media (prefers-color-scheme: dark){
-    :root{
-      --paper:#0C0F22;
-      --surface:#12162E;
-      --ink:#E9EBF6;
-      --muted:#9AA0BC;
-      --faint:#6D7396;
-      --hairline:#242A4A;
-      --grid:rgba(255,255,255,0.035);
-      --accent:#8E80FF;
-      --accent-ink:#A89DFF;
-      --accent-soft:rgba(142,128,255,0.12);
-      --chip:#1B2042;
-      --live:#42C79C;
-    }
-  }
-  *{box-sizing:border-box;margin:0;padding:0}
-  html{scroll-behavior:smooth}
-  body{
-    font-family:"IBM Plex Sans",system-ui,sans-serif;
-    background:var(--paper);
-    color:var(--ink);
-    line-height:1.55;
-    -webkit-font-smoothing:antialiased;
-    background-image:
-      linear-gradient(var(--grid) 1px,transparent 1px),
-      linear-gradient(90deg,var(--grid) 1px,transparent 1px);
-    background-size:32px 32px;
-  }
-  .mono{font-family:"IBM Plex Mono",ui-monospace,monospace}
-  .wrap{max-width:var(--maxw);margin:0 auto;padding:0 28px}
-  a{color:inherit;text-decoration:none}
-
-  /* top bar */
-  .bar{position:sticky;top:0;z-index:10;backdrop-filter:blur(8px);
-    background:color-mix(in srgb,var(--paper) 82%,transparent);
-    border-bottom:1px solid var(--hairline)}
-  .bar .wrap{display:flex;align-items:center;justify-content:space-between;height:58px}
-  .brand{font-family:"IBM Plex Mono",monospace;font-weight:600;letter-spacing:-0.02em;font-size:15px}
-  .brand .dot{color:var(--accent)}
-  .nav{display:flex;gap:22px;font-family:"IBM Plex Mono",monospace;font-size:13px}
-  .nav a{color:var(--muted);transition:color .15s}
-  .nav a:hover{color:var(--ink)}
-  .nav a.ext::after{content:"↗";font-size:11px;margin-left:3px;color:var(--faint)}
-
-  /* hero */
-  .hero{padding:84px 0 36px}
-  .eyebrow{font-family:"IBM Plex Mono",monospace;font-size:12.5px;color:var(--muted);
-    display:flex;align-items:center;gap:10px;margin-bottom:30px}
-  .eyebrow .pin{width:7px;height:7px;border-radius:50%;background:var(--live);
-    box-shadow:0 0 0 4px color-mix(in srgb,var(--live) 18%,transparent)}
-  .name{font-family:"IBM Plex Mono",monospace;font-weight:600;letter-spacing:-0.03em;
-    font-size:clamp(34px,7vw,68px);line-height:1.02}
-  .role{font-family:"IBM Plex Mono",monospace;color:var(--muted);font-size:clamp(13px,1.6vw,15px);
-    margin-top:14px;letter-spacing:0.01em}
-  .thesis{font-size:clamp(22px,3.6vw,34px);font-weight:600;letter-spacing:-0.02em;
-    max-width:18ch;margin:34px 0 0;line-height:1.18}
-  .thesis .hl{color:var(--accent);font-style:normal}
-  .pitch{color:var(--muted);font-size:clamp(15px,1.9vw,17px);max-width:54ch;margin-top:20px}
-  .cta{display:flex;gap:12px;margin-top:30px;flex-wrap:wrap}
-  .btn{font-family:"IBM Plex Mono",monospace;font-size:13.5px;padding:11px 18px;border-radius:9px;
-    border:1px solid var(--hairline);background:var(--surface);transition:transform .12s,border-color .15s}
-  .btn:hover{transform:translateY(-1px);border-color:var(--accent)}
-  .btn.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
-  .btn.primary:hover{background:var(--accent-ink);border-color:var(--accent-ink)}
-
-  /* signature: focus measurement scale */
-  .scale{margin-top:58px;border-top:1px solid var(--hairline);padding-top:16px}
-  .scale-cap{font-family:"IBM Plex Mono",monospace;font-size:11.5px;color:var(--faint);
-    letter-spacing:0.14em;text-transform:uppercase;margin-bottom:14px}
-  .ticks{display:flex;gap:0;flex-wrap:wrap}
-  .tick{flex:1 1 150px;border-left:1px solid var(--hairline);padding:10px 0 2px 12px;position:relative}
-  .tick::before{content:"";position:absolute;left:-1px;top:0;width:1px;height:14px;background:var(--accent)}
-  .tick .n{font-family:"IBM Plex Mono",monospace;font-size:11px;color:var(--faint)}
-  .tick .l{font-weight:600;font-size:15px;margin-top:2px}
-
-  /* sections */
-  section{padding:64px 0}
-  .seclabel{font-family:"IBM Plex Mono",monospace;font-size:12px;color:var(--accent);
-    letter-spacing:0.16em;text-transform:uppercase;display:flex;align-items:center;gap:12px;margin-bottom:30px}
-  .seclabel::after{content:"";flex:1;height:1px;background:var(--hairline)}
-
-  /* work cards */
-  .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:18px}
-  .card{background:var(--surface);border:1px solid var(--hairline);border-radius:14px;padding:24px;
-    display:flex;flex-direction:column;transition:transform .14s,border-color .15s,box-shadow .15s}
-  .card:hover{transform:translateY(-3px);border-color:var(--accent);
-    box-shadow:0 12px 30px -18px color-mix(in srgb,var(--accent) 50%,transparent)}
-  .card-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
-  .repo{font-family:"IBM Plex Mono",monospace;font-weight:600;font-size:15.5px}
-  .chip{font-family:"IBM Plex Mono",monospace;font-size:10.5px;padding:3px 9px;border-radius:20px;
-    background:var(--chip);color:var(--muted);letter-spacing:0.04em}
-  .chip.live{background:color-mix(in srgb,var(--live) 16%,transparent);color:var(--live)}
-  .card p{color:var(--muted);font-size:14.5px;flex:1}
-  .tags{display:flex;gap:7px;flex-wrap:wrap;margin-top:16px}
-  .tag{font-family:"IBM Plex Mono",monospace;font-size:11px;color:var(--faint)}
-  .tag::before{content:"#";opacity:.5}
-  .card .go{font-family:"IBM Plex Mono",monospace;font-size:13px;color:var(--accent);margin-top:18px}
-
-  /* roadmap strip */
-  .roadmap{margin-top:22px;border:1px dashed var(--hairline);border-radius:12px;padding:18px 22px}
-  .roadmap .rl{font-family:"IBM Plex Mono",monospace;font-size:11.5px;color:var(--faint);
-    letter-spacing:0.1em;text-transform:uppercase;margin-bottom:12px}
-  .roadmap .items{display:flex;gap:10px;flex-wrap:wrap}
-  .roadmap .it{font-family:"IBM Plex Mono",monospace;font-size:13px;color:var(--muted);
-    background:var(--paper);border:1px solid var(--hairline);border-radius:7px;padding:6px 11px}
-
-  /* background */
-  .bg-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:30px}
-  .bg-col h3{font-family:"IBM Plex Mono",monospace;font-size:12px;color:var(--faint);
-    letter-spacing:0.14em;text-transform:uppercase;margin-bottom:16px}
-  .bg-item{padding:12px 0;border-top:1px solid var(--hairline)}
-  .bg-item:first-of-type{border-top:none;padding-top:0}
-  .bg-item .t{font-weight:600;font-size:15px}
-  .bg-item .s{color:var(--muted);font-size:13.5px;margin-top:2px}
-
-  /* footer */
-  footer{border-top:1px solid var(--hairline);padding:46px 0 60px}
-  .foot{display:flex;justify-content:space-between;align-items:center;gap:20px;flex-wrap:wrap}
-  .foot .links{display:flex;gap:20px;font-family:"IBM Plex Mono",monospace;font-size:13.5px}
-  .foot .links a{color:var(--muted);transition:color .15s}
-  .foot .links a:hover{color:var(--accent)}
-  .foot .copy{font-family:"IBM Plex Mono",monospace;font-size:12px;color:var(--faint)}
-
-  /* a11y + motion */
-  a:focus-visible,.btn:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radius:6px}
-  .reveal{opacity:0;transform:translateY(14px);animation:rise .7s cubic-bezier(.2,.7,.2,1) forwards}
-  .d1{animation-delay:.05s}.d2{animation-delay:.13s}.d3{animation-delay:.21s}
-  .d4{animation-delay:.29s}.d5{animation-delay:.37s}.d6{animation-delay:.45s}
-  @keyframes rise{to{opacity:1;transform:none}}
-  @media (prefers-reduced-motion:reduce){
-    .reveal{animation:none;opacity:1;transform:none}
-    html{scroll-behavior:auto}
-  }
-</style>
+<link rel="stylesheet" href="/assets/site.css">
 </head>
 <body>
 
@@ -170,6 +20,7 @@
     <a class="brand" href="/">akanjilal<span class="dot">.dev</span></a>
     <nav class="nav" aria-label="Primary">
       <a href="#work">work</a>
+      <a href="/blog/">writing</a>
       <a href="#background">background</a>
       <a class="ext" href="https://github.com/akanjilal-dev">github</a>
       <a class="ext" href="https://www.linkedin.com/in/akanjilal/">linkedin</a>
@@ -180,23 +31,23 @@
 <main>
   <section class="hero">
     <div class="wrap">
-      <div class="eyebrow reveal d1"><span class="pin" aria-hidden="true"></span> Guelph, ON &nbsp;·&nbsp; open to advisory, speaking &amp; collaboration</div>
+      <div class="eyebrow reveal d1"><span class="pin" aria-hidden="true"></span> Guelph, Ontario &nbsp;·&nbsp; open to advisory, speaking and collaboration</div>
       <h1 class="name reveal d2">Anirban&nbsp;Kanjilal</h1>
       <div class="role mono reveal d2">Solutions Architect &nbsp;·&nbsp; Cloud &nbsp;·&nbsp; Security &nbsp;·&nbsp; Quantum</div>
-      <p class="thesis reveal d3">Frontier compute, made <span class="hl">secure, cost-governed, and production-real.</span></p>
-      <p class="pitch reveal d4">I take AI and quantum out of the demo and into regulated, always-on production. Twenty years building real-time payments taught me the hard part is rarely the model — it's the security, the cost, and the SLA.</p>
+      <p class="thesis reveal d3">Frontier compute, made <span class="hl">secure, cost governed, and production ready.</span></p>
+      <p class="pitch reveal d4">I take artificial intelligence and quantum computing out of the demo and into regulated, always on production. Twenty years building real time payment systems taught me that the hard part is rarely the model. It is the security, the cost, and the service level agreement.</p>
       <div class="cta reveal d5">
         <a class="btn primary" href="#work">View the work</a>
-        <a class="btn" href="https://github.com/akanjilal-dev">GitHub →</a>
+        <a class="btn" href="https://github.com/akanjilal-dev">GitHub</a>
       </div>
 
       <div class="scale reveal d6" aria-label="Focus areas">
         <div class="scale-cap">Focus</div>
         <div class="ticks">
-          <div class="tick"><div class="n mono">01</div><div class="l">AI / ML in production</div></div>
-          <div class="tick"><div class="n mono">02</div><div class="l">Quantum on AWS Braket</div></div>
-          <div class="tick"><div class="n mono">03</div><div class="l">AI security</div></div>
-          <div class="tick"><div class="n mono">04</div><div class="l">Cloud &amp; AI FinOps</div></div>
+          <div class="tick"><div class="n mono">01</div><div class="l">Machine learning in production</div></div>
+          <div class="tick"><div class="n mono">02</div><div class="l">Quantum on Amazon Braket</div></div>
+          <div class="tick"><div class="n mono">03</div><div class="l">Artificial intelligence security</div></div>
+          <div class="tick"><div class="n mono">04</div><div class="l">Cloud and AI cost engineering</div></div>
           <div class="tick"><div class="n mono">05</div><div class="l">Agentic systems</div></div>
         </div>
       </div>
@@ -210,23 +61,23 @@
 
         <a class="card" href="https://github.com/akanjilal-dev/llm-security-lab">
           <div class="card-top"><span class="repo">llm-security-lab</span><span class="chip live">live</span></div>
-          <p>Prompt injection shown, not told — vulnerable vs. hardened variants of real LLM risks, each mapped to OWASP LLM Top 10, MITRE ATLAS, and the NIST AI RMF. Runs offline with zero API keys.</p>
-          <div class="tags"><span class="tag">ai-security</span><span class="tag">owasp</span><span class="tag">mitre-atlas</span></div>
-          <div class="go mono">Read the lab →</div>
+          <p>Prompt injection shown rather than described. Vulnerable and hardened versions of real language model risks, each mapped to the OWASP Top 10 for language model applications, MITRE ATLAS, and the NIST framework. It runs offline with no keys required.</p>
+          <div class="tags"><span class="tag">security</span><span class="tag">owasp</span><span class="tag">atlas</span></div>
+          <div class="go mono">Read the lab</div>
         </a>
 
         <a class="card" href="https://github.com/akanjilal-dev/quantum-on-braket">
           <div class="card-top"><span class="repo">quantum-on-braket</span><span class="chip live">live</span></div>
-          <p>Runnable, cost-aware quantum algorithms on Amazon Braket. Free on the local simulator, one flag to real hardware, with a cost guard before every QPU call. Grover today; QAOA and VQE next.</p>
-          <div class="tags"><span class="tag">quantum</span><span class="tag">aws-braket</span><span class="tag">qaoa</span></div>
-          <div class="go mono">Run it →</div>
+          <p>Quantum algorithms you can run on Amazon Braket, written to be aware of cost. They are free on the local simulator and one flag away from real hardware, with a spending guard before every call to a quantum processor. Grover today, with the optimization algorithm next.</p>
+          <div class="tags"><span class="tag">quantum</span><span class="tag">braket</span><span class="tag">optimization</span></div>
+          <div class="go mono">Run it</div>
         </a>
 
         <a class="card" href="https://github.com/akanjilal-dev/ai-finops-agent">
           <div class="card-top"><span class="repo">ai-finops-agent</span><span class="chip">building</span></div>
-          <p>An agent that reads FOCUS-format billing data and surfaces where AI and cloud spend is going — idle GPUs, inference spikes, cost-per-outcome — with the agent itself hardened against injection.</p>
-          <div class="tags"><span class="tag">finops</span><span class="tag">focus</span><span class="tag">agents</span></div>
-          <div class="go mono">Follow along →</div>
+          <p>An agent that reads billing data in the open FOCUS format and shows where cloud and model spending goes, from idle accelerators to sudden jumps in usage, with the agent itself hardened against injection.</p>
+          <div class="tags"><span class="tag">cost</span><span class="tag">billing</span><span class="tag">agents</span></div>
+          <div class="go mono">Follow along</div>
         </a>
 
       </div>
@@ -251,25 +102,25 @@
 
         <div class="bg-col">
           <h3>Experience</h3>
-          <div class="bg-item"><div class="t">AVP — DevSecOps &amp; Cloud Engineering</div><div class="s">Interac · real-time payments at scale</div></div>
-          <div class="bg-item"><div class="t">Principal &amp; Senior Architect</div><div class="s">Interac · microservices, zero-RPO, AWS</div></div>
-          <div class="bg-item"><div class="t">Lead / Integration Architect</div><div class="s">Wipro · enterprise modernization</div></div>
-          <div class="bg-item"><div class="t">20+ years</div><div class="s">payments · banking · utilities · retail</div></div>
+          <div class="bg-item"><div class="t">Associate Vice President, Security and Cloud Engineering</div><div class="s">Interac · real time payments at scale</div></div>
+          <div class="bg-item"><div class="t">Principal and Senior Architect</div><div class="s">Interac · microservices and resilient cloud design</div></div>
+          <div class="bg-item"><div class="t">Lead and Integration Architect</div><div class="s">Wipro · enterprise modernization</div></div>
+          <div class="bg-item"><div class="t">More than twenty years</div><div class="s">payments · banking · utilities · retail</div></div>
         </div>
 
         <div class="bg-col">
           <h3>Education</h3>
-          <div class="bg-item"><div class="t">MSc, Interdisciplinary AI</div><div class="s">University of Ottawa · in progress</div></div>
-          <div class="bg-item"><div class="t">MBA (IT)</div><div class="s">United Business Institutes, Brussels</div></div>
-          <div class="bg-item"><div class="t">B.Tech, Computer Science</div><div class="s">Calcutta University</div></div>
+          <div class="bg-item"><div class="t">Master of Interdisciplinary Artificial Intelligence</div><div class="s">University of Ottawa · in progress</div></div>
+          <div class="bg-item"><div class="t">Master of Business Administration in Information Technology</div><div class="s">United Business Institutes, Brussels</div></div>
+          <div class="bg-item"><div class="t">Bachelor of Technology in Computer Science</div><div class="s">Calcutta University</div></div>
         </div>
 
         <div class="bg-col">
           <h3>Credentials</h3>
-          <div class="bg-item"><div class="t">AWS Solutions Architect</div><div class="s">cloud architecture, certified</div></div>
+          <div class="bg-item"><div class="t">Amazon Web Services Solutions Architect</div><div class="s">cloud architecture, certified</div></div>
           <div class="bg-item"><div class="t">TOGAF 9</div><div class="s">enterprise architecture</div></div>
-          <div class="bg-item"><div class="t">Oracle Cloud Architect</div><div class="s">multi-cloud design</div></div>
-          <div class="bg-item"><div class="t">Quantum computing since 2003</div><div class="s">published; now hands-on on Braket</div></div>
+          <div class="bg-item"><div class="t">Oracle Cloud Architect</div><div class="s">design across multiple clouds</div></div>
+          <div class="bg-item"><div class="t">Quantum computing since 2003</div><div class="s">published, and now hands on with Braket</div></div>
         </div>
 
       </div>
@@ -284,7 +135,7 @@
       <a href="https://www.linkedin.com/in/akanjilal/">LinkedIn</a>
       <a href="mailto:anirban.kanjilal@gmail.com">Email</a>
     </div>
-    <div class="copy">© 2026 Anirban Kanjilal · built &amp; hosted on GitHub Pages</div>
+    <div class="copy">© 2026 Anirban Kanjilal · built and hosted on GitHub Pages</div>
   </div>
 </footer>
 
