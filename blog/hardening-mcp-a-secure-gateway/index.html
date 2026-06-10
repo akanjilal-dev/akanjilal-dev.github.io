@@ -22,7 +22,7 @@
       <a href="/#work">work</a>
       <a href="/blog/">my blogs</a>
       <a href="/#background">background</a>
-      <a class="ext" href="https://github.com/akanjilal-dev">github</a>
+      <a class="ext" href="https://github.com/akanjilal-work">github</a>
       <a class="ext" href="https://www.linkedin.com/in/akanjilal/">linkedin</a>
     </nav>
   </div>
@@ -47,7 +47,7 @@
 
         <p>The oldest of these problems has a name that is decades old. A confused deputy is a program that holds more authority than the party asking it to act, and can be tricked into using that authority on the asker's behalf. The classic example is a compiler with permission to write to a system directory that a user persuades to overwrite a file it should not. An agent in front of a protocol server is a near perfect confused deputy. The server may expose a tool that deletes records or sends mail, the agent technically can call it, and the decision to call it rests on text the agent was reading, which an attacker may well have written.</p>
 
-        <p>The structural fix is to stop reasoning about what the agent can do and start reasoning about what the caller is allowed to do. In the gateway I built for this, which lives in the <a href="https://github.com/akanjilal-dev/mcp-secure-gateway">mcp-secure-gateway</a> repository, the allow list is default deny. Nothing is callable unless a named principal has been granted that specific tool, and the gateway acts only on the authority of the caller in front of it, never on the broad ambient authority of whatever the server happens to expose. In the demonstration, an analyst who has been granted only the ability to read documents asks to delete a user. An open proxy carries out the deletion without a second thought. The gateway refuses it before the tool is ever reached, and writes down why.</p>
+        <p>The structural fix is to stop reasoning about what the agent can do and start reasoning about what the caller is allowed to do. In the gateway I built for this, which lives in the <a href="https://github.com/akanjilal-work/mcp-secure-gateway">mcp-secure-gateway</a> repository, the allow list is default deny. Nothing is callable unless a named principal has been granted that specific tool, and the gateway acts only on the authority of the caller in front of it, never on the broad ambient authority of whatever the server happens to expose. In the demonstration, an analyst who has been granted only the ability to read documents asks to delete a user. An open proxy carries out the deletion without a second thought. The gateway refuses it before the tool is ever reached, and writes down why.</p>
 
         <pre><code>policy.grant(<span class="s">"analyst"</span>, <span class="s">"read_doc"</span>)        <span class="c"># read only, nothing else</span>
 gateway.call(<span class="s">"tok-analyst"</span>, <span class="s">"delete_user"</span>, {<span class="s">"user_id"</span>: <span class="s">"u-42"</span>})
@@ -104,7 +104,7 @@ result = gateway.call(<span class="s">"tok-analyst"</span>, <span class="s">"rea
 
       <div class="article-foot">
         <div class="cta-row">
-          <a class="btn primary" href="https://github.com/akanjilal-dev/mcp-secure-gateway">Open mcp-secure-gateway</a>
+          <a class="btn primary" href="https://github.com/akanjilal-work/mcp-secure-gateway">Open mcp-secure-gateway</a>
           <a class="btn" href="/blog/">More writing</a>
         </div>
       </div>
@@ -115,7 +115,7 @@ result = gateway.call(<span class="s">"tok-analyst"</span>, <span class="s">"rea
 <footer>
   <div class="wrap foot">
     <div class="links">
-      <a href="https://github.com/akanjilal-dev">GitHub</a>
+      <a href="https://github.com/akanjilal-work">GitHub</a>
       <a href="https://www.linkedin.com/in/akanjilal/">LinkedIn</a>
       <a href="mailto:anirban.kanjilal@gmail.com">Email</a>
     </div>

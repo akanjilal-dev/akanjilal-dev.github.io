@@ -22,7 +22,7 @@
       <a href="/#work">work</a>
       <a href="/blog/">my blogs</a>
       <a href="/#background">background</a>
-      <a class="ext" href="https://github.com/akanjilal-dev">github</a>
+      <a class="ext" href="https://github.com/akanjilal-work">github</a>
       <a class="ext" href="https://www.linkedin.com/in/akanjilal/">linkedin</a>
     </nav>
   </div>
@@ -53,7 +53,7 @@
 
         <h2>Four controls, and the order they run in</h2>
 
-        <p>The middleware I built for this, which lives in the <a href="https://github.com/akanjilal-dev/llm-cost-guardrails">llm-cost-guardrails</a> repository, is small on purpose. It is four controls and a piece of glue that runs them in the right order, and the whole thing runs offline with no keys, because the cost arithmetic does not need a real model to be correct. The four controls are these.</p>
+        <p>The middleware I built for this, which lives in the <a href="https://github.com/akanjilal-work/llm-cost-guardrails">llm-cost-guardrails</a> repository, is small on purpose. It is four controls and a piece of glue that runs them in the right order, and the whole thing runs offline with no keys, because the cost arithmetic does not need a real model to be correct. The four controls are these.</p>
 
         <p>The first is cost estimation. It turns a count of tokens into a number of dollars, and it understands the cached read discount and the cache write premium described above. It is the foundation, because every other control begins by asking it the same question, which is what this call is going to cost.</p>
 
@@ -83,7 +83,7 @@ budgets.reconcile(tenant, hold, actual)   <span class="c"># release the hold, re
 
         <p>If this sounds like an edge concern, the numbers say otherwise. The FinOps Foundation, which is the body that defines the common practice for managing cloud spending, has made the management of artificial intelligence cost its leading forward looking priority and has built an entire <a href="https://www.finops.org/wg/finops-for-ai-overview/">FinOps for AI</a> body of work around it. In its <a href="https://data.finops.org/">State of FinOps research</a>, the share of organisations that say they are actively managing artificial intelligence spend has risen to the overwhelming majority in the space of two years, and the foundation went so far as to broaden its own mission statement from managing the value of cloud to managing the value of technology, precisely because spending on models had become too large to sit outside the discipline. The most telling finding is that the hardest part of the job is no longer reducing the number. It is proving that the spending bought something worth having. You cannot have that conversation at all until the spending is measured and bounded, which is what this kind of middleware is for.</p>
 
-        <div class="callout"><p>A useful way to make spending legible is to stop measuring it in dollars per month and start measuring it in dollars per outcome. A budget tells you that you spent four hundred dollars. A cost per outcome tells you that each resolved support ticket cost eleven cents, which is a number a finance team can actually reason about. The per tenant attribution in this middleware is the first step toward that view, and it pairs naturally with the billing analysis in my <a href="https://github.com/akanjilal-dev/ai-finops-agent">ai-finops-agent</a> project.</p></div>
+        <div class="callout"><p>A useful way to make spending legible is to stop measuring it in dollars per month and start measuring it in dollars per outcome. A budget tells you that you spent four hundred dollars. A cost per outcome tells you that each resolved support ticket cost eleven cents, which is a number a finance team can actually reason about. The per tenant attribution in this middleware is the first step toward that view, and it pairs naturally with the billing analysis in my <a href="https://github.com/akanjilal-work/ai-finops-agent">ai-finops-agent</a> project.</p></div>
 
         <h2>The payments lens</h2>
 
@@ -108,7 +108,7 @@ budgets.reconcile(tenant, hold, actual)   <span class="c"># release the hold, re
 
       <div class="article-foot">
         <div class="cta-row">
-          <a class="btn primary" href="https://github.com/akanjilal-dev/llm-cost-guardrails">Open llm-cost-guardrails</a>
+          <a class="btn primary" href="https://github.com/akanjilal-work/llm-cost-guardrails">Open llm-cost-guardrails</a>
           <a class="btn" href="/blog/">More writing</a>
         </div>
       </div>
@@ -119,7 +119,7 @@ budgets.reconcile(tenant, hold, actual)   <span class="c"># release the hold, re
 <footer>
   <div class="wrap foot">
     <div class="links">
-      <a href="https://github.com/akanjilal-dev">GitHub</a>
+      <a href="https://github.com/akanjilal-work">GitHub</a>
       <a href="https://www.linkedin.com/in/akanjilal/">LinkedIn</a>
       <a href="mailto:anirban.kanjilal@gmail.com">Email</a>
     </div>
