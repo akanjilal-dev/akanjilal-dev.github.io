@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ai-finops-agent, live in your browser, Anirban Kanjilal</title>
+<meta name="description" content="A live, in-browser demo of ai-finops-agent. The real Python agent runs entirely in your browser through Pyodide, with no server and no data leaving your machine. Ask it about cloud and AI spend over a sample FOCUS billing dataset.">
+<meta property="og:title" content="ai-finops-agent, live in your browser">
+<meta property="og:description" content="The real agent, running client side via Pyodide. No server, no keys, no data leaves your machine.">
+<meta property="og:type" content="website">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/site.css">
+<style>
+  .demo{padding:48px 0 24px;max-width:var(--readw,680px);margin:0 auto}
+  .demo .lead{color:var(--muted);font-size:16.5px;margin:14px 0 0}
+  .statbar{display:flex;gap:10px;flex-wrap:wrap;margin:26px 0 0;font-family:"IBM Plex Mono",monospace;font-size:12.5px}
+  .stat{background:var(--surface);border:1px solid var(--hairline);border-radius:9px;padding:9px 13px}
+  .stat b{color:var(--accent);font-weight:600}
+  .status{font-family:"IBM Plex Mono",monospace;font-size:12.5px;color:var(--faint);margin:18px 0 6px;display:flex;align-items:center;gap:9px}
+  .status .pin{width:8px;height:8px;border-radius:50%;background:var(--faint);flex:none}
+  .status.ready .pin{background:var(--live);box-shadow:0 0 0 4px color-mix(in srgb,var(--live) 18%,transparent)}
+  .status.err .pin{background:#d9544f}
+  .chips{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0 14px}
+  .chip-q{font-family:"IBM Plex Mono",monospace;font-size:12.5px;color:var(--muted);background:var(--paper);
+    border:1px solid var(--hairline);border-radius:20px;padding:6px 12px;cursor:pointer;transition:border-color .15s,color .15s}
+  .chip-q:hover{border-color:var(--accent);color:var(--ink)}
+  .ask{display:flex;gap:10px;flex-wrap:wrap}
+  .ask input{flex:1 1 280px;font-family:"IBM Plex Sans",sans-serif;font-size:15px;padding:12px 14px;
+    border:1px solid var(--hairline);border-radius:10px;background:var(--surface);color:var(--ink)}
+  .ask input:focus{outline:2px solid var(--accent);outline-offset:2px;border-color:var(--accent)}
+  .ask button{font-family:"IBM Plex Mono",monospace;font-size:13.5px;padding:12px 20px;border-radius:10px;
+    border:1px solid var(--accent);background:var(--accent);color:#fff;cursor:pointer;transition:background .15s}
+  .ask button:hover:not(:disabled){background:var(--accent-ink)}
+  .ask button:disabled{opacity:.5;cursor:not-allowed}
+  .out{margin-top:20px;background:var(--code-bg);color:var(--code-ink);border:1px solid var(--hairline);
+    border-radius:12px;padding:20px 22px;font-family:"IBM Plex Mono",monospace;font-size:13px;line-height:1.6;
+    white-space:pre-wrap;word-break:break-word;min-height:60px}
+  .out .q{color:var(--code-kw,#9D8BFF)}
+  .note{margin-top:26px;border-left:3px solid var(--accent);padding:4px 0 4px 18px;color:var(--muted);font-size:15px}
+  .demo-foot{margin-top:30px;display:flex;gap:12px;flex-wrap:wrap}
+</style>
+</head>
+<body>
+
+<header class="bar">
+  <div class="wrap">
+    <a class="brand" href="/">akanjilal<span class="dot">.dev</span></a>
+    <nav class="nav" aria-label="Primary">
+      <a href="/#work">work</a>
+      <a href="/blog/">my blogs</a>
+      <a href="/#background">background</a>
+      <a class="ext" href="https://github.com/akanjilal-dev">github</a>
+      <a class="ext" href="https://www.linkedin.com/in/akanjilal/">linkedin</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <div class="wrap">
+    <div class="demo">
+      <div class="page-head" style="padding:0">
+        <div class="kicker">Live demo</div>
+        <h1>ai-finops-agent, running in your browser</h1>
+        <p class="lead">This is the real agent from the <a href="https://github.com/akanjilal-dev/ai-finops-agent">ai-finops-agent</a> repository, running unmodified through Pyodide, which is Python compiled to WebAssembly. There is no server and no API key. The code, the sample billing data, and every answer stay on your machine. Ask it about a sample month of cloud and AI spend in the open FOCUS format.</p>
+      </div>
+
+      <div class="statbar" id="statbar" hidden>
+        <span class="stat" id="stat-records">records: <b>—</b></span>
+        <span class="stat" id="stat-total">total spend: <b>—</b></span>
+        <span class="stat">runtime: <b>your browser</b></span>
+      </div>
+
+      <div class="status" id="status"><span class="pin"></span><span id="status-text">Booting the Python runtime in your browser, this takes a few seconds the first time…</span></div>
+
+      <div class="chips" id="chips" hidden>
+        <button class="chip-q">What is our total spend?</button>
+        <button class="chip-q">How much are we spending on AI?</button>
+        <button class="chip-q">Show me spend by team</button>
+        <button class="chip-q">What are the top 5 resources by cost?</button>
+        <button class="chip-q">What is our cost per inference?</button>
+        <button class="chip-q">Are there any anomalies or wasted spend?</button>
+      </div>
+
+      <div class="ask">
+        <input id="q" type="text" placeholder="Ask about the spend, for example: spend by service" disabled autocomplete="off">
+        <button id="ask" disabled>Ask</button>
+      </div>
+
+      <div class="out mono" id="out">The agent will answer here.</div>
+
+      <div class="note">It is read only and hardened. It can only run a fixed set of analytics tools, it refuses questions that carry injected instructions, and the sample data even contains a poisoned billing description that tries to make it report a total of zero. The total above is correct anyway, because billing text is only ever counted, never obeyed.</div>
+
+      <div class="demo-foot">
+        <a class="btn primary" href="https://github.com/akanjilal-dev/ai-finops-agent">Read the code</a>
+        <a class="btn" href="/blog/a-circuit-breaker-for-llm-spend/">Related writing</a>
+      </div>
+    </div>
+  </div>
+</main>
+
+<footer>
+  <div class="wrap foot">
+    <div class="links">
+      <a href="https://github.com/akanjilal-dev">GitHub</a>
+      <a href="https://www.linkedin.com/in/akanjilal/">LinkedIn</a>
+      <a href="mailto:anirban.kanjilal@gmail.com">Email</a>
+    </div>
+    <div class="copy">© 2026 Anirban Kanjilal · this demo runs entirely client side</div>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/pyodide/v0.29.4/full/pyodide.js"></script>
+<script>
+const PY_FILES = ["finops/__init__.py", "finops/focus.py", "finops/analytics.py", "finops/anomalies.py", "finops/agent.py"];
+const statusEl = document.getElementById("status");
+const statusText = document.getElementById("status-text");
+const out = document.getElementById("out");
+const input = document.getElementById("q");
+const askBtn = document.getElementById("ask");
+let pyodide = null;
+
+function setStatus(text, cls) {
+  statusText.textContent = text;
+  statusEl.className = "status" + (cls ? " " + cls : "");
+}
+
+async function fetchText(path) {
+  const r = await fetch(path, { cache: "no-store" });
+  if (!r.ok) throw new Error("could not load " + path + " (" + r.status + ")");
+  return r.text();
+}
+
+async function boot() {
+  try {
+    pyodide = await loadPyodide({ indexURL: "https://cdn.jsdelivr.net/pyodide/v0.29.4/full/" });
+
+    // Write the agent package and sample data into Pyodide's virtual filesystem.
+    const enc = new TextEncoder();
+    pyodide.FS.mkdirTree("/home/pyodide/finops");
+    for (const rel of PY_FILES) {
+      const text = await fetchText("py/" + rel);
+      pyodide.FS.writeFile("/home/pyodide/" + rel, enc.encode(text));
+    }
+    const csv = await fetchText("py/sample_focus.csv");
+    pyodide.FS.writeFile("/home/pyodide/sample_focus.csv", enc.encode(csv));
+
+    // Initialise the agent over the sample data.
+    const stats = await pyodide.runPythonAsync(`
+import sys
+sys.path.insert(0, "/home/pyodide")
+from finops.focus import load_focus
+from finops.analytics import total_cost
+from finops.agent import FinOpsAgent
+_records = load_focus("/home/pyodide/sample_focus.csv")
+_agent = FinOpsAgent(_records)
+[len(_records), round(total_cost(_records), 2)]
+`);
+    const [count, total] = stats.toJs();
+    stats.destroy();
+
+    document.querySelector("#stat-records b").textContent = count;
+    document.querySelector("#stat-total b").textContent = "$" + total.toLocaleString("en-US", {minimumFractionDigits: 2, maximumFractionDigits: 2});
+    document.getElementById("statbar").hidden = false;
+    document.getElementById("chips").hidden = false;
+    input.disabled = false;
+    askBtn.disabled = false;
+    setStatus("Ready. Ask a question, or pick one above.", "ready");
+    out.textContent = "The agent will answer here.";
+  } catch (e) {
+    setStatus("The in-browser runtime could not start: " + e.message, "err");
+    out.textContent = "You can still read the code and run it locally from the repository.";
+  }
+}
+
+function ask(q) {
+  q = (q || "").trim();
+  if (!q || !pyodide) return;
+  input.value = q;
+  let answer;
+  try {
+    pyodide.globals.set("_q", q);
+    answer = pyodide.runPython("_agent.ask(_q).text");
+  } catch (e) {
+    answer = "Error: " + e.message;
+  }
+  out.textContent = "";
+  const qline = document.createElement("div");
+  qline.className = "q";
+  qline.textContent = "> " + q;
+  out.appendChild(qline);
+  out.appendChild(document.createTextNode("\n" + answer));
+}
+
+askBtn.addEventListener("click", () => ask(input.value));
+input.addEventListener("keydown", (e) => { if (e.key === "Enter") ask(input.value); });
+document.getElementById("chips").addEventListener("click", (e) => {
+  if (e.target.classList.contains("chip-q")) ask(e.target.textContent);
+});
+
+boot();
+</script>
+
+</body>
+</html>
