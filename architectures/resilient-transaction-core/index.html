@@ -243,7 +243,83 @@ table.put_item(
         <p>The core runs in two regions. Idempotency keys replicate through DynamoDB global tables, the ledger replicates through Aurora Global Database with a recovery point objective near zero, and Amazon Route 53 with the Application Recovery Controller directs traffic and supports a controlled failover. The combination of replicated keys and a replicated ledger is what makes the failover safe. A request that was in flight when the primary region failed can be retried against the standby and will be recognized as already seen, so it is never applied a second time.</p>
 
         <figure class="diagram">
-          <img src="/assets/img/txn-multiregion.png" alt="Two regions with DynamoDB global tables for idempotency, Aurora Global Database for the ledger, and Route 53 failover" loading="lazy">
+          <svg viewBox="0 0 1180 720" role="img" aria-label="Two regions, ca-central-1 active and ca-west-1 standby, each with API and processing, DynamoDB global tables for idempotency keys, Aurora Global Database for the ledger, and EventBridge. Amazon Route 53 with the Application Recovery Controller steers a controlled failover. DynamoDB and Aurora replicate between the regions.">
+            <style>
+              .mrl{font-family:"IBM Plex Sans",system-ui,sans-serif;font-weight:600;fill:var(--ink)}
+              .mrt{font-family:"IBM Plex Sans",system-ui,sans-serif;font-weight:700;fill:var(--ink)}
+              .mrp{font-family:"IBM Plex Sans",system-ui,sans-serif;font-weight:700;fill:#ffffff}
+            </style>
+
+            <text x="42" y="40" class="num" font-size="12" letter-spacing="2">RESILIENT TRANSACTIONS · MULTI REGION</text>
+            <text x="40" y="78" class="mrt" font-size="24">Idempotency and the ledger survive a region loss</text>
+            <line class="conn" x1="40" y1="98" x2="1140" y2="98"/>
+
+            <rect class="box" x="380" y="128" width="420" height="66" rx="12"/>
+            <rect x="398" y="146" width="30" height="30" rx="7" style="fill:var(--accent)"/>
+            <text x="440" y="164" class="mrl" font-size="13">Amazon Route 53 · Application Recovery Controller</text>
+            <text x="440" y="182" class="num" font-size="11.5">controlled regional failover</text>
+            <line class="conn" x1="470" y1="194" x2="300" y2="232"/>
+            <line class="conn" x1="710" y1="194" x2="880" y2="232"/>
+
+            <rect class="conna" x="60" y="232" width="480" height="432" rx="16" stroke-dasharray="7 6"/>
+            <rect class="conna" x="640" y="232" width="480" height="432" rx="16" stroke-dasharray="7 6"/>
+
+            <rect x="84" y="250" width="300" height="42" rx="10" style="fill:var(--accent)"/>
+            <text x="104" y="277" class="mrp" font-size="15">Region ca-central-1 (active)</text>
+            <rect x="664" y="250" width="300" height="42" rx="10" style="fill:var(--accent)"/>
+            <text x="684" y="277" class="mrp" font-size="15">Region ca-west-1 (standby)</text>
+
+            <rect class="box" x="84" y="308" width="432" height="70" rx="10"/>
+            <rect x="104" y="328" width="30" height="30" rx="7" style="fill:#F2811D"/>
+            <text x="148" y="340" class="mrl" font-size="15">API and processing</text>
+            <text x="148" y="360" class="num" font-size="12">active and ready</text>
+            <rect class="box" x="84" y="390" width="432" height="70" rx="10"/>
+            <rect x="104" y="410" width="30" height="30" rx="7" style="fill:#3A35C9"/>
+            <text x="148" y="422" class="mrl" font-size="15">DynamoDB global tables</text>
+            <text x="148" y="442" class="num" font-size="12">idempotency keys, replicated</text>
+            <rect class="box" x="84" y="472" width="432" height="70" rx="10"/>
+            <rect x="104" y="492" width="30" height="30" rx="7" style="fill:#3A35C9"/>
+            <text x="148" y="504" class="mrl" font-size="15">Aurora Global Database</text>
+            <text x="148" y="524" class="num" font-size="12">ledger, sub second replication</text>
+            <rect class="box" x="84" y="554" width="432" height="70" rx="10"/>
+            <rect x="104" y="574" width="30" height="30" rx="7" style="fill:#E5317F"/>
+            <text x="148" y="586" class="mrl" font-size="15">EventBridge</text>
+            <text x="148" y="606" class="num" font-size="12">event bus, regional</text>
+            <text x="104" y="648" class="sub" font-size="13">Processes transactions.</text>
+
+            <rect class="box" x="664" y="308" width="432" height="70" rx="10"/>
+            <rect x="684" y="328" width="30" height="30" rx="7" style="fill:#F2811D"/>
+            <text x="728" y="340" class="mrl" font-size="15">API and processing</text>
+            <text x="728" y="360" class="num" font-size="12">active and ready</text>
+            <rect class="box" x="664" y="390" width="432" height="70" rx="10"/>
+            <rect x="684" y="410" width="30" height="30" rx="7" style="fill:#3A35C9"/>
+            <text x="728" y="422" class="mrl" font-size="15">DynamoDB global tables</text>
+            <text x="728" y="442" class="num" font-size="12">idempotency keys, replicated</text>
+            <rect class="box" x="664" y="472" width="432" height="70" rx="10"/>
+            <rect x="684" y="492" width="30" height="30" rx="7" style="fill:#3A35C9"/>
+            <text x="728" y="504" class="mrl" font-size="15">Aurora Global Database</text>
+            <text x="728" y="524" class="num" font-size="12">ledger, sub second replication</text>
+            <rect class="box" x="664" y="554" width="432" height="70" rx="10"/>
+            <rect x="684" y="574" width="30" height="30" rx="7" style="fill:#E5317F"/>
+            <text x="728" y="586" class="mrl" font-size="15">EventBridge</text>
+            <text x="728" y="606" class="num" font-size="12">event bus, regional</text>
+            <text x="684" y="648" class="sub" font-size="13">Warm standby, promoted on failover.</text>
+
+            <line class="conn" x1="540" y1="425" x2="640" y2="425" stroke-dasharray="6 5"/>
+            <text x="590" y="417" text-anchor="middle" class="num" font-size="11">global tables</text>
+            <line class="conn" x1="540" y1="507" x2="640" y2="507" stroke-dasharray="6 5"/>
+            <text x="590" y="499" text-anchor="middle" class="num" font-size="11">Aurora Global</text>
+
+            <rect x="40" y="680" width="14" height="14" rx="3" style="fill:var(--accent)"/>
+            <text x="60" y="691" class="sub" font-size="12">Networking</text>
+            <rect x="176" y="680" width="14" height="14" rx="3" style="fill:#F2811D"/>
+            <text x="196" y="691" class="sub" font-size="12">Compute</text>
+            <rect x="300" y="680" width="14" height="14" rx="3" style="fill:#3A35C9"/>
+            <text x="320" y="691" class="sub" font-size="12">Database</text>
+            <rect x="440" y="680" width="14" height="14" rx="3" style="fill:#E5317F"/>
+            <text x="460" y="691" class="sub" font-size="12">Integration</text>
+            <text x="1140" y="706" text-anchor="end" class="sub" font-size="11">akanjilal.dev</text>
+          </svg>
           <figcaption>Multi region. Idempotency keys and the ledger both replicate, so a failover neither loses a transaction nor processes one twice.</figcaption>
         </figure>
 
