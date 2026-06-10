@@ -156,3 +156,20 @@ a:focus-visible,.btn:focus-visible{outline:2px solid var(--accent);outline-offse
 .refs li a{color:var(--accent);border-bottom:1px solid color-mix(in srgb,var(--accent) 35%,transparent);word-break:break-word}
 .refs li a:hover{border-bottom-color:var(--accent)}
 .refs .src{font-family:"IBM Plex Mono",monospace;font-size:12.5px;color:var(--faint);display:block;margin-top:2px;word-break:break-all}
+
+/* inline architecture diagrams and infographics */
+.diagram{margin:30px 0}
+.diagram svg{width:100%;height:auto;display:block;font-family:"IBM Plex Sans",system-ui,sans-serif}
+.diagram .box{fill:var(--surface);stroke:var(--hairline);stroke-width:1.5}
+.diagram .boxa{fill:var(--accent-soft);stroke:var(--accent);stroke-width:1.5}
+.diagram .lbl{fill:var(--ink);font-family:"IBM Plex Mono",ui-monospace,monospace;font-weight:500}
+.diagram .sub{fill:var(--muted);font-family:"IBM Plex Sans",system-ui,sans-serif}
+.diagram .num{fill:var(--accent);font-family:"IBM Plex Mono",ui-monospace,monospace;font-weight:600}
+.diagram .conn{stroke:var(--hairline);stroke-width:1.5;fill:none}
+.diagram .conna{stroke:var(--accent);stroke-width:1.5;fill:none}
+.diagram .dot{fill:var(--accent)}
+.diagram .fillink{fill:var(--ink)}
+.diagram .fillmute{fill:var(--muted)}
+.diagram .bar{fill:var(--accent)}
+.diagram .bartrack{fill:var(--hairline)}
+.diagram .band{fill:var(--accent-soft);stroke:none}
