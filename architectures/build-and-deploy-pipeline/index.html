@@ -145,6 +145,28 @@
         <p><strong>Rationale.</strong> A second region meets the recovery requirement, and an admission check inside the cluster is a second, independent enforcement of the signing rule, so an image that somehow arrived unsigned still cannot run. This serves functional requirement 7 and the security attribute.</p>
         <p><strong>Consequences.</strong> The signing identity and the policy must be maintained in both regions, which is part of the cluster baseline.</p>
 
+        <h2>The engineering standards</h2>
+
+        <p>A pipeline only enforces what the team has agreed to. The standards below are the rules of the road, and the point of the pipeline is that it holds every one of them on every change rather than leaving them to memory or good intentions. The right hand column is where each standard stops being a document and becomes something that blocks.</p>
+
+        <table>
+          <thead><tr><th>Area</th><th>The standard</th><th>How the pipeline holds it</th></tr></thead>
+          <tbody>
+            <tr><td>Source control</td><td>Trunk based development, short lived branches, a protected main branch, and signed commits.</td><td>Branch protection rules, a linear history, and a signed commit check on every pull request.</td></tr>
+            <tr><td>Code review</td><td>At least one approving review, no self approval, and every comment resolved before merge.</td><td>Required reviews and a code owners file, enforced as merge conditions.</td></tr>
+            <tr><td>Infrastructure as code</td><td>All infrastructure defined in code, with no change made by hand in the console.</td><td>The pipeline runs the plan on a pull request and applies only from main, with drift detection.</td></tr>
+            <tr><td>Testing</td><td>Unit and integration tests above a coverage threshold, with contract tests on every interface.</td><td>Tests are a blocking gate, and coverage below the threshold fails the build.</td></tr>
+            <tr><td>Static analysis</td><td>Linting, formatting, type checks, and static application security testing on every change.</td><td>Each runs as a parallel gate, and a new finding fails the build rather than warning.</td></tr>
+            <tr><td>Dependencies and supply chain</td><td>Reviewed and pinned dependencies, a software bill of materials, and signed images with build provenance.</td><td>Software composition analysis is a gate, and the build attaches the bill of materials and the provenance to the signed image.</td></tr>
+            <tr><td>Secrets</td><td>No secret in source, and only short lived federated credentials at deploy time.</td><td>Secret scanning with push protection, and OpenID Connect federation in place of any stored key.</td></tr>
+            <tr><td>Container images</td><td>A minimal base image, run as a non root user, with no high or critical vulnerability.</td><td>Image scanning by Amazon Inspector is a gate, and a cluster admission policy refuses anything unsigned or unscanned.</td></tr>
+            <tr><td>Artifacts and versioning</td><td>Semantic versioning, and one immutable artifact promoted unchanged by its digest.</td><td>The image is built once and promoted by digest, with tag immutability in Amazon Elastic Container Registry.</td></tr>
+            <tr><td>Observability</td><td>Structured logs, traces, metrics, and health endpoints ship with every service.</td><td>A readiness check confirms the required signals before a deployment is promoted.</td></tr>
+            <tr><td>Release and rollback</td><td>Progressive delivery, automated rollback on a failed health check, and a recorded change.</td><td>Blue and green or GitOps with health gates, an automatic rollback, and a change record written for audit.</td></tr>
+            <tr><td>Ownership</td><td>Every service has a named owner and a runbook.</td><td>A code owners file and a required service manifest, checked on every change.</td></tr>
+          </tbody>
+        </table>
+
         <h2>The developer journey</h2>
 
         <p>The journey begins before the pipeline does. On the developer's own machine, fast checks run on every commit, formatting and linting, the unit tests, a quick secret scan, and a signed commit, so that the most common mistakes never even reach the repository. The change then arrives as a pull request, which cannot be merged directly and which triggers the pipeline. From there the work runs on a GitHub hosted runner through a sequence of stages, each of which can fail the build, ending in a signed image pushed to the registry and a deployment to either platform.</p>
