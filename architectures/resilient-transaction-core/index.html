@@ -350,6 +350,55 @@ table.put_item(
           </tbody>
         </table>
 
+        <p>The tiers say where things sit. The next view says how they talk, component by component, and what travels on each link.</p>
+
+        <figure class="diagram">
+          <svg viewBox="0 0 920 600" role="img" aria-label="Component and data flow in one region. The caller reaches the Ingress Gateway, which claims an idempotency key in Amazon DynamoDB and fans out to the parallel decision services, then enqueues work on Amazon SQS. A worker runs the Step Functions saga through the Posting Engine, which writes the Aurora ledger and the ElastiCache balance cache. The Event Publisher emits to Amazon EventBridge, which fans out to the consumers and to the isolated Scheme Connector that reaches the external scheme.">
+            <text x="20" y="24" class="lbl" font-size="13">Components and data flow, one region</text>
+
+            <!-- left pipeline -->
+            <rect class="boxa" x="50" y="44" width="300" height="30" rx="6"/><text x="62" y="63" class="lbl" font-size="11">Authenticated caller</text>
+            <rect class="boxa" x="50" y="100" width="300" height="44" rx="6"/><text x="62" y="119" class="lbl" font-size="11">Ingress Gateway</text><text x="62" y="134" class="sub" font-size="10">validate, authenticate, rate limit</text>
+            <rect class="box"  x="50" y="176" width="300" height="40" rx="6"/><text x="62" y="195" class="lbl" font-size="11">Work Queue</text><text x="62" y="209" class="sub" font-size="10">Amazon SQS, ordered, dead letter</text>
+            <rect class="boxa" x="50" y="252" width="300" height="44" rx="6"/><text x="62" y="271" class="lbl" font-size="11">Worker and Saga Orchestrator</text><text x="62" y="286" class="sub" font-size="10">AWS Step Functions, compensations</text>
+            <rect class="boxa" x="50" y="328" width="300" height="34" rx="6"/><text x="62" y="349" class="lbl" font-size="11">Posting Engine</text>
+            <rect class="boxa" x="50" y="394" width="300" height="34" rx="6"/><text x="62" y="415" class="lbl" font-size="11">Event Publisher</text>
+            <rect class="box"  x="50" y="460" width="300" height="40" rx="6"/><text x="62" y="479" class="lbl" font-size="11">Event bus</text><text x="62" y="493" class="sub" font-size="10">Amazon EventBridge</text>
+
+            <!-- vertical flow -->
+            <line class="conn" x1="200" y1="74" x2="200" y2="100"/><text x="210" y="91" class="sub" font-size="10">request</text>
+            <line class="conn" x1="200" y1="144" x2="200" y2="176"/><text x="210" y="164" class="sub" font-size="10">enqueue accepted work</text>
+            <line class="conn" x1="200" y1="216" x2="200" y2="252"/><text x="210" y="238" class="sub" font-size="10">poll, in transaction id order</text>
+            <line class="conn" x1="200" y1="296" x2="200" y2="328"/><text x="210" y="316" class="sub" font-size="10">reserve, debit, credit</text>
+            <line class="conn" x1="200" y1="362" x2="200" y2="394"/><text x="210" y="382" class="sub" font-size="10">on commit</text>
+            <line class="conn" x1="200" y1="428" x2="200" y2="460"/><text x="210" y="448" class="sub" font-size="10">settled event</text>
+
+            <!-- right column -->
+            <rect class="box"  x="560" y="44"  width="310" height="46" rx="6"/><text x="572" y="64"  class="lbl" font-size="11">Decision services, parallel</text><text x="572" y="80" class="sub" font-size="10">Risk, Screening, Limits, Account Directory</text>
+            <rect class="box"  x="560" y="110" width="310" height="40" rx="6"/><text x="572" y="129" class="lbl" font-size="11">Idempotency Store</text><text x="572" y="143" class="sub" font-size="10">Amazon DynamoDB global table</text>
+            <rect class="box"  x="560" y="320" width="310" height="40" rx="6"/><text x="572" y="339" class="lbl" font-size="11">Ledger</text><text x="572" y="353" class="sub" font-size="10">Amazon Aurora Global Database</text>
+            <rect class="box"  x="560" y="368" width="310" height="40" rx="6"/><text x="572" y="387" class="lbl" font-size="11">Balance Cache</text><text x="572" y="401" class="sub" font-size="10">Amazon ElastiCache</text>
+            <rect class="box"  x="560" y="448" width="310" height="46" rx="6"/><text x="572" y="468" class="lbl" font-size="11">Event consumers</text><text x="572" y="484" class="sub" font-size="10">Notification, Reconciliation, Analytics</text>
+            <rect class="boxa" x="560" y="510" width="310" height="40" rx="6"/><text x="572" y="529" class="lbl" font-size="11">Scheme Connector, isolated</text><text x="572" y="543" class="sub" font-size="10">signs with AWS CloudHSM</text>
+            <rect class="box"  x="560" y="560" width="310" height="30" rx="6"/><text x="572" y="579" class="lbl" font-size="11">External payment scheme</text>
+
+            <!-- cross links -->
+            <line class="conna" x1="350" y1="118" x2="560" y2="67"/><text x="372" y="100" class="sub" font-size="10">synchronous fan out, fail closed</text>
+            <line class="conna" x1="350" y1="132" x2="560" y2="130"/><text x="372" y="146" class="sub" font-size="10">claim key, conditional write</text>
+            <line class="conna" x1="350" y1="343" x2="560" y2="338"/><text x="372" y="332" class="sub" font-size="10">append, system of record</text>
+            <line class="conna" x1="350" y1="352" x2="560" y2="386"/><text x="372" y="378" class="sub" font-size="10">update projection</text>
+            <line class="conna" x1="350" y1="476" x2="560" y2="470"/><text x="372" y="462" class="sub" font-size="10">fan out</text>
+            <line class="conna" x1="350" y1="486" x2="560" y2="528"/><text x="372" y="512" class="sub" font-size="10">outbound instruction</text>
+            <line class="conna" x1="715" y1="550" x2="715" y2="560"/>
+            <text x="725" y="558" class="sub" font-size="10">AWS PrivateLink</text>
+
+            <circle class="dot" cx="200" cy="100" r="3"/>
+            <circle class="dot" cx="560" cy="130" r="3"/>
+            <circle class="dot" cx="560" cy="338" r="3"/>
+          </svg>
+          <figcaption>A closer view of the components and what flows between them. The synchronous path, from the caller through acceptance, is deliberately short. Everything after the Work Queue is asynchronous. The Idempotency Store and the Ledger both replicate to the second region, which is what makes the failover safe.</figcaption>
+        </figure>
+
         <h3>One transaction, end to end</h3>
         <ol>
           <li>An authenticated caller reaches the Ingress Gateway over AWS Cloud WAN. The gateway validates the request and asks the Idempotency Store to claim it with a conditional write. A duplicate stops here and returns the stored result of the original.</li>
@@ -370,7 +419,18 @@ table.put_item(
 
         <h2>The six pillars, made concrete</h2>
 
-        <p>Because this workload is judged on all six pillars, it is worth stating exactly how each is met rather than claiming it in passing. Operational excellence comes from defining the whole core as code and from being able to trace any single transaction through every step by its identifier. Security comes from authenticated entry, least privilege on every component, encryption in transit and at rest, and from running inside the landing zone production segment behind its inspection. Reliability comes from spreading every component across three availability zones, from idempotency that makes retries safe, from the saga that prevents half completed transactions, and from the rehearsed regional failover. Performance efficiency comes from queues that absorb spikes and processors that scale to demand rather than to peak. Cost optimization comes from paying for work done through serverless and managed components and from keeping the second region warm rather than fully scaled. Sustainability comes from the same elasticity, since capacity scaled to actual load consumes less than capacity provisioned for a peak that rarely arrives. This core is the kind of backbone that the other reference architectures publish their events to and rely on for anything that moves value.</p>
+        <p>Because this workload is judged on all six pillars of the Well Architected Framework, it is worth stating exactly how each one is met rather than claiming it in passing.</p>
+
+        <ul>
+          <li><strong>Operational excellence.</strong> The whole core is defined in infrastructure as code and delivered through the standby first, blue green pipeline, so a change is rehearsed in the second region before it touches the first. A single transaction identifier threads through the Ingress Gateway, the Work Queue, the saga, the Ledger, and the events, so any one transaction can be traced from end to end, and the same identifier keys the metrics and alarms that page a human before a customer notices.</li>
+          <li><strong>Security.</strong> Entry is authenticated and rate limited at the Ingress Gateway, every call between services inside the mesh is mutually authenticated, and the data subnets have no route to the public internet. The keys that authorise a movement never leave AWS CloudHSM, every store is encrypted at rest, and the core inherits the account isolation and centralised inspection of the landing zone production segment. The only way out is the isolated Scheme Connector over AWS PrivateLink.</li>
+          <li><strong>Reliability.</strong> Every component runs across three availability zones, so the loss of one is handled with no action. Idempotency makes every retry safe, the saga prevents a half moved transaction, and the rehearsed regional failover, backed by replicated idempotency keys and a replicated ledger, recovers from the loss of a whole region within minutes and without double processing.</li>
+          <li><strong>Performance efficiency.</strong> The synchronous path does almost nothing, so acceptance stays inside the 99th percentile target of 250 milliseconds even under load. The Work Queue absorbs a surge while the worker fleet scales on its depth, and the Balance Cache keeps hot reads off the ledger, which together hold a sustained rate of about 2,000 transactions per second and absorb peaks near 8,000.</li>
+          <li><strong>Cost optimisation.</strong> Compute runs on Amazon EKS with Fargate and AWS Lambda and follows demand rather than a provisioned peak, so the bill tracks real work. The second region is kept warm rather than fully scaled, which meets the recovery objective at a fraction of the cost of a pair that is fully active in both regions.</li>
+          <li><strong>Sustainability.</strong> The same elasticity is the sustainability story. Capacity scaled to actual load draws less power than capacity provisioned for a peak that rarely arrives, and the managed and serverless components share their underlying hardware across many tenants rather than sitting idle.</li>
+        </ul>
+
+        <p>This core is the kind of backbone that the other reference architectures publish their events to and rely on for anything that moves value.</p>
       </div>
 
       <section class="prose refs">
