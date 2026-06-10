@@ -173,3 +173,6 @@ a:focus-visible,.btn:focus-visible{outline:2px solid var(--accent);outline-offse
 .diagram .bar{fill:var(--accent)}
 .diagram .bartrack{fill:var(--hairline)}
 .diagram .band{fill:var(--accent-soft);stroke:none}
+
+/* rendered infographic images */
+.diagram img{width:100%;height:auto;display:block}
