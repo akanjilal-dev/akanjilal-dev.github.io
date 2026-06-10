@@ -151,7 +151,7 @@
             <tr><td>Edge and entry</td><td>Terminate the connection, filter hostile traffic, authenticate the caller, and apply a first rate limit before anything reaches the core.</td><td>Amazon CloudFront, AWS WAF, an authenticated API behind a private load balancer</td></tr>
             <tr><td>Ingestion and idempotency</td><td>Validate the request, claim its idempotency key, and either accept it once or return the result of the accepted original. Nothing past this layer runs twice for the same key.</td><td>A thin ingestion function and a DynamoDB idempotency table with a conditional write</td></tr>
             <tr><td>Durable buffer</td><td>Hold accepted work safely so that a spike or a slow downstream never drops a transaction, and so the processors scale independently of the arrival rate.</td><td>Amazon SQS, with a dead letter queue for anything that cannot be processed after retries</td></tr>
-            <tr><td>Processing and orchestration</td><td>Pull work from the buffer, run the saga that moves the money, and decide success, retry, or compensation for each step.</td><td>AWS Lambda or AWS Fargate workers driving an AWS Step Functions saga</td></tr>
+            <tr><td>Processing and orchestration</td><td>Pull work from the buffer, run the saga that moves the money, and decide success, retry, or compensation for each step.</td><td>Amazon EKS with Fargate workers driving an AWS Step Functions saga</td></tr>
             <tr><td>System of record</td><td>Append every movement to an ordered, immutable ledger and keep a summarized balance for fast reads. This layer is the truth.</td><td>Amazon Aurora for the ledger, with an immutable archive in Amazon S3 under Object Lock</td></tr>
             <tr><td>Eventing</td><td>Publish a domain event for every committed transaction so that downstream systems react without being wired into the core.</td><td>Amazon EventBridge, with one bus and well defined event schemas</td></tr>
             <tr><td>Observability</td><td>Trace any single transaction through every layer by its identifier, and alarm on what matters before a human notices.</td><td>AWS X-Ray traces, structured logs, and CloudWatch metrics and alarms</td></tr>
@@ -165,6 +165,26 @@
         <p>Inside the core, two communication styles do different jobs. A command, which is an instruction to do one specific thing such as debit this payer, travels on a queue to exactly one processor, so that it is handled once and can be retried safely if the processor dies mid step. An event, which is a statement that something has already happened such as this transaction settled, is published to the bus, where any number of consumers may read it, now or later, without the core knowing they exist. Commands are point to point and carry intent. Events are broadcast and carry fact.</p>
 
         <p>Three rules keep that communication reliable. First, every message carries the transaction identifier and the idempotency key, so a redelivery, which a durable queue will eventually cause, is recognized and ignored rather than acted on twice. Second, failures retry with exponential backoff a bounded number of times, and anything that still fails lands in a dead letter queue for inspection rather than blocking the line behind it or being silently dropped. Third, where the order of operations matters, the queue is configured for strict ordering on the transaction identifier, so the steps of one transaction never overtake each other while unrelated transactions still run in parallel. The result is a system that absorbs a surge by letting the queue grow, drains it as the processors scale out, and never confuses backpressure with data loss.</p>
+
+        <h2>The wider system, and the services the core depends on</h2>
+
+        <p>The core does one thing well and delegates everything else, so in practice it sits at the centre of a small constellation of services rather than standing alone. Before a transaction posts, it consults a few decision services and treats their answers as part of the contract. After a transaction commits, it informs a wider set that react on their own time. Naming these and being explicit about which calls block matters, because every synchronous dependency is part of the acceptance latency budget and part of the failure surface.</p>
+
+        <table>
+          <thead><tr><th>Service</th><th>Responsibility</th><th>Interaction</th></tr></thead>
+          <tbody>
+            <tr><td>Risk Decision</td><td>Scores the transaction for fraud and returns allow, deny, or step up.</td><td>Synchronous, hard deadline, fails closed</td></tr>
+            <tr><td>Screening</td><td>Checks the payer and payee against sanctions and watchlists.</td><td>Synchronous, hard deadline, fails closed</td></tr>
+            <tr><td>Limits</td><td>Enforces per account and per window value and velocity limits.</td><td>Synchronous, backed by an in memory store</td></tr>
+            <tr><td>Account Directory</td><td>Resolves account status, ownership, and eligibility.</td><td>Synchronous, cached</td></tr>
+            <tr><td>Notification</td><td>Tells the customer the outcome.</td><td>Asynchronous, on a domain event</td></tr>
+            <tr><td>Reconciliation and Settlement</td><td>Nets and settles to the scheme and reconciles the ledger against the scheme statement.</td><td>Asynchronous</td></tr>
+            <tr><td>Analytics sink</td><td>Lands every event for reporting and modelling.</td><td>Asynchronous</td></tr>
+            <tr><td>Scheme Connector</td><td>Carries the outbound instruction to the external network and ingests its responses.</td><td>Asynchronous, isolated</td></tr>
+          </tbody>
+        </table>
+
+        <p>The four synchronous services share the acceptance budget, so the core calls them in parallel rather than in sequence, gives each its own short timeout, and treats a missed answer exactly as it treats a deny. In a payments system a risk service that does not answer in time is not a reason to take the risk, so the default on a timeout is to refuse the transaction cleanly with a reason the caller can act on. These services are usually owned by other teams and run in their own accounts inside the landing zone, reached over private connectivity, so the core depends on their published contracts and never on their internals.</p>
 
         <h2>The saga and idempotency</h2>
 
@@ -247,15 +267,110 @@ table.put_item(
 
         <p>Because the keys and the ledger both crossed the boundary before any failure, the two outcomes that matter most are both closed off. A transaction in flight is never lost, because it was either not yet accepted, in which case the caller retries cleanly, or already accepted and replicated, in which case the standby recognizes it. And a transaction is never applied twice, because the replicated idempotency key rejects the duplicate on whichever region serves the retry. That is what zero data loss means here in practice, stated as two failure modes that cannot happen rather than as a number on a slide.</p>
 
-        <h2>How it is deployed</h2>
+        <h2>The deployment architecture</h2>
 
-        <p>The entire core is defined as code and deployed through a pipeline rather than by hand, which is what makes it reproducible across two regions and auditable after the fact. The infrastructure is described in AWS Cloud Development Kit stacks, one set per region with the region as a parameter, so the standby is the same definition as the primary rather than a hand built copy that has drifted. Application changes flow through a pipeline that runs the tests, deploys to the standby region first, runs a synthetic transaction end to end, and only then promotes to the primary, with a blue green cutover so that a bad release is rolled back in seconds rather than recovered from over hours.</p>
+        <p>Everything above describes behaviour. This is where it physically lives. Each region is a single Virtual Private Cloud spread across three availability zones and divided into four subnet tiers, attached to the rest of the organisation through AWS Cloud WAN, and able to reach the external payment scheme only from an isolated connector. The second region is the same definition with the region as a parameter, not a hand built copy.</p>
 
-        <p>The core runs inside the production segment of the landing zone described elsewhere in these architectures, so it inherits that foundation's account isolation, centralised inspection, and guardrails rather than reinventing them. Every component is spread across at least two availability zones in its region, so the loss of a single zone is handled automatically with no action and no recovery objective to meet. Compute is serverless where the work is short and event shaped, on AWS Lambda, and on AWS Fargate where a longer running worker suits the step better, and in both cases capacity follows demand rather than being provisioned for a peak that rarely arrives. Secrets and keys are held in AWS Secrets Manager and AWS Key Management Service, every store is encrypted at rest, every call is encrypted in transit, and every component runs with the least privilege it needs and nothing more.</p>
+        <figure class="diagram">
+          <svg viewBox="0 0 900 575" role="img" aria-label="Deployment view of one region. A Virtual Private Cloud across three availability zones with ingress, application, data, and egress subnet tiers. Core services run on Amazon EKS with Fargate behind a mutually authenticated mesh, and an isolated scheme connector reaches the external payment scheme over AWS PrivateLink.">
+            <text x="20" y="24" class="lbl" font-size="13">Deployment view, one region (the second region is identical)</text>
+
+            <rect class="boxa" x="300" y="40" width="300" height="32" rx="8"/>
+            <text x="316" y="60" class="lbl" font-size="11">Authenticated callers, via AWS Cloud WAN</text>
+            <line class="conn" x1="450" y1="72" x2="450" y2="92"/>
+            <circle class="dot" cx="450" cy="92" r="3"/>
+
+            <rect class="box" x="24" y="92" width="852" height="410" rx="12"/>
+            <text x="40" y="114" class="lbl" font-size="12">Region Virtual Private Cloud, three availability zones</text>
+
+            <rect class="band" x="40" y="126" width="820" height="54" rx="8"/>
+            <text x="52" y="142" class="sub" font-size="10.5">Ingress subnets, private</text>
+            <rect class="boxa" x="52" y="148" width="300" height="26" rx="6"/>
+            <text x="64" y="165" class="lbl" font-size="11">Ingress Gateway</text>
+            <text x="372" y="165" class="sub" font-size="11">authenticate, rate limit, claim the idempotency key</text>
+
+            <rect class="band" x="40" y="188" width="820" height="96" rx="8"/>
+            <text x="52" y="204" class="sub" font-size="10.5">Application subnets, private. Amazon EKS with Fargate behind a mutual authentication mesh</text>
+            <rect class="boxa" x="52" y="212" width="190" height="30" rx="6"/><text x="64" y="231" class="lbl" font-size="11">Saga Orchestrator</text>
+            <rect class="boxa" x="252" y="212" width="190" height="30" rx="6"/><text x="264" y="231" class="lbl" font-size="11">Posting Engine</text>
+            <rect class="boxa" x="452" y="212" width="190" height="30" rx="6"/><text x="464" y="231" class="lbl" font-size="11">Event Publisher</text>
+            <rect class="boxa" x="652" y="212" width="190" height="30" rx="6"/><text x="664" y="231" class="lbl" font-size="11">Worker fleet</text>
+            <text x="52" y="270" class="sub" font-size="11">AWS Step Functions drives the saga. Workers drain the Work Queue, on Amazon SQS, and scale on its depth.</text>
+
+            <rect class="band" x="40" y="292" width="820" height="92" rx="8"/>
+            <text x="52" y="308" class="sub" font-size="10.5">Data subnets, private, no route to the internet</text>
+            <rect class="box" x="52" y="316" width="190" height="30" rx="6"/><text x="64" y="335" class="lbl" font-size="11">Idempotency Store</text>
+            <rect class="box" x="252" y="316" width="190" height="30" rx="6"/><text x="264" y="335" class="lbl" font-size="11">Ledger</text>
+            <rect class="box" x="452" y="316" width="190" height="30" rx="6"/><text x="464" y="335" class="lbl" font-size="11">Balance Cache</text>
+            <rect class="box" x="652" y="316" width="190" height="30" rx="6"/><text x="664" y="335" class="lbl" font-size="11">Signing</text>
+            <text x="52" y="372" class="sub" font-size="11">DynamoDB global table, Aurora Global Database, ElastiCache, AWS CloudHSM. Reached through interface endpoints.</text>
+
+            <rect class="band" x="40" y="392" width="820" height="54" rx="8"/>
+            <text x="52" y="408" class="sub" font-size="10.5">Egress and inspection subnets</text>
+            <rect class="boxa" x="52" y="414" width="300" height="26" rx="6"/>
+            <text x="64" y="431" class="lbl" font-size="11">Scheme Connector, isolated</text>
+            <text x="372" y="431" class="sub" font-size="11">outbound only, signs messages with AWS CloudHSM</text>
+
+            <line class="conna" x1="202" y1="440" x2="202" y2="520"/>
+            <circle class="dot" cx="202" cy="520" r="3"/>
+            <rect class="boxa" x="52" y="520" width="300" height="32" rx="8"/>
+            <text x="64" y="540" class="lbl" font-size="11">External payment scheme and partner banks</text>
+            <text x="372" y="540" class="sub" font-size="11">via AWS PrivateLink, with a Direct Connect fallback</text>
+          </svg>
+          <figcaption>One region. Four private subnet tiers inside the Virtual Private Cloud, the core services on Amazon EKS with Fargate behind a mutually authenticated mesh, and the only path to the external scheme through an isolated connector. The second region is identical. The decision services live in adjacent accounts reached over AWS Cloud WAN.</figcaption>
+        </figure>
+
+        <p>The subnet tiers separate concerns so that a fault or a compromise in one does not become a fault in another.</p>
+
+        <table>
+          <thead><tr><th>Tier</th><th>What runs there</th><th>Reachability</th></tr></thead>
+          <tbody>
+            <tr><td>Ingress</td><td>The Ingress Gateway and an internal load balancer.</td><td>Reachable only from the organisation network over AWS Cloud WAN, never from the public internet.</td></tr>
+            <tr><td>Application</td><td>The core domain services on Amazon EKS with Fargate, behind a mesh that mutually authenticates every service to service call.</td><td>East to west traffic only, inside the mesh.</td></tr>
+            <tr><td>Data</td><td>The ledger, the idempotency store, the balance cache, the signing cluster, and the interface endpoints for the regional services.</td><td>No route to the public internet at all.</td></tr>
+            <tr><td>Egress and inspection</td><td>The isolated Scheme Connector and centralised outbound inspection.</td><td>The only tier permitted to reach outside the Virtual Private Cloud, and only to the scheme.</td></tr>
+          </tbody>
+        </table>
+
+        <p>Each named component has a clear home and a clear runtime.</p>
+
+        <table>
+          <thead><tr><th>Component</th><th>Tier</th><th>Runs on</th></tr></thead>
+          <tbody>
+            <tr><td>Ingress Gateway</td><td>Ingress</td><td>Amazon EKS with Fargate, behind an internal load balancer</td></tr>
+            <tr><td>Saga Orchestrator</td><td>Application</td><td>AWS Step Functions, driven by Amazon EKS workers</td></tr>
+            <tr><td>Posting Engine</td><td>Application</td><td>Amazon EKS with Fargate</td></tr>
+            <tr><td>Event Publisher</td><td>Application</td><td>Amazon EKS with Fargate, writing to Amazon EventBridge</td></tr>
+            <tr><td>Work Queue</td><td>Application</td><td>Amazon SQS, reached through an interface endpoint</td></tr>
+            <tr><td>Idempotency Store</td><td>Data</td><td>Amazon DynamoDB global table</td></tr>
+            <tr><td>Ledger</td><td>Data</td><td>Amazon Aurora Global Database</td></tr>
+            <tr><td>Balance Cache</td><td>Data</td><td>Amazon ElastiCache, fronting the Aurora read replicas</td></tr>
+            <tr><td>Signing</td><td>Data</td><td>AWS CloudHSM</td></tr>
+            <tr><td>Scheme Connector</td><td>Egress and inspection</td><td>Amazon EKS with Fargate, AWS PrivateLink to the scheme with a Direct Connect fallback</td></tr>
+          </tbody>
+        </table>
+
+        <h3>One transaction, end to end</h3>
+        <ol>
+          <li>An authenticated caller reaches the Ingress Gateway over AWS Cloud WAN. The gateway validates the request and asks the Idempotency Store to claim it with a conditional write. A duplicate stops here and returns the stored result of the original.</li>
+          <li>The gateway calls the Risk Decision, Screening, Limits, and Account Directory services in parallel, each with a short deadline. Any deny, and any timeout, ends the transaction with a clear reason. This is the only synchronous fan out, and it is what the acceptance latency is spent on.</li>
+          <li>On a clean decision the gateway places the work on the Work Queue and returns accepted to the caller. The acceptance path is complete, well inside the objective of a 99th percentile under 250 milliseconds.</li>
+          <li>A worker in the application tier starts the Saga Orchestrator, which reserves funds, debits the payer, and credits the payee through the Posting Engine, each step idempotent and each with a compensation.</li>
+          <li>The Posting Engine appends every movement to the Ledger and updates the Balance Cache for fast reads. The ledger is the system of record.</li>
+          <li>The Event Publisher emits a settled event. The Notification, Reconciliation, and Analytics services react on their own time, and the Scheme Connector carries the instruction outward over the isolated path, signing it inside the hardware security module.</li>
+        </ol>
+
+        <h3>Scale, delivery, and key custody</h3>
+
+        <p>The worker fleet scales on the depth of the Work Queue rather than on a fixed size, which lets the core hold a sustained rate of about 2,000 transactions per second and absorb peaks near 8,000 by letting the queue grow and draining it as workers scale out. Capacity follows demand rather than being provisioned for a peak that rarely arrives.</p>
+
+        <p>The whole core is defined in AWS Cloud Development Kit stacks and delivered through a pipeline that runs the tests, deploys to the standby region first, runs a synthetic transaction from end to end, and only then promotes the primary, with a blue green cutover so that a bad release is reversed in seconds rather than recovered from over hours. The core sits in the production segment of the landing zone described elsewhere in these architectures and inherits its account isolation, its centralised inspection, and its guardrails.</p>
+
+        <p>Operations that move money are signed inside AWS CloudHSM, so the keys that authorise a movement never leave the hardware security module. Every store is encrypted at rest, every call between services is mutually authenticated inside the mesh, and the components that touch payment data sit inside a clearly drawn compliance boundary, which keeps the scope of the relevant standard small and auditable. Every component runs with the least privilege it needs and nothing more.</p>
 
         <h2>The six pillars, made concrete</h2>
 
-        <p>Because this workload is judged on all six pillars, it is worth stating exactly how each is met rather than claiming it in passing. Operational excellence comes from defining the whole core as code and from being able to trace any single transaction through every step by its identifier. Security comes from authenticated entry, least privilege on every component, encryption in transit and at rest, and from running inside the landing zone production segment behind its inspection. Reliability comes from spreading every component across two availability zones, from idempotency that makes retries safe, from the saga that prevents half completed transactions, and from the rehearsed regional failover. Performance efficiency comes from queues that absorb spikes and processors that scale to demand rather than to peak. Cost optimization comes from paying for work done through serverless and managed components and from keeping the second region warm rather than fully scaled. Sustainability comes from the same elasticity, since capacity scaled to actual load consumes less than capacity provisioned for a peak that rarely arrives. This core is the kind of backbone that the other reference architectures publish their events to and rely on for anything that moves value.</p>
+        <p>Because this workload is judged on all six pillars, it is worth stating exactly how each is met rather than claiming it in passing. Operational excellence comes from defining the whole core as code and from being able to trace any single transaction through every step by its identifier. Security comes from authenticated entry, least privilege on every component, encryption in transit and at rest, and from running inside the landing zone production segment behind its inspection. Reliability comes from spreading every component across three availability zones, from idempotency that makes retries safe, from the saga that prevents half completed transactions, and from the rehearsed regional failover. Performance efficiency comes from queues that absorb spikes and processors that scale to demand rather than to peak. Cost optimization comes from paying for work done through serverless and managed components and from keeping the second region warm rather than fully scaled. Sustainability comes from the same elasticity, since capacity scaled to actual load consumes less than capacity provisioned for a peak that rarely arrives. This core is the kind of backbone that the other reference architectures publish their events to and rely on for anything that moves value.</p>
       </div>
 
       <section class="prose refs">
@@ -268,6 +383,11 @@ table.put_item(
           <li>Amazon Web Services, Amazon DynamoDB global tables.<span class="src">https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/GlobalTables.html</span></li>
           <li>Amazon Web Services, Amazon Aurora Global Database.<span class="src">https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/aurora-global-database.html</span></li>
           <li>Amazon Web Services, Amazon EventBridge.<span class="src">https://docs.aws.amazon.com/eventbridge/latest/userguide/eb-what-is.html</span></li>
+          <li>Amazon Web Services, Amazon Elastic Kubernetes Service with Fargate.<span class="src">https://docs.aws.amazon.com/eks/latest/userguide/fargate.html</span></li>
+          <li>Amazon Web Services, AWS Cloud WAN.<span class="src">https://docs.aws.amazon.com/network-manager/latest/cloudwan/what-is-cloudwan.html</span></li>
+          <li>Amazon Web Services, AWS PrivateLink.<span class="src">https://docs.aws.amazon.com/vpc/latest/privatelink/what-is-privatelink.html</span></li>
+          <li>Amazon Web Services, AWS CloudHSM.<span class="src">https://docs.aws.amazon.com/cloudhsm/latest/userguide/introduction.html</span></li>
+          <li>Amazon Web Services, Amazon ElastiCache.<span class="src">https://docs.aws.amazon.com/AmazonElastiCache/latest/dg/WhatIs.html</span></li>
         </ol>
       </section>
 
