@@ -141,6 +141,31 @@
           <figcaption>The event driven core. Accept and make idempotent, queue, process, coordinate the saga, record in the ledger, and publish events.</figcaption>
         </figure>
 
+        <h2>The layers, end to end</h2>
+
+        <p>It helps to walk the core one layer at a time, because each has a single job and a clear contract with the layers on either side of it. A transaction touches all of them in order on the way in, and the resilience of the whole comes from each layer being able to scale, retry, and fail on its own.</p>
+
+        <table>
+          <thead><tr><th>Layer</th><th>Responsibility</th><th>Built with</th></tr></thead>
+          <tbody>
+            <tr><td>Edge and entry</td><td>Terminate the connection, filter hostile traffic, authenticate the caller, and apply a first rate limit before anything reaches the core.</td><td>Amazon CloudFront, AWS WAF, an authenticated API behind a private load balancer</td></tr>
+            <tr><td>Ingestion and idempotency</td><td>Validate the request, claim its idempotency key, and either accept it once or return the result of the accepted original. Nothing past this layer runs twice for the same key.</td><td>A thin ingestion function and a DynamoDB idempotency table with a conditional write</td></tr>
+            <tr><td>Durable buffer</td><td>Hold accepted work safely so that a spike or a slow downstream never drops a transaction, and so the processors scale independently of the arrival rate.</td><td>Amazon SQS, with a dead letter queue for anything that cannot be processed after retries</td></tr>
+            <tr><td>Processing and orchestration</td><td>Pull work from the buffer, run the saga that moves the money, and decide success, retry, or compensation for each step.</td><td>AWS Lambda or AWS Fargate workers driving an AWS Step Functions saga</td></tr>
+            <tr><td>System of record</td><td>Append every movement to an ordered, immutable ledger and keep a summarized balance for fast reads. This layer is the truth.</td><td>Amazon Aurora for the ledger, with an immutable archive in Amazon S3 under Object Lock</td></tr>
+            <tr><td>Eventing</td><td>Publish a domain event for every committed transaction so that downstream systems react without being wired into the core.</td><td>Amazon EventBridge, with one bus and well defined event schemas</td></tr>
+            <tr><td>Observability</td><td>Trace any single transaction through every layer by its identifier, and alarm on what matters before a human notices.</td><td>AWS X-Ray traces, structured logs, and CloudWatch metrics and alarms</td></tr>
+          </tbody>
+        </table>
+
+        <h2>How the services talk to each other</h2>
+
+        <p>The most important boundary in the core is the line between synchronous and asynchronous communication, and it is drawn deliberately. The caller talks to the core synchronously for exactly one thing, which is to have its transaction accepted and made idempotent. That call is fast and does almost no work, so it stays available under load. Everything after acceptance is asynchronous, because the moment work is on a durable queue it cannot be lost, and the parts that do the real work scale and fail without the caller ever waiting on them.</p>
+
+        <p>Inside the core, two communication styles do different jobs. A command, which is an instruction to do one specific thing such as debit this payer, travels on a queue to exactly one processor, so that it is handled once and can be retried safely if the processor dies mid step. An event, which is a statement that something has already happened such as this transaction settled, is published to the bus, where any number of consumers may read it, now or later, without the core knowing they exist. Commands are point to point and carry intent. Events are broadcast and carry fact.</p>
+
+        <p>Three rules keep that communication reliable. First, every message carries the transaction identifier and the idempotency key, so a redelivery, which a durable queue will eventually cause, is recognized and ignored rather than acted on twice. Second, failures retry with exponential backoff a bounded number of times, and anything that still fails lands in a dead letter queue for inspection rather than blocking the line behind it or being silently dropped. Third, where the order of operations matters, the queue is configured for strict ordering on the transaction identifier, so the steps of one transaction never overtake each other while unrelated transactions still run in parallel. The result is a system that absorbs a surge by letting the queue grow, drains it as the processors scale out, and never confuses backpressure with data loss.</p>
+
         <h2>The saga and idempotency</h2>
 
         <p>The saga is an explicit state machine. Funds are reserved, the payer is debited, the payee is credited, and the result is confirmed and emitted, and every step has a compensating action so that a failure late in the sequence reverses the earlier steps rather than leaving the transaction half done. Because each step is idempotent and keyed on the transaction identifier, a retry repeats the intent without repeating the effect.</p>
@@ -181,6 +206,18 @@
   }
 }</code></pre>
 
+        <p>Idempotency is enforced at the only place it can be, which is the first write. Before any work begins, the ingestion layer attempts to claim the transaction with a conditional write keyed on the idempotency key. If the claim succeeds, this is the first time the request has been seen and processing proceeds. If the claim fails because the key already exists, the request is a retry, and the core returns the stored result of the original rather than doing the work again. The whole guarantee rests on this one atomic operation.</p>
+
+        <pre><code># claim the transaction exactly once; a retry hits the condition and is rejected
+table.put_item(
+    Item={"pk": idempotency_key, "status": "ACCEPTED", "result": None,
+          "ttl": now + RETENTION_SECONDS},
+    ConditionExpression="attribute_not_exists(pk)",
+)
+# ConditionalCheckFailedException  means already seen:
+#   read the stored record and return its result, do not reprocess
+</code></pre>
+
         <h2>Across two regions</h2>
 
         <p>The core runs in two regions. Idempotency keys replicate through DynamoDB global tables, the ledger replicates through Aurora Global Database with a recovery point objective near zero, and Amazon Route 53 with the Application Recovery Controller directs traffic and supports a controlled failover. The combination of replicated keys and a replicated ledger is what makes the failover safe. A request that was in flight when the primary region failed can be retried against the standby and will be recognized as already seen, so it is never applied a second time.</p>
@@ -189,6 +226,32 @@
           <img src="/assets/img/txn-multiregion.png" alt="Two regions with DynamoDB global tables for idempotency, Aurora Global Database for the ledger, and Route 53 failover" loading="lazy">
           <figcaption>Multi region. Idempotency keys and the ledger both replicate, so a failover neither loses a transaction nor processes one twice.</figcaption>
         </figure>
+
+        <h2>How the data replicates, and why nothing is lost</h2>
+
+        <p>Zero data loss is a property of the data layer, not a slogan, so it is worth being precise about how each piece of state crosses the region boundary and what guarantee that gives. There are three kinds of state, and each replicates in the way that suits it.</p>
+
+        <p>The idempotency keys live in a DynamoDB global table, which replicates every write to the second region within a second or two, in both directions. This is the piece that makes a failover safe rather than dangerous. A transaction accepted in the primary region just before it failed has already had its key replicated, so when the caller retries against the standby, the conditional claim fails exactly as it would have in the primary, and the transaction is recognized as already seen rather than applied a second time.</p>
+
+        <p>The ledger, which is the system of record, lives in an Amazon Aurora Global Database. Aurora replicates at the storage layer, typically with under a second of lag and a recovery point objective measured in single digit seconds, and a healthy secondary can be promoted to a full read and write primary in about a minute. Writes go to one region at a time, which avoids the risk of two regions disagreeing about a balance, and the standby is kept warm and current rather than cold. For the strongest durability the immutable archive of the ledger is written to Amazon S3 under Object Lock and replicated across regions, so even the catastrophic loss of a database leaves an independent, tamper proof copy of every movement.</p>
+
+        <p>Traffic is steered by Amazon Route 53 with the Application Recovery Controller, whose routing controls turn a failover into a deliberate, rehearsed switch rather than a guess made under pressure. A regional failover then follows a short, practiced runbook.</p>
+
+        <ol>
+          <li>Confirm the primary is genuinely unhealthy and stop new work from entering it.</li>
+          <li>Promote the Aurora secondary in the standby region to primary.</li>
+          <li>Flip the Route 53 routing control so the entry points resolve to the standby.</li>
+          <li>Let the standby processors drain the replicated queue. The idempotency keys are already present, so any in flight retries settle exactly once.</li>
+          <li>Confirm the ledger and the idempotency table agree, then bring the original region back up as the new standby.</li>
+        </ol>
+
+        <p>Because the keys and the ledger both crossed the boundary before any failure, the two outcomes that matter most are both closed off. A transaction in flight is never lost, because it was either not yet accepted, in which case the caller retries cleanly, or already accepted and replicated, in which case the standby recognizes it. And a transaction is never applied twice, because the replicated idempotency key rejects the duplicate on whichever region serves the retry. That is what zero data loss means here in practice, stated as two failure modes that cannot happen rather than as a number on a slide.</p>
+
+        <h2>How it is deployed</h2>
+
+        <p>The entire core is defined as code and deployed through a pipeline rather than by hand, which is what makes it reproducible across two regions and auditable after the fact. The infrastructure is described in AWS Cloud Development Kit stacks, one set per region with the region as a parameter, so the standby is the same definition as the primary rather than a hand built copy that has drifted. Application changes flow through a pipeline that runs the tests, deploys to the standby region first, runs a synthetic transaction end to end, and only then promotes to the primary, with a blue green cutover so that a bad release is rolled back in seconds rather than recovered from over hours.</p>
+
+        <p>The core runs inside the production segment of the landing zone described elsewhere in these architectures, so it inherits that foundation's account isolation, centralised inspection, and guardrails rather than reinventing them. Every component is spread across at least two availability zones in its region, so the loss of a single zone is handled automatically with no action and no recovery objective to meet. Compute is serverless where the work is short and event shaped, on AWS Lambda, and on AWS Fargate where a longer running worker suits the step better, and in both cases capacity follows demand rather than being provisioned for a peak that rarely arrives. Secrets and keys are held in AWS Secrets Manager and AWS Key Management Service, every store is encrypted at rest, every call is encrypted in transit, and every component runs with the least privilege it needs and nothing more.</p>
 
         <h2>The six pillars, made concrete</h2>
 
@@ -210,7 +273,6 @@
 
       <div class="article-foot">
         <div class="cta-row">
-          <a class="btn primary" href="https://github.com/akanjilal-work/reference-architectures">See the repository</a>
           <a class="btn" href="/architectures/">More architectures</a>
         </div>
       </div>

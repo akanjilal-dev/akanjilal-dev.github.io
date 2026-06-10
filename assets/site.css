@@ -188,7 +188,7 @@ a:focus-visible,.btn:focus-visible{outline:2px solid var(--accent);outline-offse
 
 /* collapsible card grids (Selected work + Reference architectures): show 3, expand for the rest */
 .cards.collapsed > *:nth-child(n+4){display:none}
-.show-more{display:inline-block;margin-top:18px;font-family:"IBM Plex Mono",monospace;font-size:13px;
-  padding:9px 16px;border-radius:9px;border:1px solid var(--hairline);background:var(--surface);color:var(--ink);
-  cursor:pointer;transition:border-color .15s,transform .12s}
-.show-more:hover{border-color:var(--accent);transform:translateY(-1px)}
+.show-more{display:inline-block;margin-top:20px;font-family:"IBM Plex Mono",monospace;font-size:13.5px;font-weight:500;
+  padding:11px 20px;border-radius:9px;border:1px solid var(--accent);background:var(--accent);color:#fff;
+  cursor:pointer;transition:background .15s,transform .12s,box-shadow .15s}
+.show-more:hover{background:var(--accent-ink);transform:translateY(-1px);box-shadow:0 8px 22px -12px color-mix(in srgb,var(--accent) 70%,transparent)}

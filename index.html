@@ -213,10 +213,10 @@
     var btn = document.createElement("button");
     btn.className = "show-more mono";
     btn.type = "button";
-    btn.textContent = "Show all " + total;
+    btn.textContent = "Show more";
     btn.addEventListener("click", function () {
       var collapsed = grid.classList.toggle("collapsed");
-      btn.textContent = collapsed ? "Show all " + total : "Show less";
+      btn.textContent = collapsed ? "Show more" : "Show less";
     });
     grid.insertAdjacentElement("afterend", btn);
   });
