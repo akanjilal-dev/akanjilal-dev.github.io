@@ -353,7 +353,7 @@ table.put_item(
         <p>The tiers say where things sit. The next view says how they talk, component by component, and what travels on each link.</p>
 
         <figure class="diagram">
-          <svg viewBox="0 0 920 600" role="img" aria-label="Component and data flow in one region. The caller reaches the Ingress Gateway, which claims an idempotency key in Amazon DynamoDB and fans out to the parallel decision services, then enqueues work on Amazon SQS. A worker runs the Step Functions saga through the Posting Engine, which writes the Aurora ledger and the ElastiCache balance cache. The Event Publisher emits to Amazon EventBridge, which fans out to the consumers and to the isolated Scheme Connector that reaches the external scheme.">
+          <svg viewBox="0 0 920 612" role="img" aria-label="Component and data flow in one region. The caller reaches the Ingress Gateway, which claims an idempotency key in Amazon DynamoDB and fans out to the parallel decision services, then enqueues work on Amazon SQS. A worker runs the Step Functions saga through the Posting Engine, which writes the Aurora ledger and the ElastiCache balance cache. The Event Publisher emits to Amazon EventBridge, which fans out to the consumers and to the isolated Scheme Connector that reaches the external scheme.">
             <text x="20" y="24" class="lbl" font-size="13">Components and data flow, one region</text>
 
             <!-- left pipeline -->
@@ -380,21 +380,36 @@ table.put_item(
             <rect class="box"  x="560" y="368" width="310" height="40" rx="6"/><text x="572" y="387" class="lbl" font-size="11">Balance Cache</text><text x="572" y="401" class="sub" font-size="10">Amazon ElastiCache</text>
             <rect class="box"  x="560" y="448" width="310" height="46" rx="6"/><text x="572" y="468" class="lbl" font-size="11">Event consumers</text><text x="572" y="484" class="sub" font-size="10">Notification, Reconciliation, Analytics</text>
             <rect class="boxa" x="560" y="510" width="310" height="40" rx="6"/><text x="572" y="529" class="lbl" font-size="11">Scheme Connector, isolated</text><text x="572" y="543" class="sub" font-size="10">signs with AWS CloudHSM</text>
-            <rect class="box"  x="560" y="560" width="310" height="30" rx="6"/><text x="572" y="579" class="lbl" font-size="11">External payment scheme</text>
+            <rect class="box"  x="560" y="576" width="310" height="30" rx="6"/><text x="572" y="595" class="lbl" font-size="11">External payment scheme</text>
 
-            <!-- cross links -->
-            <line class="conna" x1="350" y1="118" x2="560" y2="67"/><text x="372" y="100" class="sub" font-size="10">synchronous fan out, fail closed</text>
-            <line class="conna" x1="350" y1="132" x2="560" y2="130"/><text x="372" y="146" class="sub" font-size="10">claim key, conditional write</text>
-            <line class="conna" x1="350" y1="343" x2="560" y2="338"/><text x="372" y="332" class="sub" font-size="10">append, system of record</text>
-            <line class="conna" x1="350" y1="352" x2="560" y2="386"/><text x="372" y="378" class="sub" font-size="10">update projection</text>
-            <line class="conna" x1="350" y1="476" x2="560" y2="470"/><text x="372" y="462" class="sub" font-size="10">fan out</text>
-            <line class="conna" x1="350" y1="486" x2="560" y2="528"/><text x="372" y="512" class="sub" font-size="10">outbound instruction</text>
-            <line class="conna" x1="715" y1="550" x2="715" y2="560"/>
-            <text x="725" y="558" class="sub" font-size="10">AWS PrivateLink</text>
+            <!-- cross links, routed at right angles so the labels never sit on a line -->
+            <polyline class="conna" fill="none" points="350,112 420,112 420,67 560,67"/>
+            <text x="430" y="60" class="sub" font-size="10">synchronous fan out</text>
+            <circle class="dot" cx="560" cy="67" r="3"/>
 
+            <polyline class="conna" fill="none" points="350,131 560,131"/>
+            <text x="372" y="124" class="sub" font-size="10">claim key, conditional write</text>
+            <circle class="dot" cx="560" cy="131" r="3"/>
+
+            <polyline class="conna" fill="none" points="350,340 560,340"/>
+            <text x="372" y="333" class="sub" font-size="10">append, system of record</text>
+            <circle class="dot" cx="560" cy="340" r="3"/>
+
+            <polyline class="conna" fill="none" points="350,352 440,352 440,388 560,388"/>
+            <text x="450" y="381" class="sub" font-size="10">update projection</text>
+            <circle class="dot" cx="560" cy="388" r="3"/>
+
+            <polyline class="conna" fill="none" points="350,471 560,471"/>
+            <text x="372" y="464" class="sub" font-size="10">fan out</text>
+            <circle class="dot" cx="560" cy="471" r="3"/>
+
+            <polyline class="conna" fill="none" points="350,486 440,486 440,530 560,530"/>
+            <text x="450" y="523" class="sub" font-size="10">outbound instruction</text>
+            <circle class="dot" cx="560" cy="530" r="3"/>
+
+            <line class="conna" x1="715" y1="550" x2="715" y2="576"/>
+            <text x="725" y="567" class="sub" font-size="10">AWS PrivateLink</text>
             <circle class="dot" cx="200" cy="100" r="3"/>
-            <circle class="dot" cx="560" cy="130" r="3"/>
-            <circle class="dot" cx="560" cy="338" r="3"/>
           </svg>
           <figcaption>A closer view of the components and what flows between them. The synchronous path, from the caller through acceptance, is deliberately short. Everything after the Work Queue is asynchronous. The Idempotency Store and the Ledger both replicate to the second region, which is what makes the failover safe.</figcaption>
         </figure>
