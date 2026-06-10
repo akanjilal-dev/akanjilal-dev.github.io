@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>llm-cost-guardrails, watch the budgets and the kill switch fire, Anirban Kanjilal</title>
+<meta name="description" content="A live, in-browser demo of llm-cost-guardrails. Fire language model requests from different tenants and watch per tenant budgets fill, rate limits refuse, and a spend kill switch trip. Runs client side via Pyodide, no server, no keys.">
+<meta property="og:title" content="llm-cost-guardrails, budgets and a kill switch, live">
+<meta property="og:description" content="Fire requests and watch budgets fill, rate limits refuse, and the spend breaker trip. Runs in your browser via Pyodide.">
+<meta property="og:type" content="website">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/site.css">
+<style>
+  .demo{padding:48px 0 24px;max-width:760px;margin:0 auto}
+  .demo .lead{color:var(--muted);font-size:16.5px;margin:14px 0 0}
+  .status{font-family:"IBM Plex Mono",monospace;font-size:12.5px;color:var(--faint);margin:22px 0 6px;display:flex;align-items:center;gap:9px}
+  .status .pin{width:8px;height:8px;border-radius:50%;background:var(--faint);flex:none}
+  .status.ready .pin{background:var(--live);box-shadow:0 0 0 4px color-mix(in srgb,var(--live) 18%,transparent)}
+  .status.err .pin{background:#d9544f}
+  .state{border:1px solid var(--hairline);border-radius:12px;background:var(--surface);padding:16px 18px;margin:6px 0 18px}
+  .row{display:flex;align-items:center;gap:12px;margin:8px 0;font-family:"IBM Plex Mono",monospace;font-size:12.5px}
+  .row .name{width:64px;color:var(--ink)}
+  .bar{flex:1;height:10px;background:var(--paper);border:1px solid var(--hairline);border-radius:6px;overflow:hidden}
+  .bar i{display:block;height:100%;background:var(--accent);width:0}
+  .bar i.over{background:#d9544f}
+  .row .amt{width:150px;text-align:right;color:var(--muted)}
+  .breaker{margin-top:12px;padding-top:12px;border-top:1px solid var(--hairline);font-family:"IBM Plex Mono",monospace;font-size:12.5px}
+  .breaker .open{color:#d9544f;font-weight:600}
+  .breaker .closed{color:var(--live);font-weight:600}
+  .acts{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+  .act{font-family:"IBM Plex Mono",monospace;font-size:12.5px;color:var(--ink);background:var(--surface);
+    border:1px solid var(--hairline);border-radius:9px;padding:9px 13px;cursor:pointer;transition:border-color .15s}
+  .act:hover:not(:disabled){border-color:var(--accent)} .act:disabled{opacity:.5;cursor:not-allowed}
+  .log{background:var(--code-bg);color:var(--code-ink);border:1px solid var(--hairline);border-radius:12px;padding:14px 16px;font-family:"IBM Plex Mono",monospace;font-size:12px;line-height:1.6;min-height:40px;max-height:240px;overflow:auto}
+  .log .ok{color:var(--code-str,#9FE8C9)} .log .no{color:#ff8a85}
+  .demo-foot{margin-top:26px;display:flex;gap:12px;flex-wrap:wrap}
+</style>
+</head>
+<body>
+
+<header class="bar">
+  <div class="wrap">
+    <a class="brand" href="/">akanjilal<span class="dot">.dev</span></a>
+    <nav class="nav" aria-label="Primary">
+      <a href="/#work">work</a>
+      <a href="/blog/">my blogs</a>
+      <a href="/#background">background</a>
+      <a class="ext" href="https://github.com/akanjilal-work">github</a>
+      <a class="ext" href="https://www.linkedin.com/in/akanjilal/">linkedin</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <div class="wrap">
+    <div class="demo">
+      <div class="page-head" style="padding:0">
+        <div class="kicker">Live demo</div>
+        <h1>Budgets, rate limits, and a spend kill switch</h1>
+        <p class="lead">This is the real middleware from <a href="https://github.com/akanjilal-work/llm-cost-guardrails">llm-cost-guardrails</a>, running in your browser through Pyodide. Fire language model requests from different tenants and watch the controls fire: each tenant has a budget, a rate limit of five requests a minute, and a global breaker that trips if spend crosses two dollars a minute. Every gate fails closed. No server, no keys.</p>
+      </div>
+
+      <div class="status" id="status"><span class="pin"></span><span id="status-text">Booting the Python runtime in your browser…</span></div>
+
+      <div class="state" id="state" hidden>
+        <div id="bars"></div>
+        <div class="breaker" id="breaker"></div>
+      </div>
+
+      <div class="acts" id="acts" hidden>
+        <button class="act" data-k="normal">Normal request (globex, Opus)</button>
+        <button class="act" data-k="budget">Spend acme to its $0.20 cap</button>
+        <button class="act" data-k="rate">Flood globex (rate limit)</button>
+        <button class="act" data-k="kill">Trip the kill switch (spike)</button>
+        <button class="act" data-k="advance">Let a minute pass</button>
+        <button class="act" data-k="reset">Reset</button>
+      </div>
+
+      <div class="log" id="log">Fire a request to begin.</div>
+
+      <div class="demo-foot">
+        <a class="btn primary" href="https://github.com/akanjilal-work/llm-cost-guardrails">Read the code</a>
+        <a class="btn" href="/blog/a-circuit-breaker-for-llm-spend/">Related writing</a>
+      </div>
+    </div>
+  </div>
+</main>
+
+<footer>
+  <div class="wrap foot">
+    <div class="links">
+      <a href="https://github.com/akanjilal-work">GitHub</a>
+      <a href="https://www.linkedin.com/in/akanjilal/">LinkedIn</a>
+      <a href="mailto:anirban.kanjilal@gmail.com">Email</a>
+    </div>
+    <div class="copy">© 2026 Anirban Kanjilal · this demo runs entirely client side</div>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/pyodide/v0.29.4/full/pyodide.js"></script>
+<script>
+const PY_FILES = ["guardrails/pricing.py","guardrails/budgets.py","guardrails/limits.py","guardrails/guard.py"];
+const statusEl = document.getElementById("status");
+const statusText = document.getElementById("status-text");
+const logEl = document.getElementById("log");
+let pyodide = null;
+
+function setStatus(t,c){ statusText.textContent=t; statusEl.className="status"+(c?" "+c:""); }
+async function fetchText(p){ const r=await fetch(p,{cache:"no-store"}); if(!r.ok) throw new Error("load "+p+" ("+r.status+")"); return r.text(); }
+function logLine(text, ok){ const d=document.createElement("div"); d.className = ok===true?"ok":ok===false?"no":""; d.textContent=text; logEl.appendChild(d); logEl.scrollTop=logEl.scrollHeight; }
+function clearLog(){ logEl.textContent=""; }
+
+function refresh(){
+  const s = JSON.parse(pyodide.runPython("_state()"));
+  let html = "";
+  for (const [t, b] of Object.entries(s.budgets)){
+    const pct = Math.min(100, Math.round(b.spent / b.cap * 100));
+    const over = b.spent >= b.cap - 1e-9;
+    html += `<div class="row"><span class="name">${t}</span><span class="bar"><i class="${over?'over':''}" style="width:${pct}%"></i></span><span class="amt">$${b.spent.toFixed(4)} / $${b.cap.toFixed(2)}</span></div>`;
+  }
+  document.getElementById("bars").innerHTML = html;
+  const cls = s.tripped ? "open" : "closed";
+  const word = s.tripped ? "OPEN (deploys blocked)" : "closed";
+  document.getElementById("breaker").innerHTML = `kill switch: <span class="${cls}">${word}</span>  ·  window spend $${s.window.toFixed(4)} / $${s.limit.toFixed(2)} per minute`;
+}
+
+function callOnce(tenant, model, itok, omax, oact, label){
+  const r = JSON.parse(pyodide.runPython(`_call("${tenant}","${model}",${itok},${omax},${oact})`));
+  if (r.ok) logLine(`  allowed   ${label}  cost $${r.cost.toFixed(5)}`, true);
+  else logLine(`  REFUSED   ${label}  (${r.kind})`, false);
+  refresh();
+  return r;
+}
+
+function action(k){
+  if (k === "normal"){ callOnce("globex","claude-opus-4-8",2000,1000,800,"globex Opus 2000/800"); return; }
+  if (k === "budget"){ logLine("acme sends Opus requests until its $0.20 cap is hit:");
+    for (let i=1;i<=7;i++){ if (!callOnce("acme","claude-opus-4-8",3000,1500,1200,`acme request ${i}`).ok) break; } return; }
+  if (k === "rate"){ logLine("globex floods cheap Haiku requests (limit 5/min):");
+    for (let i=1;i<=7;i++){ if (!callOnce("globex","claude-haiku-4-5",500,200,150,`globex request ${i}`).ok) break; } return; }
+  if (k === "kill"){ logLine("spike fires large Opus jobs (~$1.50 each) at the $2.00/min breaker:");
+    for (let i=1;i<=4;i++){ if (!callOnce("spike","claude-opus-4-8",50000,50000,50000,`spike job ${i}`).ok) break; } return; }
+  if (k === "advance"){ pyodide.runPython("_advance()"); logLine("-- a minute passes: rate buckets refill, the breaker window rolls off --"); refresh(); return; }
+  if (k === "reset"){ pyodide.runPython("_reset()"); clearLog(); logLine("reset."); refresh(); return; }
+}
+
+async function boot(){
+  try{
+    pyodide = await loadPyodide({ indexURL: "https://cdn.jsdelivr.net/pyodide/v0.29.4/full/" });
+    const enc = new TextEncoder();
+    pyodide.FS.mkdirTree("/home/pyodide/guardrails");
+    pyodide.FS.writeFile("/home/pyodide/guardrails/__init__.py", enc.encode("# demo package\n"));
+    for (const rel of PY_FILES) pyodide.FS.writeFile("/home/pyodide/"+rel, enc.encode(await fetchText("py/"+rel)));
+    await pyodide.runPythonAsync(`
+import sys, json
+sys.path.insert(0, "/home/pyodide")
+from guardrails.guard import default_guard
+from guardrails.pricing import Usage
+from guardrails.budgets import BudgetExceeded
+from guardrails.limits import RateLimitExceeded, KillSwitchTripped
+class _Clock:
+    def __init__(self): self.t = 0.0
+    def __call__(self): return self.t
+    def adv(self, s): self.t += s
+_clock = _Clock()
+_guard = None
+def _reset():
+    global _guard
+    _guard = default_guard(per_tenant_budget=0.50, requests_per_min=5, tokens_per_min=10_000_000,
+                           kill_switch_limit=2.00, kill_switch_window_sec=60.0, clock=_clock)
+    _guard.budgets.set_cap("acme", 0.20); _guard.budgets.set_cap("globex", 5.00); _guard.budgets.set_cap("spike", 100.0)
+def _call(tenant, model, itok, omax, oact):
+    def fn(): return ("...", Usage(input_tokens=itok, output_tokens=oact))
+    try:
+        r = _guard.guarded_call(tenant=tenant, model=model, input_tokens=itok, max_output_tokens=omax, call=fn)
+        return json.dumps({"ok": True, "cost": round(r.cost_usd, 5)})
+    except BudgetExceeded:    return json.dumps({"ok": False, "kind": "over budget"})
+    except RateLimitExceeded: return json.dumps({"ok": False, "kind": "rate limited"})
+    except KillSwitchTripped: return json.dumps({"ok": False, "kind": "kill switch open"})
+def _state():
+    return json.dumps({"budgets": _guard.budgets.report(), "window": round(_guard.kill_switch.window_spend, 4),
+                       "limit": _guard.kill_switch.limit_usd, "tripped": _guard.kill_switch.tripped})
+def _advance(): _clock.adv(60)
+_reset()
+`);
+    document.getElementById("state").hidden = false;
+    document.getElementById("acts").hidden = false;
+    clearLog(); logLine("Ready. Fire some requests.");
+    refresh();
+    setStatus("Ready. Each tenant has a budget; the breaker trips at $2.00 a minute.", "ready");
+  } catch(e){ setStatus("The in-browser runtime could not start: " + e.message, "err"); }
+}
+document.getElementById("acts").addEventListener("click", e => { const b=e.target.closest(".act"); if(b) action(b.dataset.k); });
+boot();
+</script>
+
+</body>
+</html>

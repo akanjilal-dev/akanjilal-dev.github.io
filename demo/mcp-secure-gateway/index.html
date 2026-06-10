@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>mcp-secure-gateway, watch a confused deputy get blocked, Anirban Kanjilal</title>
+<meta name="description" content="A live, in-browser demo of mcp-secure-gateway. Send tool calls and watch an open proxy carry out a destructive action while the hardened gateway refuses it, with input validation, output sanitisation, and a live audit log. Runs client side via Pyodide, no server, no keys.">
+<meta property="og:title" content="mcp-secure-gateway, a confused deputy blocked live">
+<meta property="og:description" content="Open proxy vs hardened gateway, side by side, with a live audit log. Runs in your browser via Pyodide.">
+<meta property="og:type" content="website">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/site.css">
+<style>
+  .demo{padding:48px 0 24px;max-width:760px;margin:0 auto}
+  .demo .lead{color:var(--muted);font-size:16.5px;margin:14px 0 0}
+  .status{font-family:"IBM Plex Mono",monospace;font-size:12.5px;color:var(--faint);margin:22px 0 6px;display:flex;align-items:center;gap:9px}
+  .status .pin{width:8px;height:8px;border-radius:50%;background:var(--faint);flex:none}
+  .status.ready .pin{background:var(--live);box-shadow:0 0 0 4px color-mix(in srgb,var(--live) 18%,transparent)}
+  .status.err .pin{background:#d9544f}
+  .scenarios{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0 18px}
+  .sc{font-family:"IBM Plex Mono",monospace;font-size:12.5px;color:var(--ink);background:var(--surface);
+    border:1px solid var(--hairline);border-radius:9px;padding:9px 13px;cursor:pointer;transition:border-color .15s}
+  .sc:hover:not(:disabled){border-color:var(--accent)}
+  .sc:disabled{opacity:.5;cursor:not-allowed}
+  .sc.danger{border-color:rgba(217,84,79,.4)}
+  .panels{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  @media(max-width:640px){.panels{grid-template-columns:1fr}}
+  .panel{border:1px solid var(--hairline);border-radius:12px;overflow:hidden;background:var(--surface)}
+  .panel h3{font-family:"IBM Plex Mono",monospace;font-size:11.5px;letter-spacing:.08em;text-transform:uppercase;padding:10px 14px;margin:0}
+  .panel.bad h3{background:rgba(217,84,79,.12);color:#d9544f}
+  .panel.good h3{background:color-mix(in srgb,var(--live) 14%,transparent);color:var(--live)}
+  .panel .body{padding:14px;font-family:"IBM Plex Mono",monospace;font-size:12.5px;line-height:1.55;white-space:pre-wrap;word-break:break-word;min-height:40px}
+  .one{border:1px solid var(--hairline);border-radius:12px;background:var(--surface);padding:14px;font-family:"IBM Plex Mono",monospace;font-size:13px;white-space:pre-wrap;word-break:break-word;min-height:40px}
+  .verdict{font-weight:600}
+  .deny{color:#d9544f}.allow{color:var(--live)}
+  .leak{color:#d9544f;font-weight:600}
+  .auditwrap{margin-top:22px}
+  .auditwrap h2{font-family:"IBM Plex Mono",monospace;font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--faint);margin:0 0 8px}
+  .audit{background:var(--code-bg);color:var(--code-ink);border:1px solid var(--hairline);border-radius:12px;padding:16px 18px;font-family:"IBM Plex Mono",monospace;font-size:12px;line-height:1.6;white-space:pre-wrap;min-height:40px}
+  .demo-foot{margin-top:26px;display:flex;gap:12px;flex-wrap:wrap}
+</style>
+</head>
+<body>
+
+<header class="bar">
+  <div class="wrap">
+    <a class="brand" href="/">akanjilal<span class="dot">.dev</span></a>
+    <nav class="nav" aria-label="Primary">
+      <a href="/#work">work</a>
+      <a href="/blog/">my blogs</a>
+      <a href="/#background">background</a>
+      <a class="ext" href="https://github.com/akanjilal-work">github</a>
+      <a class="ext" href="https://www.linkedin.com/in/akanjilal/">linkedin</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <div class="wrap">
+    <div class="demo">
+      <div class="page-head" style="padding:0">
+        <div class="kicker">Live demo</div>
+        <h1>A confused deputy, blocked at the door</h1>
+        <p class="lead">This is the real code from the <a href="https://github.com/akanjilal-work/mcp-secure-gateway">mcp-secure-gateway</a> repository, running in your browser through Pyodide. An analyst is allowed to read documents and nothing else. Watch what an open proxy lets them do, and what the gateway does instead. Every decision lands in the audit log below. No server, no keys.</p>
+      </div>
+
+      <div class="status" id="status"><span class="pin"></span><span id="status-text">Booting the Python runtime in your browser…</span></div>
+
+      <div class="scenarios" id="scenarios" hidden>
+        <button class="sc danger" data-k="delete">analyst calls delete_user</button>
+        <button class="sc" data-k="poison">read a poisoned document</button>
+        <button class="sc" data-k="traversal">read ../../etc/shadow</button>
+        <button class="sc" data-k="forged">use a forged token</button>
+        <button class="sc" data-k="normal">read a normal document</button>
+      </div>
+
+      <div id="result"><div class="one" id="result-one">Pick a scenario above to see the gateway decide.</div></div>
+
+      <div class="auditwrap">
+        <h2>Audit log</h2>
+        <div class="audit" id="audit">(no calls yet)</div>
+      </div>
+
+      <div class="demo-foot">
+        <a class="btn primary" href="https://github.com/akanjilal-work/mcp-secure-gateway">Read the code</a>
+        <a class="btn" href="/blog/hardening-mcp-a-secure-gateway/">Related writing</a>
+      </div>
+    </div>
+  </div>
+</main>
+
+<footer>
+  <div class="wrap foot">
+    <div class="links">
+      <a href="https://github.com/akanjilal-work">GitHub</a>
+      <a href="https://www.linkedin.com/in/akanjilal/">LinkedIn</a>
+      <a href="mailto:anirban.kanjilal@gmail.com">Email</a>
+    </div>
+    <div class="copy">© 2026 Anirban Kanjilal · this demo runs entirely client side</div>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/pyodide/v0.29.4/full/pyodide.js"></script>
+<script>
+const PY_FILES = ["gateway/policy.py","gateway/auth.py","gateway/validation.py","gateway/audit.py","gateway/gateway.py","gateway/main.py"];
+const statusEl = document.getElementById("status");
+const statusText = document.getElementById("status-text");
+const resultEl = document.getElementById("result");
+const auditEl = document.getElementById("audit");
+let pyodide = null, SECRET = "";
+
+function setStatus(t, c){ statusText.textContent = t; statusEl.className = "status" + (c ? " "+c : ""); }
+async function fetchText(p){ const r = await fetch(p, {cache:"no-store"}); if(!r.ok) throw new Error("load "+p+" ("+r.status+")"); return r.text(); }
+
+function esc(s){ const d=document.createElement("div"); d.textContent=s; return d.innerHTML; }
+function withLeak(s){ return SECRET && s.includes(SECRET) ? esc(s).split(esc(SECRET)).join('<span class="leak">'+esc(SECRET)+'</span>') : esc(s); }
+
+function renderOne(g){
+  const cls = g.decision === "allow" ? "allow" : "deny";
+  let html = `<div class="one"><span class="verdict ${cls}">${g.decision.toUpperCase()}</span>  ${esc(g.reason)}`;
+  if (g.findings && g.findings.length) html += `\n\nfindings: ${esc(g.findings.join("; "))}`;
+  if (g.output) html += `\n\n${withLeak(g.output)}`;
+  html += `</div>`;
+  resultEl.innerHTML = html;
+}
+function renderDelete(naive, g){
+  resultEl.innerHTML = `<div class="panels">
+    <div class="panel bad"><h3>Open proxy</h3><div class="body">${esc(naive.output)}\n\nusers deleted: ${esc(JSON.stringify(naive.deleted))}  ← it just did it</div></div>
+    <div class="panel good"><h3>Hardened gateway</h3><div class="body"><span class="verdict deny">${g.decision.toUpperCase()}</span>  ${esc(g.reason)}\n\nno tool was invoked</div></div>
+  </div>`;
+}
+function refreshAudit(){ const a = pyodide.runPython("_audit()"); auditEl.textContent = a || "(no calls yet)"; }
+
+function run(kind){
+  if (kind === "delete"){
+    const naive = JSON.parse(pyodide.runPython("_naive_delete()"));
+    const g = JSON.parse(pyodide.runPython("s_delete_gw()"));
+    renderDelete(naive, g);
+  } else {
+    const fn = {poison:"s_poison()", traversal:"s_traversal()", forged:"s_forged()", normal:"s_normal()"}[kind];
+    renderOne(JSON.parse(pyodide.runPython(fn)));
+  }
+  refreshAudit();
+}
+
+async function boot(){
+  try{
+    pyodide = await loadPyodide({ indexURL: "https://cdn.jsdelivr.net/pyodide/v0.29.4/full/" });
+    const enc = new TextEncoder();
+    pyodide.FS.mkdirTree("/home/pyodide/gateway");
+    pyodide.FS.writeFile("/home/pyodide/gateway/__init__.py", enc.encode("# demo package\n"));
+    for (const rel of PY_FILES) pyodide.FS.writeFile("/home/pyodide/"+rel, enc.encode(await fetchText("py/"+rel)));
+    SECRET = await pyodide.runPythonAsync(`
+import sys, json
+sys.path.insert(0, "/home/pyodide")
+from gateway.main import build_gateway, TOOLS, SECRET, DELETED_USERS
+from gateway.gateway import NaiveProxy
+_g = build_gateway()
+_naive = NaiveProxy(TOOLS)
+def _gw(token, tool, args):
+    r = _g.call(token, tool, args)
+    return json.dumps({"decision": r.decision, "reason": r.reason,
+                       "output": "" if r.output is None else str(r.output), "findings": list(r.findings)})
+def s_normal():    return _gw("tok-analyst", "read_doc", {"path": "q3-report"})
+def s_poison():    return _gw("tok-analyst", "read_doc", {"path": "vendor-memo"})
+def s_traversal(): return _gw("tok-analyst", "read_doc", {"path": "../../etc/shadow"})
+def s_forged():    return _gw("forged-token", "read_doc", {"path": "q3-report"})
+def s_delete_gw(): return _gw("tok-analyst", "delete_user", {"user_id": "u-42"})
+def _naive_delete():
+    DELETED_USERS.clear()
+    out = _naive.call("delete_user", {"user_id": "u-42"})
+    return json.dumps({"output": out, "deleted": list(DELETED_USERS)})
+def _audit():
+    return "\\n".join(str(rec) for rec in _g.audit)
+SECRET
+`);
+    document.getElementById("scenarios").hidden = false;
+    document.querySelectorAll(".sc").forEach(b => b.disabled = false);
+    setStatus("Ready. The analyst's only granted tool is read_doc. Try the scenarios.", "ready");
+  } catch(e){
+    setStatus("The in-browser runtime could not start: " + e.message, "err");
+  }
+}
+document.getElementById("scenarios").addEventListener("click", e => {
+  const b = e.target.closest(".sc"); if (b) run(b.dataset.k);
+});
+boot();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>agent-eval-harness, run the suite and see the deploy gate, Anirban Kanjilal</title>
+<meta name="description" content="A live, in-browser demo of agent-eval-harness. Run the same behavioural eval suite against a hardened agent and a naive one, and watch the harness pass the first and block the second, naming every failing check. Runs client side via Pyodide, no server, no keys.">
+<meta property="og:title" content="agent-eval-harness, a behavioural deploy gate, live">
+<meta property="og:description" content="Run one suite against a good and a buggy agent; watch the harness catch the bad one. Runs in your browser via Pyodide.">
+<meta property="og:type" content="website">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/site.css">
+<style>
+  .demo{padding:48px 0 24px;max-width:720px;margin:0 auto}
+  .demo .lead{color:var(--muted);font-size:16.5px;margin:14px 0 0}
+  .status{font-family:"IBM Plex Mono",monospace;font-size:12.5px;color:var(--faint);margin:22px 0 6px;display:flex;align-items:center;gap:9px}
+  .status .pin{width:8px;height:8px;border-radius:50%;background:var(--faint);flex:none}
+  .status.ready .pin{background:var(--live);box-shadow:0 0 0 4px color-mix(in srgb,var(--live) 18%,transparent)}
+  .status.err .pin{background:#d9544f}
+  .acts{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0 16px}
+  .act{font-family:"IBM Plex Mono",monospace;font-size:13px;border-radius:9px;padding:10px 16px;cursor:pointer;transition:background .15s}
+  .act.good{border:1px solid var(--accent);background:var(--accent);color:#fff}
+  .act.good:hover:not(:disabled){background:var(--accent-ink)}
+  .act.bad{border:1px solid var(--hairline);background:var(--surface);color:var(--ink)}
+  .act.bad:hover:not(:disabled){border-color:#d9544f}
+  .act:disabled{opacity:.5;cursor:not-allowed}
+  .report{border:1px solid var(--hairline);border-radius:12px;background:var(--surface);padding:6px 0;min-height:40px}
+  .rhead{font-family:"IBM Plex Mono",monospace;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--faint);padding:12px 16px 6px}
+  .case{padding:8px 16px;border-top:1px solid var(--hairline);font-family:"IBM Plex Mono",monospace;font-size:13px}
+  .case:first-of-type{border-top:none}
+  .tag-pass{color:var(--live);font-weight:600}
+  .tag-fail{color:#d9544f;font-weight:600}
+  .fail-detail{color:var(--muted);font-size:12px;margin:3px 0 0 56px}
+  .gate{padding:12px 16px;border-top:1px solid var(--hairline);font-family:"IBM Plex Mono",monospace;font-size:13px;font-weight:600}
+  .gate.pass{color:var(--live)} .gate.block{color:#d9544f}
+  .placeholder{padding:16px;color:var(--muted);font-family:"IBM Plex Mono",monospace;font-size:13px}
+  .demo-foot{margin-top:26px;display:flex;gap:12px;flex-wrap:wrap}
+</style>
+</head>
+<body>
+
+<header class="bar">
+  <div class="wrap">
+    <a class="brand" href="/">akanjilal<span class="dot">.dev</span></a>
+    <nav class="nav" aria-label="Primary">
+      <a href="/#work">work</a>
+      <a href="/blog/">my blogs</a>
+      <a href="/#background">background</a>
+      <a class="ext" href="https://github.com/akanjilal-work">github</a>
+      <a class="ext" href="https://www.linkedin.com/in/akanjilal/">linkedin</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <div class="wrap">
+    <div class="demo">
+      <div class="page-head" style="padding:0">
+        <div class="kicker">Live demo</div>
+        <h1>A behavioural deploy gate, run live</h1>
+        <p class="lead">This is the real harness from <a href="https://github.com/akanjilal-work/agent-eval-harness">agent-eval-harness</a>, running in your browser through Pyodide. One eval suite checks an agent's tool calls, its refusal of an attack, and its cost. Run it against a hardened agent and a naive one, and watch the harness pass the first and block the second, naming exactly what failed. No server, no keys.</p>
+      </div>
+
+      <div class="status" id="status"><span class="pin"></span><span id="status-text">Booting the Python runtime in your browser…</span></div>
+
+      <div class="acts" id="acts" hidden>
+        <button class="act good" data-w="hardened">Run against the hardened agent</button>
+        <button class="act bad" data-w="naive">Run against the naive agent</button>
+      </div>
+
+      <div class="report" id="report"><div class="placeholder">Run the suite to see the report.</div></div>
+
+      <div class="demo-foot">
+        <a class="btn primary" href="https://github.com/akanjilal-work/agent-eval-harness">Read the code</a>
+        <a class="btn" href="/blog/">More writing</a>
+      </div>
+    </div>
+  </div>
+</main>
+
+<footer>
+  <div class="wrap foot">
+    <div class="links">
+      <a href="https://github.com/akanjilal-work">GitHub</a>
+      <a href="https://www.linkedin.com/in/akanjilal/">LinkedIn</a>
+      <a href="mailto:anirban.kanjilal@gmail.com">Email</a>
+    </div>
+    <div class="copy">© 2026 Anirban Kanjilal · this demo runs entirely client side</div>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/pyodide/v0.29.4/full/pyodide.js"></script>
+<script>
+const PY_FILES = ["harness/types.py","harness/checks.py","harness/runner.py","harness/main.py"];
+const statusEl = document.getElementById("status");
+const statusText = document.getElementById("status-text");
+const reportEl = document.getElementById("report");
+let pyodide = null;
+
+function setStatus(t,c){ statusText.textContent=t; statusEl.className="status"+(c?" "+c:""); }
+async function fetchText(p){ const r=await fetch(p,{cache:"no-store"}); if(!r.ok) throw new Error("load "+p+" ("+r.status+")"); return r.text(); }
+function esc(s){ const d=document.createElement("div"); d.textContent=s; return d.innerHTML; }
+
+function render(which){
+  const rep = JSON.parse(pyodide.runPython(`_run("${which}")`));
+  let html = `<div class="rhead">Suite against the ${which} agent</div>`;
+  for (const c of rep.cases){
+    html += `<div class="case"><span class="${c.passed?'tag-pass':'tag-fail'}">${c.passed?'PASS':'FAIL'}</span>  ${esc(c.name)}`;
+    for (const f of c.fails) html += `<div class="fail-detail">- ${esc(f.label)}: ${esc(f.detail)}</div>`;
+    html += `</div>`;
+  }
+  const gate = rep.ok
+    ? `<div class="gate pass">${rep.passed} of ${rep.total} cases passed — deploy gate is GREEN</div>`
+    : `<div class="gate block">${rep.passed} of ${rep.total} cases passed — this would BLOCK the deploy</div>`;
+  reportEl.innerHTML = html + gate;
+}
+
+async function boot(){
+  try{
+    pyodide = await loadPyodide({ indexURL: "https://cdn.jsdelivr.net/pyodide/v0.29.4/full/" });
+    const enc = new TextEncoder();
+    pyodide.FS.mkdirTree("/home/pyodide/harness");
+    pyodide.FS.writeFile("/home/pyodide/harness/__init__.py", enc.encode("# demo package\n"));
+    for (const rel of PY_FILES) pyodide.FS.writeFile("/home/pyodide/"+rel, enc.encode(await fetchText("py/"+rel)));
+    await pyodide.runPythonAsync(`
+import sys, json
+sys.path.insert(0, "/home/pyodide")
+from harness.main import SUITE, hardened_agent, naive_agent
+from harness.runner import run_suite
+def _run(which):
+    agent = hardened_agent if which == "hardened" else naive_agent
+    rep = run_suite(agent, SUITE)
+    cases = [{"name": r.case.name, "passed": r.passed,
+              "fails": [{"label": o.label, "detail": o.detail} for o in r.outcomes if not o.passed]}
+             for r in rep.results]
+    return json.dumps({"ok": rep.ok, "passed": rep.passed_count, "total": rep.total, "cases": cases})
+`);
+    document.getElementById("acts").hidden = false;
+    setStatus("Ready. Run the suite against each agent.", "ready");
+    reportEl.innerHTML = '<div class="placeholder">Run the suite to see the report.</div>';
+  } catch(e){ setStatus("The in-browser runtime could not start: " + e.message, "err"); }
+}
+document.getElementById("acts").addEventListener("click", e => { const b=e.target.closest(".act"); if(b) render(b.dataset.w); });
+boot();
+</script>
+
+</body>
+</html>
