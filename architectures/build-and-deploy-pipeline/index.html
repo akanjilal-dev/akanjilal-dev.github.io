@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Build and deployment pipeline on GitHub Actions, Anirban Kanjilal</title>
+<meta name="description" content="A multi region reference architecture for a secure build and deployment pipeline on GitHub Actions, covering the full developer journey from a local commit through static and dynamic analysis, dependency and image scanning, signing and provenance, hard quality gates, and deployment to Amazon Elastic Kubernetes Service through ArgoCD and Amazon Elastic Container Service through blue and green.">
+<meta property="og:title" content="Build and deployment pipeline on GitHub Actions">
+<meta property="og:description" content="The full path from a local commit to a signed image to two regions, behind hard quality gates and with no long lived credentials.">
+<meta property="og:type" content="article">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/site.css">
+</head>
+<body>
+
+<header class="bar">
+  <div class="wrap">
+    <a class="brand" href="/">akanjilal<span class="dot">.dev</span></a>
+    <nav class="nav" aria-label="Primary">
+      <a href="/#work">work</a>
+      <a href="/blog/">my blogs</a>
+      <a href="/architectures/">architectures</a>
+      <a href="/#background">background</a>
+      <a class="ext" href="https://github.com/akanjilal-work">github</a>
+      <a class="ext" href="https://www.linkedin.com/in/akanjilal/">linkedin</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <article class="article">
+    <div class="wrap">
+      <a class="back" href="/architectures/">Back to reference architectures</a>
+      <div class="article-head">
+        <div class="meta"><span>Reference architecture</span><span>GitHub Actions and Amazon Web Services</span><span>ca-central-1 and ca-west-1</span></div>
+        <h1>Build and deployment pipeline on GitHub Actions</h1>
+        <p class="standfirst">The journey from a line of code on a laptop to a running service in production crosses a lot of ground, and in a regulated environment every step of it has to be checked, recorded, and reversible. This reference architecture describes that journey as a single pipeline on GitHub Actions. It runs from a local commit through static and dynamic analysis, dependency and image scanning, signing and provenance, behind hard quality gates, to a deployment that reaches Amazon Elastic Kubernetes Service through ArgoCD and Amazon Elastic Container Service through a blue and green release, in two Canadian regions, with no long lived credentials held anywhere.</p>
+      </div>
+
+      <div class="prose">
+        <p>A pipeline is where good intentions about security and quality either become real or quietly do not. It is easy to agree that code should be scanned, that dependencies should be checked, that images should be signed, and that nothing should reach production without review. It is the pipeline that decides whether those things actually happen on every change or only when someone remembers. The design here makes them happen automatically, makes the checks block rather than merely warn, and produces, as a side effect of how the work is done, a complete record of what was built, what it was scanned for, who approved it, and where it went. The tools named are examples. The shape of the pipeline matters more than any one vendor, and any of the named tools can be swapped for an equivalent without changing the design.</p>
+
+        <h2>Requirements</h2>
+
+        <p>The requirements the pipeline has to satisfy, the quality attributes it is judged on, the constraints it must respect, and the assumptions it rests on.</p>
+
+        <h3>Functional requirements</h3>
+        <table>
+          <thead><tr><th>Number</th><th>Requirement</th></tr></thead>
+          <tbody>
+            <tr><td>1</td><td>Run security and quality checks automatically on every change before it can merge.</td></tr>
+            <tr><td>2</td><td>Produce one immutable, signed artifact and promote it unchanged through every environment.</td></tr>
+            <tr><td>3</td><td>Block any change that fails a gate from progressing.</td></tr>
+            <tr><td>4</td><td>Authenticate to Amazon Web Services without storing long lived credentials.</td></tr>
+            <tr><td>5</td><td>Deploy to Amazon Elastic Kubernetes Service and to Amazon Elastic Container Service.</td></tr>
+            <tr><td>6</td><td>Promote the same artifact through development, test, staging, and production with approvals.</td></tr>
+            <tr><td>7</td><td>Deploy to two regions and roll back quickly on failure.</td></tr>
+            <tr><td>8</td><td>Keep an auditable record of what was built, scanned, signed, approved, and deployed.</td></tr>
+          </tbody>
+        </table>
+
+        <h3>Quality attributes</h3>
+        <table>
+          <thead><tr><th>Number</th><th>Attribute</th><th>Intent</th></tr></thead>
+          <tbody>
+            <tr><td>1</td><td>Security</td><td>Every change scanned, only signed and compliant artifacts deployed, and no standing credentials.</td></tr>
+            <tr><td>2</td><td>Auditability</td><td>Reconstruct the full provenance of anything in production, retained for audit.</td></tr>
+            <tr><td>3</td><td>Reliability</td><td>Safe rollouts and fast rollback, across two regions.</td></tr>
+            <tr><td>4</td><td>Speed</td><td>Fast feedback to developers, with independent checks running in parallel.</td></tr>
+            <tr><td>5</td><td>Repeatability</td><td>The same pipeline and the same artifact every time.</td></tr>
+            <tr><td>6</td><td>Least privilege</td><td>Each stage and each environment holds only the access it needs.</td></tr>
+          </tbody>
+        </table>
+
+        <h3>Constraints and assumptions</h3>
+        <table>
+          <thead><tr><th>Number</th><th>Constraint</th></tr></thead>
+          <tbody>
+            <tr><td>1</td><td>Deployments target the two approved regions inside the landing zone.</td></tr>
+            <tr><td>2</td><td>Runners are GitHub hosted, so the cluster and private resources are not reachable from a runner.</td></tr>
+            <tr><td>3</td><td>Only signed images that pass every gate may run in production.</td></tr>
+            <tr><td>4</td><td>Source, artifacts, and deployment evidence are retained for audit.</td></tr>
+          </tbody>
+        </table>
+        <table>
+          <thead><tr><th>Number</th><th>Assumption</th></tr></thead>
+          <tbody>
+            <tr><td>1</td><td>Application code and infrastructure as code live in GitHub repositories.</td></tr>
+            <tr><td>2</td><td>The landing zone provides the registries, the clusters, the roles, and the networking.</td></tr>
+            <tr><td>3</td><td>Workloads are packaged as container images.</td></tr>
+          </tbody>
+        </table>
+
+        <h2>Architecture decisions and rationale</h2>
+
+        <p>The decisions that shaped the pipeline, each with the alternative that was set aside and the cost that was accepted.</p>
+
+        <h3>1. Security checks inside the pipeline rather than a review at the end</h3>
+        <p><strong>Decision.</strong> Run static analysis, dependency analysis, secret scanning, infrastructure as code scanning, image scanning, and dynamic analysis as stages of the pipeline on every change.</p>
+        <p><strong>Alternatives.</strong> A separate security review performed late, by a different team, after the code is written.</p>
+        <p><strong>Rationale.</strong> A check that runs on every change is consistent and cheap to fix, where a late review finds problems when they are expensive to undo and creates a bottleneck. This serves functional requirement 1 and the security attribute.</p>
+        <p><strong>Consequences.</strong> The pipeline takes longer because it always checks, which is reduced by running the independent checks in parallel.</p>
+
+        <h3>2. Gates that block rather than warnings that are ignored</h3>
+        <p><strong>Decision.</strong> Make a failed check fail the build, so a change that does not meet the bar cannot merge or deploy.</p>
+        <p><strong>Alternatives.</strong> Reporting findings as advisory notes that a developer may choose to act on.</p>
+        <p><strong>Rationale.</strong> A warning that does not block is a warning that is eventually ignored under deadline pressure, where a gate that blocks turns the policy into something that actually holds. This serves functional requirement 3.</p>
+        <p><strong>Consequences.</strong> A noisy or wrong check stops work, so the thresholds are tuned and exceptions are explicit and time limited rather than silent.</p>
+
+        <h3>3. OpenID Connect federation rather than long lived access keys</h3>
+        <p><strong>Decision.</strong> Authenticate from GitHub to Amazon Web Services with OpenID Connect, where the workflow exchanges a short lived token for temporary credentials by assuming a role.</p>
+        <p><strong>Alternatives.</strong> Storing an access key and a secret key in the repository as secrets.</p>
+        <p><strong>Rationale.</strong> A stored key is a standing credential that nobody rotates and that leaks badly, where a federated token is short lived, scoped by the role's trust policy, and never stored. This serves functional requirement 4 and the least privilege attribute.</p>
+        <p><strong>Consequences.</strong> Each environment needs a role with a carefully written trust policy, which is the intended point of control.</p>
+
+        <h3>4. One immutable, signed artifact promoted by digest rather than rebuilt per environment</h3>
+        <p><strong>Decision.</strong> Build the image once, sign it, and promote that exact image by its content digest through every environment.</p>
+        <p><strong>Alternatives.</strong> Rebuilding the image for each environment, or promoting by a mutable tag such as latest.</p>
+        <p><strong>Rationale.</strong> The thing tested in staging must be the thing that runs in production, bit for bit, which is only true if the same digest is promoted, where a rebuild or a moving tag can quietly change what runs. This serves functional requirement 2 and the repeatability attribute.</p>
+        <p><strong>Consequences.</strong> Promotion moves a reference to an artifact rather than running a build, which is simpler and faster as well as safer.</p>
+
+        <h3>5. Amazon Elastic Container Registry as the single artifact source</h3>
+        <p><strong>Decision.</strong> Push every image to Amazon Elastic Container Registry with tag immutability and enhanced scanning, and pull only from there.</p>
+        <p><strong>Alternatives.</strong> Pulling images from several registries, including public ones, at deployment time.</p>
+        <p><strong>Rationale.</strong> A single private registry with immutable tags and continuous scanning by Amazon Inspector is the one place to know exactly what an image is and whether it has developed a known vulnerability since it was built. This serves functional requirement 8 and the security attribute.</p>
+        <p><strong>Consequences.</strong> Base images must be mirrored into the registry rather than pulled from the internet, which is the intended control.</p>
+
+        <h3>6. Pull based GitOps with ArgoCD for Kubernetes rather than pushing into the cluster</h3>
+        <p><strong>Decision.</strong> For Amazon Elastic Kubernetes Service, have the pipeline commit the desired state to a Git repository, and let ArgoCD running inside each cluster pull and apply it.</p>
+        <p><strong>Alternatives.</strong> Having the pipeline reach into the cluster and apply changes directly.</p>
+        <p><strong>Rationale.</strong> Because runners are GitHub hosted, a push model would require opening a path from the runner into the private cluster, where a pull model keeps the cluster unreachable and limits the runner to pushing an image and committing a file, which is the smallest possible blast radius. This serves functional requirement 5 within constraint 2.</p>
+        <p><strong>Consequences.</strong> The cluster state lives in Git, which is a benefit, since the desired state is now reviewable, auditable, and the same in both regions.</p>
+
+        <h3>7. Blue and green for Elastic Container Service rather than in place replacement</h3>
+        <p><strong>Decision.</strong> For Amazon Elastic Container Service, deploy with AWS CodeDeploy in a blue and green pattern, shifting traffic only once the new version is healthy.</p>
+        <p><strong>Alternatives.</strong> Replacing the running tasks in place with the new version.</p>
+        <p><strong>Rationale.</strong> Keeping the old version serving until the new one is proven, then shifting traffic, makes a bad release a quick and automatic rollback rather than an outage. This serves functional requirement 7 and the reliability attribute.</p>
+        <p><strong>Consequences.</strong> Both versions run briefly during a release, a small and temporary use of extra capacity.</p>
+
+        <h3>8. The one artifact in two regions, admitted only if signed</h3>
+        <p><strong>Decision.</strong> Deploy the same artifact to both regions, and enforce at the cluster that only images carrying a valid signature may run, using an admission policy.</p>
+        <p><strong>Alternatives.</strong> Deploying to one region, or trusting the pipeline alone to have signed the image.</p>
+        <p><strong>Rationale.</strong> A second region meets the recovery requirement, and an admission check inside the cluster is a second, independent enforcement of the signing rule, so an image that somehow arrived unsigned still cannot run. This serves functional requirement 7 and the security attribute.</p>
+        <p><strong>Consequences.</strong> The signing identity and the policy must be maintained in both regions, which is part of the cluster baseline.</p>
+
+        <h2>The developer journey</h2>
+
+        <p>The journey begins before the pipeline does. On the developer's own machine, fast checks run on every commit, formatting and linting, the unit tests, a quick secret scan, and a signed commit, so that the most common mistakes never even reach the repository. The change then arrives as a pull request, which cannot be merged directly and which triggers the pipeline. From there the work runs on a GitHub hosted runner through a sequence of stages, each of which can fail the build, ending in a signed image pushed to the registry and a deployment to either platform.</p>
+
+        <figure class="diagram">
+          <img src="/assets/img/cicd-pipeline.png" alt="The full pipeline from local pre-commit checks through pull request, ten continuous integration stages, a quality gate, and two deployment paths" loading="lazy">
+          <figcaption>The end to end pipeline. Local checks, then ten stages on the runner, then a hard quality gate, then deployment to Kubernetes through GitOps or to the container service through blue and green.</figcaption>
+        </figure>
+
+        <p>Expressed as a workflow, the stages are ordinary steps, and the important detail is that each scanning step is configured to fail the job when it finds something above the agreed severity rather than to pass and report.</p>
+
+        <pre><code>permissions:
+  id-token: write          # request the OpenID Connect token
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Static analysis
+        run: sonar-scanner                       # fails on a failed quality gate
+      - name: Software composition analysis
+        run: snyk test --severity-threshold=high
+      - name: Secret scan
+        run: gitleaks detect --no-banner
+      - name: Infrastructure as code scan
+        run: checkov --directory infra
+      - name: Build the image
+        run: docker buildx build --tag "$IMAGE_DIGEST_REF" --push .
+      - name: Image vulnerability scan
+        run: trivy image --exit-code 1 --severity HIGH,CRITICAL "$IMAGE_DIGEST_REF"
+      - name: Sign and attest
+        run: cosign sign --yes "$IMAGE_DIGEST_REF"</code></pre>
+
+        <h2>The quality gates</h2>
+
+        <p>The gates are the heart of the design, so it is worth setting them out plainly. Each control inspects something specific, and each has a condition that decides whether a change may proceed. The bar is deliberately strict for anything that reaches production, and the conditions are part of the pipeline configuration rather than a document that describes good intentions.</p>
+
+        <figure class="diagram">
+          <img src="/assets/img/cicd-gates.png" alt="A table of nine controls, what each inspects, example tools, and the gate condition that blocks a change" loading="lazy">
+          <figcaption>The controls and their gates. A finding that does not meet the bar fails the build rather than raising a note that is later ignored.</figcaption>
+        </figure>
+
+        <h2>Keyless trust and promotion</h2>
+
+        <p>The pipeline never holds a long lived key. When a job needs to act in Amazon Web Services, it asks GitHub for a short lived OpenID Connect token whose claims describe the repository, the branch, and the environment, and it presents that token to assume a role. The role's trust policy pins the claim, so only that repository, on that environment, can assume it, and the credentials returned are temporary and scoped to what the environment needs.</p>
+
+        <figure class="diagram">
+          <img src="/assets/img/cicd-oidc-promotion.png" alt="The keyless trust flow from GitHub to AWS, and the promotion of one immutable artifact through four environments with gates" loading="lazy">
+          <figcaption>Keyless trust and promotion. No stored keys, and one immutable artifact promoted by digest through environments, each with its own protection rules and its own scoped role.</figcaption>
+        </figure>
+
+        <p>The trust is expressed in the role's policy. The condition on the subject claim is what limits which workflow, on which environment, may assume the role.</p>
+
+        <pre><code>{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "Federated": "arn:aws:iam::111122223333:oidc-provider/token.actions.githubusercontent.com"
+      },
+      "Action": "sts:AssumeRoleWithWebIdentity",
+      "Condition": {
+        "StringEquals": {
+          "token.actions.githubusercontent.com:aud": "sts.amazonaws.com",
+          "token.actions.githubusercontent.com:sub": "repo:akanjilal-dev/payments-app:environment:production"
+        }
+      }
+    }
+  ]
+}</code></pre>
+
+        <p>The same immutable image is promoted by its digest through development, test, staging, and production. Each environment is a GitHub environment with its own protection rules, so production requires two approvers and a wait timer, and each environment has its own role, so a deployment to one environment cannot touch another.</p>
+
+        <h2>Deploying to Kubernetes with GitOps</h2>
+
+        <p>For Amazon Elastic Kubernetes Service the deployment is pull based. The pipeline pushes the signed image to the registry and commits the new image digest into a configuration repository that holds the desired state of the clusters. ArgoCD, running inside each cluster, watches that repository, notices the change, pulls it, and reconciles the cluster to match. The runner is never given a way into the cluster, which is exactly what makes a GitHub hosted runner acceptable for a private, regulated cluster.</p>
+
+        <figure class="diagram">
+          <img src="/assets/img/cicd-eks-gitops.png" alt="GitOps with ArgoCD pulling desired state from Git into two clusters, with Kyverno admission and Argo Rollouts canary" loading="lazy">
+          <figcaption>Pull based GitOps. The runner only pushes an image and commits a file. ArgoCD pulls the desired state from inside each cluster, and the same state converges in both regions.</figcaption>
+        </figure>
+
+        <p>Inside the cluster, a policy refuses to schedule any image that does not carry a valid signature from the pipeline's identity, which is the second, independent enforcement of the signing rule. Argo Rollouts then moves the new version in as a canary and rolls back automatically if it is unhealthy.</p>
+
+        <pre><code>apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: require-signed-images
+spec:
+  validationFailureAction: Enforce
+  rules:
+    - name: verify-signature
+      match:
+        any:
+          - resources:
+              kinds: [ Pod ]
+      verifyImages:
+        - imageReferences:
+            - "111122223333.dkr.ecr.ca-central-1.amazonaws.com/*"
+          attestors:
+            - entries:
+                - keyless:
+                    issuer: "https://token.actions.githubusercontent.com"
+                    subject: "https://github.com/akanjilal-work/payments-app"</code></pre>
+
+        <h2>Deploying to the container service with blue and green</h2>
+
+        <p>For Amazon Elastic Container Service the deployment is push based but safe. A deploy job assumes its scoped role, registers a new task definition that points at the same image digest, and hands the release to AWS CodeDeploy, which stands up the new version alongside the old one behind the load balancer. The current version keeps serving traffic until the new one passes its health checks, at which point traffic shifts. If an alarm fires during the shift, the release rolls back automatically and the old version simply keeps serving.</p>
+
+        <figure class="diagram">
+          <img src="/assets/img/cicd-ecs-bluegreen.png" alt="Blue and green deployment on the container service in two regions, with CodeDeploy shifting traffic and rolling back on an alarm" loading="lazy">
+          <figcaption>Blue and green on the container service. The old version stays in place until the new one is proven, and a failed shift rolls back on its own.</figcaption>
+        </figure>
+
+        <p>Both paths deploy the same signed artifact to both regions, so a release is consistent across the estate, and a regional problem is handled by the landing zone's regional failover rather than by the pipeline. The result is a pipeline that turns a local commit into a production change through a sequence of checks that cannot be skipped, that holds no standing credentials, that deploys in a way that is quick to undo, and that leaves behind a complete and honest record of how the change got there.</p>
+      </div>
+
+      <section class="prose refs">
+        <h2>References</h2>
+        <ol>
+          <li>GitHub, GitHub Actions documentation.<span class="src">https://docs.github.com/en/actions</span></li>
+          <li>GitHub, configuring OpenID Connect in Amazon Web Services.<span class="src">https://docs.github.com/en/actions/security-for-github-actions/security-hardening-your-deployments/configuring-openid-connect-in-amazon-web-services</span></li>
+          <li>GitHub, managing environments for deployment.<span class="src">https://docs.github.com/en/actions/managing-workflow-runs-and-deployments/managing-deployments/managing-environments-for-deployment</span></li>
+          <li>Amazon Web Services, the configure AWS credentials action for GitHub Actions.<span class="src">https://github.com/aws-actions/configure-aws-credentials</span></li>
+          <li>Amazon Web Services, Amazon Elastic Container Registry.<span class="src">https://docs.aws.amazon.com/AmazonECR/latest/userguide/what-is-ecr.html</span></li>
+          <li>Amazon Web Services, Amazon Elastic Container Registry image scanning.<span class="src">https://docs.aws.amazon.com/AmazonECR/latest/userguide/image-scanning.html</span></li>
+          <li>Argo Project, Argo CD.<span class="src">https://argo-cd.readthedocs.io/en/stable/</span></li>
+          <li>Argo Project, Argo Rollouts.<span class="src">https://argoproj.github.io/argo-rollouts/</span></li>
+          <li>Amazon Web Services, blue and green deployment for Amazon Elastic Container Service.<span class="src">https://docs.aws.amazon.com/AmazonECS/latest/developerguide/deployment-type-bluegreen.html</span></li>
+          <li>Kyverno, verifying container image signatures.<span class="src">https://kyverno.io/docs/writing-policies/verify-images/</span></li>
+          <li>Sigstore, Cosign documentation.<span class="src">https://docs.sigstore.dev/</span></li>
+          <li>Supply chain Levels for Software Artifacts.<span class="src">https://slsa.dev/</span></li>
+          <li>Open Worldwide Application Security Project, Top 10 Continuous Integration and Continuous Delivery Security Risks.<span class="src">https://owasp.org/www-project-top-10-ci-cd-security-risks/</span></li>
+        </ol>
+      </section>
+
+      <div class="article-foot">
+        <div class="cta-row">
+          <a class="btn" href="/architectures/">More architectures</a>
+        </div>
+      </div>
+    </div>
+  </article>
+</main>
+
+<footer>
+  <div class="wrap foot">
+    <div class="links">
+      <a href="https://github.com/akanjilal-work">GitHub</a>
+      <a href="https://www.linkedin.com/in/akanjilal/">LinkedIn</a>
+      <a href="mailto:anirban.kanjilal@gmail.com">Email</a>
+    </div>
+    <div class="copy">© 2026 Anirban Kanjilal</div>
+  </div>
+</footer>
+
+</body>
+</html>
