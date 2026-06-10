@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Zero trust AI gateway, Anirban Kanjilal</title>
+<meta name="description" content="A multi region reference architecture for a zero trust gateway that sits between agents and the models, tools, and data they use, with scoped identity, an allow list, guardrails on input and output, human approval for high impact actions, and a full audit trail.">
+<meta property="og:title" content="Zero trust AI gateway">
+<meta property="og:description" content="One controlled chokepoint between agents and the models and tools they use, across two regions.">
+<meta property="og:type" content="article">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/site.css">
+</head>
+<body>
+
+<header class="bar">
+  <div class="wrap">
+    <a class="brand" href="/">akanjilal<span class="dot">.dev</span></a>
+    <nav class="nav" aria-label="Primary">
+      <a href="/#work">work</a>
+      <a href="/blog/">my blogs</a>
+      <a href="/architectures/">architectures</a>
+      <a href="/#background">background</a>
+      <a class="ext" href="https://github.com/akanjilal-work">github</a>
+      <a class="ext" href="https://www.linkedin.com/in/akanjilal/">linkedin</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <article class="article">
+    <div class="wrap">
+      <a class="back" href="/architectures/">Back to reference architectures</a>
+      <div class="article-head">
+        <div class="meta"><span>Reference architecture</span><span>Amazon Web Services</span><span>ca-central-1 and ca-west-1</span></div>
+        <h1>Zero trust AI gateway</h1>
+        <p class="standfirst">When applications and agents start calling models, tools, and private data, the risk is no longer the model alone. It is the open path between a caller and everything the caller can reach. This reference architecture places a single controlled gateway on that path, so that every call is authenticated, inspected, authorized against an allow list, and recorded, and so that an agent never touches a model or a tool except through it. It runs in two Canadian regions inside the landing zone, in the production segment, and inherits its inspection and identity.</p>
+      </div>
+
+      <div class="prose">
+        <p>The phrase zero trust means that nothing is trusted because of where it sits. A request from inside the network is treated with the same suspicion as a request from outside, every call is checked on its own merits, and the gateway grants the least it can rather than the most it could. For systems built on models and agents this matters more than usual, because an agent is, by design, a component that decides at run time what to call and with what arguments, so the controls cannot live only in the application. They have to live on the path that every call must cross.</p>
+
+        <h2>Requirements</h2>
+
+        <p>The requirements the gateway has to satisfy, the quality attributes it is judged on, the constraints it must respect, and the assumptions it rests on. Every decision in the next section traces back to one or more of them.</p>
+
+        <h3>Functional requirements</h3>
+        <table>
+          <thead><tr><th>Number</th><th>Requirement</th></tr></thead>
+          <tbody>
+            <tr><td>1</td><td>Provide one controlled entry point between callers and all models, tools, and knowledge.</td></tr>
+            <tr><td>2</td><td>Authenticate every caller and authorize each model and tool call against an allow list.</td></tr>
+            <tr><td>3</td><td>Inspect every prompt and every response for prompt attacks and for personal data.</td></tr>
+            <tr><td>4</td><td>Issue short lived, scoped credentials to tools rather than sharing standing secrets.</td></tr>
+            <tr><td>5</td><td>Require a human to approve any action that moves money or is otherwise irreversible.</td></tr>
+            <tr><td>6</td><td>Record every model invocation and every tool call as an audit trail.</td></tr>
+            <tr><td>7</td><td>Continue to enforce all of the above after a failover to the second region.</td></tr>
+          </tbody>
+        </table>
+
+        <h3>Quality attributes</h3>
+        <table>
+          <thead><tr><th>Number</th><th>Attribute</th><th>Intent</th></tr></thead>
+          <tbody>
+            <tr><td>1</td><td>Security</td><td>No caller reaches a model or a tool except through the gateway, with least privilege throughout.</td></tr>
+            <tr><td>2</td><td>Auditability</td><td>Reconstruct every interaction after the fact, retained for at least one year.</td></tr>
+            <tr><td>3</td><td>Reliability</td><td>Tolerate the loss of an availability zone with no action, and the loss of a region within the recovery objective.</td></tr>
+            <tr><td>4</td><td>Latency</td><td>Add only a small and bounded overhead to each call.</td></tr>
+            <tr><td>5</td><td>Extensibility</td><td>Add a model or a tool by registering it, without changing any caller.</td></tr>
+            <tr><td>6</td><td>Cost efficiency</td><td>Pay for inspection and routing in proportion to use.</td></tr>
+          </tbody>
+        </table>
+
+        <h3>Constraints and assumptions</h3>
+        <table>
+          <thead><tr><th>Number</th><th>Constraint</th></tr></thead>
+          <tbody>
+            <tr><td>1</td><td>All inference and all data remain within Canada and within the two approved regions.</td></tr>
+            <tr><td>2</td><td>The gateway sits inside the landing zone production segment and inherits its inspection and guardrails.</td></tr>
+            <tr><td>3</td><td>Only approved foundation models and approved tool versions may be reached.</td></tr>
+            <tr><td>4</td><td>Personal data and cardholder data must never leave the private network.</td></tr>
+          </tbody>
+        </table>
+        <table>
+          <thead><tr><th>Number</th><th>Assumption</th></tr></thead>
+          <tbody>
+            <tr><td>1</td><td>Callers are internal applications and agents that already authenticate to the corporate identity provider.</td></tr>
+            <tr><td>2</td><td>Tools expose a described interface that can be registered and validated.</td></tr>
+            <tr><td>3</td><td>Foundation models are consumed through Amazon Bedrock rather than self hosted.</td></tr>
+          </tbody>
+        </table>
+
+        <h2>Architecture decisions and rationale</h2>
+
+        <p>These are the decisions that shaped the gateway. Each records what was chosen, what was set aside, why, and what it costs.</p>
+
+        <h3>1. One gateway chokepoint rather than each application calling models directly</h3>
+        <p><strong>Decision.</strong> Route every call to a model, a tool, or a knowledge source through a single gateway, and forbid direct calls.</p>
+        <p><strong>Alternatives.</strong> Letting each application hold its own credentials and call Amazon Bedrock and the tools directly, with controls embedded in each application.</p>
+        <p><strong>Rationale.</strong> A single path is the only place a control can be proven to apply to every call, where controls spread across many applications are applied inconsistently and are impossible to audit as a whole. This serves functional requirements 1 and 6 and the security attribute.</p>
+        <p><strong>Consequences.</strong> The gateway is on the critical path for every call, so it is built across two availability zones and two regions and is kept thin enough to add only a small latency.</p>
+
+        <h3>2. Bedrock AgentCore for the runtime, identity, and tool gateway rather than building the plumbing</h3>
+        <p><strong>Decision.</strong> Use Bedrock AgentCore for the agent runtime with session isolation, for scoped identity, and for the tool gateway.</p>
+        <p><strong>Alternatives.</strong> Assembling the same capabilities from containers, a custom token service, and hand written tool adapters.</p>
+        <p><strong>Rationale.</strong> The managed runtime provides session isolation, a tool gateway, identity, and observability as building blocks, which removes a large amount of undifferentiated and security sensitive code that would otherwise have to be written and maintained. This serves the extensibility attribute and functional requirement 4.</p>
+        <p><strong>Consequences.</strong> The design is tied to a managed service, which is an accepted trade because the alternative is to maintain security critical plumbing that is not the organization's core business.</p>
+
+        <h3>3. Bedrock Guardrails applied independently rather than relying on a model's built in safety</h3>
+        <p><strong>Decision.</strong> Apply Bedrock Guardrails to both the input and the output of every call using the independent guardrail interface, so the same policy holds for any model.</p>
+        <p><strong>Alternatives.</strong> Trusting the safety behaviour built into each model, or filtering only the input.</p>
+        <p><strong>Rationale.</strong> A guardrail applied independently enforces one consistent policy across every model and is the place to catch prompt attacks on the way in and personal data or secrets on the way out, which a single model's behaviour cannot be relied upon to do. This serves functional requirement 3 and the security attribute.</p>
+        <p><strong>Consequences.</strong> Each call carries two inspection steps, which is a small and bounded cost accepted for a consistent control.</p>
+
+        <h3>4. An allow list of models and tools rather than open access</h3>
+        <p><strong>Decision.</strong> Maintain a registry of approved models and tools, pin their versions, and reject anything not on the list.</p>
+        <p><strong>Alternatives.</strong> Allowing callers to reach any model or any reachable service.</p>
+        <p><strong>Rationale.</strong> An allow list turns the question of what an agent may do into a reviewed decision rather than an emergent one, which is what a regulated environment requires. This serves functional requirement 2 and constraint 3.</p>
+        <p><strong>Consequences.</strong> Adding a capability requires a registration step, which is the intended point of control.</p>
+
+        <h3>5. Short lived, scoped credentials per tool rather than shared secrets</h3>
+        <p><strong>Decision.</strong> Issue a credential that is scoped to a single tool and a single purpose, valid for a short time, through AgentCore Identity.</p>
+        <p><strong>Alternatives.</strong> A shared service credential that every tool call uses.</p>
+        <p><strong>Rationale.</strong> A scoped and short lived credential limits what a compromised call can do and for how long, where a shared standing secret would expose every tool at once if it leaked. This serves functional requirement 4 and the security attribute.</p>
+        <p><strong>Consequences.</strong> The identity service must mint credentials on demand, which is the managed behaviour of AgentCore Identity.</p>
+
+        <h3>6. A human approval step for high impact actions rather than full autonomy</h3>
+        <p><strong>Decision.</strong> Require a person to confirm any action that moves money, changes a record of value, or is otherwise irreversible.</p>
+        <p><strong>Alternatives.</strong> Allowing the agent to complete such actions on its own once it decides to.</p>
+        <p><strong>Rationale.</strong> An agent's judgement is probabilistic, so the cost of a wrong irreversible action is too high to leave unattended, and a single confirmation point removes the most damaging class of mistake. This serves functional requirement 5.</p>
+        <p><strong>Consequences.</strong> Some actions are slower because they wait for a person, which is accepted in exchange for preventing the worst outcomes.</p>
+
+        <h3>7. Two regions in warm standby rather than a single region</h3>
+        <p><strong>Decision.</strong> Run the gateway active in the primary region and warm in the secondary, with configuration and session state replicated and traffic directed by Amazon Route 53.</p>
+        <p><strong>Alternatives.</strong> A single region, accepting that a regional failure takes the capability offline.</p>
+        <p><strong>Rationale.</strong> The controls are only useful if they are available, so the gateway has to survive a regional failure within the recovery objective. This serves functional requirement 7 and the reliability attribute.</p>
+        <p><strong>Consequences.</strong> A standby region carries a running cost, which is reduced by keeping it warm rather than fully scaled until it is needed.</p>
+
+        <h2>The request path</h2>
+
+        <p>Every call follows the same path, and the value of the design is that there is only one. A caller arrives, is authenticated and given a scope, the prompt is inspected, the requested model or tool is checked against the allow list, the call is made over a private path, the response is inspected, and the whole exchange is recorded. None of these steps can be skipped, because the caller has no other way to reach a model or a tool.</p>
+
+        <figure class="diagram">
+          <img src="/assets/img/aigw-lifecycle.png" alt="A caller passing through six gateway controls before reaching models, tools, and knowledge bases" loading="lazy">
+          <figcaption>The six controls on the request path. Authentication and scope, input inspection, the allow list, the private invocation, output inspection, and the audit record.</figcaption>
+        </figure>
+
+        <p>The inspection on the way in and the way out is done by Bedrock Guardrails, applied independently of the model so the policy is the same regardless of which model is called. A representative guardrail blocks prompt attacks on the input, blocks card numbers and the Canadian social insurance number, anonymizes contact details, and denies a set of topics the business has decided are out of bounds.</p>
+
+        <pre><code>{
+  "name": "payments-gateway-guardrail",
+  "contentPolicyConfig": {
+    "filtersConfig": [
+      { "type": "PROMPT_ATTACK", "inputStrength": "HIGH", "outputStrength": "NONE" },
+      { "type": "MISCONDUCT",    "inputStrength": "HIGH", "outputStrength": "HIGH" }
+    ]
+  },
+  "sensitiveInformationPolicyConfig": {
+    "piiEntitiesConfig": [
+      { "type": "CREDIT_DEBIT_CARD_NUMBER",      "action": "BLOCK" },
+      { "type": "CA_SOCIAL_INSURANCE_NUMBER",    "action": "BLOCK" },
+      { "type": "EMAIL",                         "action": "ANONYMIZE" }
+    ]
+  },
+  "topicPolicyConfig": {
+    "topicsConfig": [
+      { "name": "Investment advice", "type": "DENY",
+        "definition": "Recommendations to buy or sell specific securities" }
+    ]
+  }
+}</code></pre>
+
+        <h2>The deployment</h2>
+
+        <p>The gateway runs inside the landing zone, in the production segment of the network, which means it already sits behind the centralized inspection and inherits the organization's identity and logging. In front of it are the web application firewall and the content delivery network, which absorb common attacks and rate limit abusive callers. The runtime, the identity service, and the guardrails run inside the production virtual private cloud, and the model service, the secrets, and the session store are reached over private endpoints so that no part of the path crosses the public internet.</p>
+
+        <figure class="diagram">
+          <img src="/assets/img/aigw-architecture.png" alt="The gateway deployed across ca-central-1 and ca-west-1 with Route 53 failover, AgentCore, Guardrails, and private Bedrock access" loading="lazy">
+          <figcaption>The gateway in two regions. Each region runs the full set of controls, configuration and session state replicate, and Amazon Route 53 directs traffic to the healthy region.</figcaption>
+        </figure>
+
+        <h2>The tool boundary</h2>
+
+        <p>The most dangerous thing an agent does is call a tool, because a tool acts on the world. The gateway therefore treats the boundary between the agent and the tools as the place to be strictest. Only tools in the registry can be called, each call is made with a credential scoped to that one tool, the arguments are validated against the tool's declared interface before the call is made, an action that is irreversible waits for a human, and every call is recorded. Third party tools are treated as untrusted by default, which means their responses are inspected on the way back just as a user's input is.</p>
+
+        <figure class="diagram">
+          <img src="/assets/img/aigw-trust.png" alt="The agent reaching internal, third party, and action tools only through the gateway boundary with scoped credentials and validation" loading="lazy">
+          <figcaption>The tool boundary. The agent never reaches a tool directly, and the controls are strongest where the tool can change something in the world.</figcaption>
+        </figure>
+
+        <p>This is the same discipline a payment network applies to its own integrations, carried over to agents. The agent is allowed to be creative about what it wants to do, and the gateway is responsible for making sure that what it actually does is permitted, scoped, validated, and recorded. That separation is what makes it safe to put an agent in front of real systems.</p>
+      </div>
+
+      <section class="prose refs">
+        <h2>References</h2>
+        <ol>
+          <li>Amazon Web Services, Amazon Bedrock AgentCore.<span class="src">https://aws.amazon.com/bedrock/agentcore/</span></li>
+          <li>Amazon Web Services, Amazon Bedrock Guardrails.<span class="src">https://aws.amazon.com/bedrock/guardrails/</span></li>
+          <li>Amazon Web Services, use the ApplyGuardrail independent interface.<span class="src">https://docs.aws.amazon.com/bedrock/latest/userguide/guardrails-use-independent-api.html</span></li>
+          <li>Amazon Web Services, AWS WAF developer guide.<span class="src">https://docs.aws.amazon.com/waf/latest/developerguide/what-is-aws-waf.html</span></li>
+          <li>Amazon Web Services, AWS PrivateLink.<span class="src">https://docs.aws.amazon.com/vpc/latest/privatelink/what-is-privatelink.html</span></li>
+          <li>Amazon Web Services, Amazon Route 53 Application Recovery Controller.<span class="src">https://docs.aws.amazon.com/r53recovery/latest/dg/what-is-route-53-recovery.html</span></li>
+          <li>Open Worldwide Application Security Project, Top 10 for Large Language Model Applications.<span class="src">https://owasp.org/www-project-top-10-for-large-language-model-applications/</span></li>
+        </ol>
+      </section>
+
+      <div class="article-foot">
+        <div class="cta-row">
+          <a class="btn primary" href="https://github.com/akanjilal-work/reference-architectures">See the repository</a>
+          <a class="btn" href="/architectures/">More architectures</a>
+        </div>
+      </div>
+    </div>
+  </article>
+</main>
+
+<footer>
+  <div class="wrap foot">
+    <div class="links">
+      <a href="https://github.com/akanjilal-work">GitHub</a>
+      <a href="https://www.linkedin.com/in/akanjilal/">LinkedIn</a>
+      <a href="mailto:anirban.kanjilal@gmail.com">Email</a>
+    </div>
+    <div class="copy">© 2026 Anirban Kanjilal</div>
+  </div>
+</footer>
+
+</body>
+</html>

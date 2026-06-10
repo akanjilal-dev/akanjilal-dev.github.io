@@ -176,3 +176,19 @@ a:focus-visible,.btn:focus-visible{outline:2px solid var(--accent);outline-offse
 
 /* rendered infographic images */
 .diagram img{width:100%;height:auto;display:block}
+
+/* reference architecture detail pages: tables */
+.prose table{width:100%;border-collapse:collapse;margin:26px 0;font-size:.95rem}
+.prose th,.prose td{text-align:left;padding:10px 14px;border-bottom:1px solid var(--hairline);vertical-align:top}
+.prose thead th{font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:.72rem;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);font-weight:600}
+.prose td:first-child{font-family:"IBM Plex Mono",ui-monospace,monospace;color:var(--ink)}
+.prose td.range{font-family:"IBM Plex Mono",ui-monospace,monospace;color:var(--accent)}
+.post-item.soon{opacity:.62}
+.post-item.soon .meta span:last-child{color:var(--accent)}
+
+/* collapsible card grids (Selected work + Reference architectures): show 3, expand for the rest */
+.cards.collapsed > *:nth-child(n+4){display:none}
+.show-more{display:inline-block;margin-top:18px;font-family:"IBM Plex Mono",monospace;font-size:13px;
+  padding:9px 16px;border-radius:9px;border:1px solid var(--hairline);background:var(--surface);color:var(--ink);
+  cursor:pointer;transition:border-color .15s,transform .12s}
+.show-more:hover{border-color:var(--accent);transform:translateY(-1px)}

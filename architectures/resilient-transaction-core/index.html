@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Resilient transaction processing core, Anirban Kanjilal</title>
+<meta name="description" content="A multi region, event driven reference architecture for a high value transaction core, designed against all six pillars of the AWS Well Architected Framework, with idempotency, the saga pattern, an append only ledger, and a rehearsed regional failover.">
+<meta property="og:title" content="Resilient transaction processing core">
+<meta property="og:description" content="An idempotent, event driven backbone for high value transactions across two regions, mapped to all six Well Architected pillars.">
+<meta property="og:type" content="article">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/site.css">
+</head>
+<body>
+
+<header class="bar">
+  <div class="wrap">
+    <a class="brand" href="/">akanjilal<span class="dot">.dev</span></a>
+    <nav class="nav" aria-label="Primary">
+      <a href="/#work">work</a>
+      <a href="/blog/">my blogs</a>
+      <a href="/architectures/">architectures</a>
+      <a href="/#background">background</a>
+      <a class="ext" href="https://github.com/akanjilal-work">github</a>
+      <a class="ext" href="https://www.linkedin.com/in/akanjilal/">linkedin</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <article class="article">
+    <div class="wrap">
+      <a class="back" href="/architectures/">Back to reference architectures</a>
+      <div class="article-head">
+        <div class="meta"><span>Reference architecture</span><span>Event driven core</span><span>ca-central-1 and ca-west-1</span></div>
+        <h1>Resilient transaction processing core</h1>
+        <p class="standfirst">A transaction core has one job that it must never get wrong. It must apply each transaction exactly once, never lose one, and never leave money half moved, even when a component fails or a whole region goes dark. This reference architecture is an idempotent, event driven backbone for high value transactions, built across two Canadian regions, coordinated with the saga pattern, recorded in an append only ledger, and designed deliberately against all six pillars of the AWS Well Architected Framework.</p>
+      </div>
+
+      <div class="prose">
+        <p>The hard part of a transaction system is not the happy path. It is what happens when a caller retries because it did not hear back, when a step succeeds but the next one fails, when a queue backs up under load, or when the primary region becomes unreachable in the middle of a busy minute. The design here treats every one of those as a normal event rather than an exception, because in a system that runs at scale they are normal. Two ideas carry most of the weight. Every operation is idempotent, so doing it twice is the same as doing it once, and every multi step transaction is a saga, so a failure partway through unwinds cleanly.</p>
+
+        <h2>Requirements</h2>
+
+        <p>The requirements the core has to satisfy, the quality attributes it is judged on, the constraints it must respect, and the assumptions it rests on. The quality attributes are deliberately the six pillars of the Well Architected Framework, because this is a workload where all six matter.</p>
+
+        <h3>Functional requirements</h3>
+        <table>
+          <thead><tr><th>Number</th><th>Requirement</th></tr></thead>
+          <tbody>
+            <tr><td>1</td><td>Accept a high rate of transactions and never lose one once accepted.</td></tr>
+            <tr><td>2</td><td>Apply each transaction exactly once, even when a caller retries.</td></tr>
+            <tr><td>3</td><td>Coordinate multi step transactions so that a partial failure never leaves money half moved.</td></tr>
+            <tr><td>4</td><td>Keep a durable, ordered, and auditable record of every transaction.</td></tr>
+            <tr><td>5</td><td>Publish events so that downstream systems react without being coupled to the core.</td></tr>
+            <tr><td>6</td><td>Continue processing through the loss of an availability zone with no action.</td></tr>
+            <tr><td>7</td><td>Recover from the loss of a region within the recovery objective.</td></tr>
+          </tbody>
+        </table>
+
+        <h3>Quality attributes, the six pillars</h3>
+        <table>
+          <thead><tr><th>Pillar</th><th>Intent</th></tr></thead>
+          <tbody>
+            <tr><td>Operational excellence</td><td>Everything defined as code, with traceability of every transaction through the system.</td></tr>
+            <tr><td>Security</td><td>Authenticated entry, least privilege, encryption everywhere, inside the landing zone production segment.</td></tr>
+            <tr><td>Reliability</td><td>Tolerate a zone loss with no action, and a region loss within the recovery objective, with no double processing.</td></tr>
+            <tr><td>Performance efficiency</td><td>Absorb spikes through queues and scale the processors to demand.</td></tr>
+            <tr><td>Cost optimization</td><td>Pay for work done rather than for idle capacity, with a warm rather than a full standby.</td></tr>
+            <tr><td>Sustainability</td><td>Serverless and managed components scaled to actual load rather than provisioned for peak.</td></tr>
+          </tbody>
+        </table>
+
+        <h3>Constraints and assumptions</h3>
+        <table>
+          <thead><tr><th>Number</th><th>Constraint</th></tr></thead>
+          <tbody>
+            <tr><td>1</td><td>Data residency in Canada and the two approved regions.</td></tr>
+            <tr><td>2</td><td>The core sits inside the landing zone production segment and inherits its controls.</td></tr>
+            <tr><td>3</td><td>Every transaction must be traceable end to end and retained for audit.</td></tr>
+            <tr><td>4</td><td>Recovery point objective near zero, and recovery time objective in minutes.</td></tr>
+          </tbody>
+        </table>
+        <table>
+          <thead><tr><th>Number</th><th>Assumption</th></tr></thead>
+          <tbody>
+            <tr><td>1</td><td>Callers are authenticated services rather than anonymous clients.</td></tr>
+            <tr><td>2</td><td>Downstream consumers can react to events asynchronously.</td></tr>
+            <tr><td>3</td><td>The ledger is the system of record for anything of value.</td></tr>
+          </tbody>
+        </table>
+
+        <h2>Architecture decisions and rationale</h2>
+
+        <p>The decisions that shaped the core, each with the alternative that was set aside and the cost that was accepted.</p>
+
+        <h3>1. Event driven rather than a synchronous chain of calls</h3>
+        <p><strong>Decision.</strong> Accept a transaction quickly, place the work on a durable queue, and process it asynchronously, with components communicating through events.</p>
+        <p><strong>Alternatives.</strong> A synchronous chain in which the caller waits while each downstream system is called in turn.</p>
+        <p><strong>Rationale.</strong> A synchronous chain is only as available as its least available link and falls over under load, where a queue absorbs spikes, decouples the parts, and lets each scale and fail independently. This serves functional requirements 1 and 5 and the performance and reliability pillars.</p>
+        <p><strong>Consequences.</strong> The system is eventually consistent for downstream effects, which is handled by emitting clear events and designing consumers to expect them.</p>
+
+        <h3>2. Idempotency keys rather than hoping callers do not retry</h3>
+        <p><strong>Decision.</strong> Give every transaction an idempotency key recorded in DynamoDB, and make every operation safe to repeat under that key.</p>
+        <p><strong>Alternatives.</strong> Assuming each request arrives exactly once.</p>
+        <p><strong>Rationale.</strong> At scale, retries are inevitable, from clients, from networks, and from the platform itself, so the only safe assumption is that any request may arrive more than once, and the idempotency key makes a repeat harmless. This serves functional requirement 2 and the reliability pillar.</p>
+        <p><strong>Consequences.</strong> Every operation must check and record the key, which is a small and consistent overhead.</p>
+
+        <h3>3. The saga pattern rather than a distributed transaction</h3>
+        <p><strong>Decision.</strong> Coordinate multi step transactions with AWS Step Functions as an explicit saga, where each step has a compensating action.</p>
+        <p><strong>Alternatives.</strong> A distributed transaction that tries to lock every system and commit them together.</p>
+        <p><strong>Rationale.</strong> A lock held across independent services does not scale and creates new failure modes, where a saga makes the steps and their compensations explicit and lets a late failure unwind the earlier steps cleanly. This serves functional requirement 3.</p>
+        <p><strong>Consequences.</strong> Each step needs a compensation written for it, which is the deliberate cost of doing this correctly.</p>
+
+        <h3>4. An append only ledger as the system of record rather than mutable rows</h3>
+        <p><strong>Decision.</strong> Record every movement in an append only ledger in Amazon Aurora, and archive an immutable copy to object storage.</p>
+        <p><strong>Alternatives.</strong> Updating balances in place and trusting the latest value.</p>
+        <p><strong>Rationale.</strong> An append only record can always be replayed and audited, where a mutable balance loses the history that a regulated system has to be able to reconstruct. This serves functional requirement 4 and the operational excellence pillar.</p>
+        <p><strong>Consequences.</strong> The ledger grows and is summarized for fast reads, which is a normal and well understood pattern.</p>
+
+        <h3>5. Domain events for downstream rather than direct integration</h3>
+        <p><strong>Decision.</strong> Publish domain events to Amazon EventBridge for downstream systems to consume.</p>
+        <p><strong>Alternatives.</strong> Calling each downstream system directly from the core.</p>
+        <p><strong>Rationale.</strong> Direct calls couple the core to every consumer and make it fragile, where an event bus lets consumers come and go without the core knowing or caring. This serves functional requirement 5 and the operational excellence pillar.</p>
+        <p><strong>Consequences.</strong> Consumers must handle events that may arrive more than once, which the idempotency discipline already assumes.</p>
+
+        <h3>6. Multi region active and warm standby rather than a single region</h3>
+        <p><strong>Decision.</strong> Replicate idempotency keys through DynamoDB global tables and the ledger through Aurora Global Database, with a warm standby promoted on failover.</p>
+        <p><strong>Alternatives.</strong> A single region, or a pair fully active in both regions.</p>
+        <p><strong>Rationale.</strong> A single region cannot meet the recovery objective, and a fully active pair would have to resolve conflicting writes to the ledger, which is more risk than this objective needs, so the standby is warm and is promoted deliberately. This serves functional requirement 7 and the reliability and cost pillars.</p>
+        <p><strong>Consequences.</strong> A failover is a rehearsed action that takes minutes, and because idempotency keys replicate, a request retried after a failover is still recognized and never applied twice.</p>
+
+        <h2>The core</h2>
+
+        <p>A transaction enters through an authenticated entry behind the web application firewall, is made idempotent immediately, and is placed on a durable queue. From there the processors pick it up, the saga coordinates the steps, the ledger records the movements, and an event is published for anyone downstream who needs to know. Each box in the picture can scale and fail on its own, which is the point of separating them.</p>
+
+        <figure class="diagram">
+          <img src="/assets/img/txn-architecture.png" alt="An event driven transaction core with idempotency, a queue, processors, a Step Functions saga, an Aurora ledger, and EventBridge events" loading="lazy">
+          <figcaption>The event driven core. Accept and make idempotent, queue, process, coordinate the saga, record in the ledger, and publish events.</figcaption>
+        </figure>
+
+        <h2>The saga and idempotency</h2>
+
+        <p>The saga is an explicit state machine. Funds are reserved, the payer is debited, the payee is credited, and the result is confirmed and emitted, and every step has a compensating action so that a failure late in the sequence reverses the earlier steps rather than leaving the transaction half done. Because each step is idempotent and keyed on the transaction identifier, a retry repeats the intent without repeating the effect.</p>
+
+        <figure class="diagram">
+          <img src="/assets/img/txn-saga.png" alt="A saga of reserve, debit, credit, and confirm, each with a compensating action that reverses it on a later failure" loading="lazy">
+          <figcaption>The saga. Each forward step has a compensation, so a late failure unwinds cleanly rather than leaving money half moved.</figcaption>
+        </figure>
+
+        <p>Expressed as a state machine, each step catches its own failure and routes to the compensation for the steps that already succeeded.</p>
+
+        <pre><code>{
+  "Comment": "Transaction saga with compensations",
+  "StartAt": "ReserveFunds",
+  "States": {
+    "ReserveFunds": {
+      "Type": "Task", "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": { "FunctionName": "reserve-funds", "Payload.$": "$" },
+      "Catch": [ { "ErrorEquals": ["States.ALL"], "Next": "Fail" } ],
+      "Next": "DebitPayer"
+    },
+    "DebitPayer": {
+      "Type": "Task", "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": { "FunctionName": "debit-payer", "Payload.$": "$" },
+      "Catch": [ { "ErrorEquals": ["States.ALL"], "Next": "ReleaseHold" } ],
+      "Next": "CreditPayee"
+    },
+    "CreditPayee": {
+      "Type": "Task", "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": { "FunctionName": "credit-payee", "Payload.$": "$" },
+      "Catch": [ { "ErrorEquals": ["States.ALL"], "Next": "ReverseDebit" } ],
+      "Next": "Confirm"
+    },
+    "Confirm":      { "Type": "Task", "Resource": "arn:aws:states:::events:putEvents", "End": true },
+    "ReverseDebit": { "Type": "Task", "Resource": "arn:aws:states:::lambda:invoke", "Next": "ReleaseHold" },
+    "ReleaseHold":  { "Type": "Task", "Resource": "arn:aws:states:::lambda:invoke", "Next": "Fail" },
+    "Fail":         { "Type": "Fail" }
+  }
+}</code></pre>
+
+        <h2>Across two regions</h2>
+
+        <p>The core runs in two regions. Idempotency keys replicate through DynamoDB global tables, the ledger replicates through Aurora Global Database with a recovery point objective near zero, and Amazon Route 53 with the Application Recovery Controller directs traffic and supports a controlled failover. The combination of replicated keys and a replicated ledger is what makes the failover safe. A request that was in flight when the primary region failed can be retried against the standby and will be recognized as already seen, so it is never applied a second time.</p>
+
+        <figure class="diagram">
+          <img src="/assets/img/txn-multiregion.png" alt="Two regions with DynamoDB global tables for idempotency, Aurora Global Database for the ledger, and Route 53 failover" loading="lazy">
+          <figcaption>Multi region. Idempotency keys and the ledger both replicate, so a failover neither loses a transaction nor processes one twice.</figcaption>
+        </figure>
+
+        <h2>The six pillars, made concrete</h2>
+
+        <p>Because this workload is judged on all six pillars, it is worth stating exactly how each is met rather than claiming it in passing. Operational excellence comes from defining the whole core as code and from being able to trace any single transaction through every step by its identifier. Security comes from authenticated entry, least privilege on every component, encryption in transit and at rest, and from running inside the landing zone production segment behind its inspection. Reliability comes from spreading every component across two availability zones, from idempotency that makes retries safe, from the saga that prevents half completed transactions, and from the rehearsed regional failover. Performance efficiency comes from queues that absorb spikes and processors that scale to demand rather than to peak. Cost optimization comes from paying for work done through serverless and managed components and from keeping the second region warm rather than fully scaled. Sustainability comes from the same elasticity, since capacity scaled to actual load consumes less than capacity provisioned for a peak that rarely arrives. This core is the kind of backbone that the other reference architectures publish their events to and rely on for anything that moves value.</p>
+      </div>
+
+      <section class="prose refs">
+        <h2>References</h2>
+        <ol>
+          <li>Amazon Web Services, the Well Architected Framework.<span class="src">https://aws.amazon.com/architecture/well-architected/</span></li>
+          <li>Amazon Web Services, the saga pattern.<span class="src">https://docs.aws.amazon.com/prescriptive-guidance/latest/cloud-design-patterns/saga.html</span></li>
+          <li>Amazon Web Services, the idempotency pattern.<span class="src">https://docs.aws.amazon.com/prescriptive-guidance/latest/cloud-design-patterns/idempotency.html</span></li>
+          <li>Amazon Web Services, AWS Step Functions.<span class="src">https://docs.aws.amazon.com/step-functions/latest/dg/welcome.html</span></li>
+          <li>Amazon Web Services, Amazon DynamoDB global tables.<span class="src">https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/GlobalTables.html</span></li>
+          <li>Amazon Web Services, Amazon Aurora Global Database.<span class="src">https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/aurora-global-database.html</span></li>
+          <li>Amazon Web Services, Amazon EventBridge.<span class="src">https://docs.aws.amazon.com/eventbridge/latest/userguide/eb-what-is.html</span></li>
+        </ol>
+      </section>
+
+      <div class="article-foot">
+        <div class="cta-row">
+          <a class="btn primary" href="https://github.com/akanjilal-work/reference-architectures">See the repository</a>
+          <a class="btn" href="/architectures/">More architectures</a>
+        </div>
+      </div>
+    </div>
+  </article>
+</main>
+
+<footer>
+  <div class="wrap foot">
+    <div class="links">
+      <a href="https://github.com/akanjilal-work">GitHub</a>
+      <a href="https://www.linkedin.com/in/akanjilal/">LinkedIn</a>
+      <a href="mailto:anirban.kanjilal@gmail.com">Email</a>
+    </div>
+    <div class="copy">© 2026 Anirban Kanjilal</div>
+  </div>
+</footer>
+
+</body>
+</html>

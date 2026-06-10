@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Model lifecycle and governance on SageMaker, Anirban Kanjilal</title>
+<meta name="description" content="A multi region reference architecture for governing the full machine learning model lifecycle on Amazon SageMaker, with a central model registry, model cards, bias and explainability checks, approval as a hard gate, drift monitoring, and a separation of duties across accounts.">
+<meta property="og:title" content="Model lifecycle and governance on SageMaker">
+<meta property="og:description" content="Training to monitoring as one governed pipeline, with approval as a gate and a central registry as the source of truth.">
+<meta property="og:type" content="article">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/site.css">
+</head>
+<body>
+
+<header class="bar">
+  <div class="wrap">
+    <a class="brand" href="/">akanjilal<span class="dot">.dev</span></a>
+    <nav class="nav" aria-label="Primary">
+      <a href="/#work">work</a>
+      <a href="/blog/">my blogs</a>
+      <a href="/architectures/">architectures</a>
+      <a href="/#background">background</a>
+      <a class="ext" href="https://github.com/akanjilal-work">github</a>
+      <a class="ext" href="https://www.linkedin.com/in/akanjilal/">linkedin</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <article class="article">
+    <div class="wrap">
+      <a class="back" href="/architectures/">Back to reference architectures</a>
+      <div class="article-head">
+        <div class="meta"><span>Reference architecture</span><span>Amazon SageMaker</span><span>ca-central-1 and ca-west-1</span></div>
+        <h1>Model lifecycle and governance on SageMaker</h1>
+        <p class="standfirst">A model in production is not a file. It is a decision that affects people, made by an artifact whose behaviour drifts as the world changes. This reference architecture treats the whole lifecycle, from training through approval to monitoring, as one governed pipeline on Amazon SageMaker, with a central registry as the single source of truth, documentation attached to every version, bias and explainability assessed before anything advances, approval as a hard gate, and drift watched continuously, all spread across two regions and separated across accounts so that the people who build models cannot quietly deploy them.</p>
+      </div>
+
+      <div class="prose">
+        <p>In a regulated setting the question is rarely whether a model is accurate. It is whether you can show how it was built, what it was tested for, who approved it and on what evidence, what it is allowed to be used for, and how you would know if it started to behave differently. A pipeline that produces a good model but cannot answer those questions has not finished the job. This design makes the answers a by product of the way the work is done, rather than something assembled after the fact for an audit.</p>
+
+        <h2>Requirements</h2>
+
+        <p>The requirements the platform has to satisfy, the quality attributes it is judged on, the constraints it must respect, and the assumptions it rests on.</p>
+
+        <h3>Functional requirements</h3>
+        <table>
+          <thead><tr><th>Number</th><th>Requirement</th></tr></thead>
+          <tbody>
+            <tr><td>1</td><td>Build and train models through a repeatable pipeline rather than by hand.</td></tr>
+            <tr><td>2</td><td>Evaluate every candidate for accuracy, for bias, and for explainability before it can advance.</td></tr>
+            <tr><td>3</td><td>Register every model as a versioned package with its documentation attached.</td></tr>
+            <tr><td>4</td><td>Require a named reviewer to approve a version before it can be deployed.</td></tr>
+            <tr><td>5</td><td>Deploy only approved versions, and record which version is in production.</td></tr>
+            <tr><td>6</td><td>Monitor every deployed model for drift and alert on deviation.</td></tr>
+            <tr><td>7</td><td>Keep one central and auditable record of every model and its approvals.</td></tr>
+          </tbody>
+        </table>
+
+        <h3>Quality attributes</h3>
+        <table>
+          <thead><tr><th>Number</th><th>Attribute</th><th>Intent</th></tr></thead>
+          <tbody>
+            <tr><td>1</td><td>Auditability</td><td>Reconstruct the full history of a model, who approved it and on what evidence, retained for at least one year.</td></tr>
+            <tr><td>2</td><td>Separation of duties</td><td>The people who build models cannot deploy them to production unreviewed.</td></tr>
+            <tr><td>3</td><td>Reproducibility</td><td>Rebuild a model and its evaluation from source.</td></tr>
+            <tr><td>4</td><td>Responsibility</td><td>Bias and explainability are assessed and recorded for every model.</td></tr>
+            <tr><td>5</td><td>Reliability</td><td>Serve inference across two regions and tolerate a regional failure.</td></tr>
+            <tr><td>6</td><td>Operability</td><td>Detect drift and act on it before it harms outcomes.</td></tr>
+          </tbody>
+        </table>
+
+        <h3>Constraints and assumptions</h3>
+        <table>
+          <thead><tr><th>Number</th><th>Constraint</th></tr></thead>
+          <tbody>
+            <tr><td>1</td><td>Data and models remain within Canada and the two approved regions.</td></tr>
+            <tr><td>2</td><td>The platform sits inside the landing zone and uses its accounts, keys, and logging.</td></tr>
+            <tr><td>3</td><td>A model must carry a documented intended use and a risk rating before production.</td></tr>
+            <tr><td>4</td><td>Managed SageMaker services are preferred over self managed training and serving.</td></tr>
+          </tbody>
+        </table>
+        <table>
+          <thead><tr><th>Number</th><th>Assumption</th></tr></thead>
+          <tbody>
+            <tr><td>1</td><td>Training data is governed and access controlled within the landing zone.</td></tr>
+            <tr><td>2</td><td>Reviewers and approvers are defined roles with the authority to sign off.</td></tr>
+            <tr><td>3</td><td>Models are served as endpoints rather than embedded inside applications.</td></tr>
+          </tbody>
+        </table>
+
+        <h2>Architecture decisions and rationale</h2>
+
+        <p>The decisions that shaped the platform, each with the alternative that was set aside and the cost that was accepted.</p>
+
+        <h3>1. The model as a governed artifact in a registry rather than a file</h3>
+        <p><strong>Decision.</strong> Treat every model as a versioned package in the SageMaker Model Registry, which is the single source of truth for what exists and what is approved.</p>
+        <p><strong>Alternatives.</strong> Storing model files in object storage and tracking their status in a spreadsheet or a wiki.</p>
+        <p><strong>Rationale.</strong> A registry gives every model a version, an approval status, attached documentation, and a lineage, which is what makes governance possible at all. This serves functional requirements 3 and 7 and the auditability attribute.</p>
+        <p><strong>Consequences.</strong> Teams must register models rather than copy files, which is the intended discipline.</p>
+
+        <h3>2. Three accounts for build, governance, and production rather than one</h3>
+        <p><strong>Decision.</strong> Separate the development account where models are built, the governance account that holds the registry and the evidence, and the production account that serves them.</p>
+        <p><strong>Alternatives.</strong> Doing all of it in one account with permissions to separate the activities.</p>
+        <p><strong>Rationale.</strong> An account boundary is the strongest separation of duties available, so a data scientist building a model has no path to deploy it to production, and the central record of approvals lives in an account that neither the builders nor the operators can quietly change. This serves the separation of duties attribute and functional requirement 5.</p>
+        <p><strong>Consequences.</strong> Models, cards, and evidence are shared across accounts through Resource Access Manager, which is a small amount of additional setup.</p>
+
+        <h3>3. Approval as a hard gate rather than a guideline</h3>
+        <p><strong>Decision.</strong> Make the deployment pipeline refuse to deploy any version whose approval status is not approved.</p>
+        <p><strong>Alternatives.</strong> Asking teams to follow an approval process by convention.</p>
+        <p><strong>Rationale.</strong> A gate enforced by the pipeline cannot be skipped under deadline pressure, where a convention always can. This serves functional requirement 4.</p>
+        <p><strong>Consequences.</strong> An unapproved model cannot reach production even in an emergency, which is the intended behaviour.</p>
+
+        <h3>4. Model Cards attached to the version rather than separate documentation</h3>
+        <p><strong>Decision.</strong> Capture the intended use, the risk rating, the training details, and the evaluation results in a SageMaker Model Card linked to the exact model version.</p>
+        <p><strong>Alternatives.</strong> Maintaining documentation in a separate system that can fall out of step with the model.</p>
+        <p><strong>Rationale.</strong> Documentation attached to the version cannot drift away from the thing it describes, and it travels with the model through approval and deployment. This serves constraint 3 and the auditability attribute.</p>
+        <p><strong>Consequences.</strong> A version is not complete until its card is filled in, which is enforced as part of registration.</p>
+
+        <h3>5. Bias and explainability in the pipeline rather than as an afterthought</h3>
+        <p><strong>Decision.</strong> Run SageMaker Clarify as a step in the pipeline, so that every candidate is assessed for bias and for feature attribution before it can be registered as a passing version.</p>
+        <p><strong>Alternatives.</strong> Assessing fairness only when someone asks, usually after deployment.</p>
+        <p><strong>Rationale.</strong> Responsibility checks that run automatically on every model are consistent and create evidence, where manual checks are infrequent and create gaps. This serves the responsibility attribute and functional requirement 2.</p>
+        <p><strong>Consequences.</strong> The pipeline takes longer because it always evaluates, which is accepted for the evidence it produces.</p>
+
+        <h3>6. Continuous drift monitoring rather than periodic review</h3>
+        <p><strong>Decision.</strong> Run SageMaker Model Monitor on every endpoint, watching data quality, model quality, bias drift, and feature attribution drift, with alerts on deviation.</p>
+        <p><strong>Alternatives.</strong> Reviewing model performance on a schedule by hand.</p>
+        <p><strong>Rationale.</strong> A model degrades continuously as the world changes, so the monitoring has to be continuous to catch it before it harms outcomes. This serves functional requirement 6 and the operability attribute.</p>
+        <p><strong>Consequences.</strong> Monitoring jobs and a baseline must be maintained for each model, which the Model Dashboard tracks and flags when missing.</p>
+
+        <h3>7. The same approved model in two regions rather than one</h3>
+        <p><strong>Decision.</strong> Replicate the approved model package and its evidence to the second region and serve from a warm standby endpoint there.</p>
+        <p><strong>Alternatives.</strong> Serving from a single region.</p>
+        <p><strong>Rationale.</strong> A failover must not change which version is in production or weaken the audit trail, so the same approved package and the same evidence exist in both regions. This serves the reliability attribute.</p>
+        <p><strong>Consequences.</strong> A standby endpoint carries a running cost, kept low by scaling it up only on failover.</p>
+
+        <h2>The lifecycle as a pipeline</h2>
+
+        <p>The work moves in one direction through a pipeline, and two of its steps are gates rather than tasks. A model is built and trained, evaluated for accuracy and fairness, registered as a version with its card, approved by a named reviewer, deployed only if approved, and then monitored. Registration and approval are the gates. A version that has not been approved cannot be deployed, and the documentation that justifies the approval is attached to that exact version for the life of the model.</p>
+
+        <figure class="diagram">
+          <img src="/assets/img/ml-lifecycle.png" alt="A six step model pipeline from build and train through evaluate, register, approve, deploy, and monitor" loading="lazy">
+          <figcaption>The lifecycle. Registration and approval are gates, so evidence and sign off are produced as part of the work rather than reconstructed later.</figcaption>
+        </figure>
+
+        <p>The registry entry carries the approval status and points at the evidence, so that the gate is a simple and unambiguous check. A representative entry shows a version waiting for approval, with its intended use and risk rating recorded and its bias and explainability reports stored in the governance account.</p>
+
+        <pre><code>{
+  "ModelPackageGroupName": "payments-risk-scorer",
+  "ModelPackageVersion": 7,
+  "ModelApprovalStatus": "PendingManualApproval",
+  "CustomerMetadataProperties": {
+    "intended-use": "Score the risk of a single transaction in real time",
+    "risk-rating":  "High",
+    "owner":        "fraud-platform"
+  },
+  "ModelMetrics": {
+    "ModelQuality":   { "areaUnderCurve": 0.94 },
+    "Bias":           { "reportPath": "s3://lz-ml-governance-evidence/clarify/v7/bias.json" },
+    "Explainability": { "reportPath": "s3://lz-ml-governance-evidence/clarify/v7/shap.json" }
+  }
+}</code></pre>
+
+        <h2>Separation across accounts</h2>
+
+        <p>The lifecycle is spread across three accounts so that no single team holds the whole chain. Models are built in the development account, the registry and the model cards and the evidence live in the governance account, which is the source of truth, and only approved versions are deployed into the production account. The registry and the cards are shared from the governance account using Resource Access Manager, so the governance account can see and audit everything while remaining the only place where approval status is set.</p>
+
+        <figure class="diagram">
+          <img src="/assets/img/ml-governance.png" alt="Three accounts, development, governance, and production, with the registry and cards in the governance account as the source of truth" loading="lazy">
+          <figcaption>Separation of duties by account. The governance account is the single source of truth for what is approved, and it is the only place where approval happens.</figcaption>
+        </figure>
+
+        <h2>Serving in two regions</h2>
+
+        <p>The approved model serves from both regions. The model artifact and the governance evidence are replicated to the second region, an endpoint runs warm there, and Amazon Route 53 directs inference to the healthy region. Model Monitor runs in each region against the same baseline, so a failover changes neither the version in production nor the strength of the monitoring.</p>
+
+        <figure class="diagram">
+          <img src="/assets/img/ml-multiregion.png" alt="The approved model served from ca-central-1 and ca-west-1 with replicated artifacts, monitoring in each region, and Route 53 routing" loading="lazy">
+          <figcaption>The same approved model in two regions, with the same evidence and the same monitoring, so a regional failure does not weaken governance.</figcaption>
+        </figure>
+
+        <p>The result is a platform where the model that serves a real decision is always a known, approved, documented, and monitored version, in either region, and where the evidence for all of that is a by product of how the work is done rather than a burden added at the end.</p>
+      </div>
+
+      <section class="prose refs">
+        <h2>References</h2>
+        <ol>
+          <li>Amazon Web Services, machine learning governance with Amazon SageMaker.<span class="src">https://aws.amazon.com/sagemaker/ai/ml-governance/</span></li>
+          <li>Amazon Web Services, SageMaker Model Registry.<span class="src">https://docs.aws.amazon.com/sagemaker/latest/dg/model-registry.html</span></li>
+          <li>Amazon Web Services, SageMaker Model Cards.<span class="src">https://docs.aws.amazon.com/sagemaker/latest/dg/model-cards.html</span></li>
+          <li>Amazon Web Services, SageMaker Clarify for fairness and explainability.<span class="src">https://docs.aws.amazon.com/sagemaker/latest/dg/clarify-fairness-and-explainability.html</span></li>
+          <li>Amazon Web Services, SageMaker Model Monitor.<span class="src">https://docs.aws.amazon.com/sagemaker/latest/dg/model-monitor.html</span></li>
+          <li>Amazon Web Services, SageMaker Pipelines.<span class="src">https://docs.aws.amazon.com/sagemaker/latest/dg/pipelines.html</span></li>
+          <li>Amazon Web Services, cross account sharing of SageMaker Model Cards.<span class="src">https://aws.amazon.com/about-aws/whats-new/2023/08/amazon-sagemaker-model-cards-cross-account-sharing-model-cards/</span></li>
+        </ol>
+      </section>
+
+      <div class="article-foot">
+        <div class="cta-row">
+          <a class="btn primary" href="https://github.com/akanjilal-work/reference-architectures">See the repository</a>
+          <a class="btn" href="/architectures/">More architectures</a>
+        </div>
+      </div>
+    </div>
+  </article>
+</main>
+
+<footer>
+  <div class="wrap foot">
+    <div class="links">
+      <a href="https://github.com/akanjilal-work">GitHub</a>
+      <a href="https://www.linkedin.com/in/akanjilal/">LinkedIn</a>
+      <a href="mailto:anirban.kanjilal@gmail.com">Email</a>
+    </div>
+    <div class="copy">© 2026 Anirban Kanjilal</div>
+  </div>
+</footer>
+
+</body>
+</html>

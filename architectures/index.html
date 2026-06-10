@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Reference architectures, Anirban Kanjilal</title>
+<meta name="description" content="Production reference architectures on Amazon Web Services for regulated and highly secured workloads, covering landing zones, AI security, model governance, resilient transaction processing, and secure retrieval.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/site.css">
+</head>
+<body>
+
+<header class="bar">
+  <div class="wrap">
+    <a class="brand" href="/">akanjilal<span class="dot">.dev</span></a>
+    <nav class="nav" aria-label="Primary">
+      <a href="/#work">work</a>
+      <a href="/blog/">my blogs</a>
+      <a href="/architectures/">architectures</a>
+      <a href="/#background">background</a>
+      <a class="ext" href="https://github.com/akanjilal-work">github</a>
+      <a class="ext" href="https://www.linkedin.com/in/akanjilal/">linkedin</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <div class="wrap">
+    <div class="page-head">
+      <div class="kicker">Reference architectures</div>
+      <h1>Patterns built to land in production</h1>
+      <p>Each of these is a complete, opinionated design on Amazon Web Services for regulated and highly secured workloads, with a detailed architecture diagram, real addressing and naming, and the security, cost, and resilience reasoning written out in full. They are meant to be lifted and adapted, not admired.</p>
+    </div>
+
+    <div class="posts">
+
+      <a class="post-item" href="/architectures/secure-landing-zone/">
+        <div class="meta"><span>Foundation</span><span>Cloud WAN, two regions</span><span>Live</span></div>
+        <h2>Secure multi account landing zone for regulated workloads</h2>
+        <p class="ex">The governed foundation every other workload lands into. A multi account, two region organization on AWS Cloud WAN with service insertion, layered guardrails, multi region data and recovery, immutable logging, and a segmented cardholder data environment for the Payment Card Industry standard.</p>
+        <div class="tags"><span class="tag">cloud-wan</span><span class="tag">multi-region</span><span class="tag">pci</span></div>
+      </a>
+
+      <a class="post-item" href="/architectures/zero-trust-ai-gateway/">
+        <div class="meta"><span>AI Security</span><span>Two regions</span><span>Live</span></div>
+        <h2>Zero trust AI gateway</h2>
+        <p class="ex">The single chokepoint between agents and the models and tools they call, with scoped identity, an allow listed tool registry, request and response validation, guardrails, and a complete audit trail.</p>
+        <div class="tags"><span class="tag">agentcore</span><span class="tag">guardrails</span><span class="tag">zero-trust</span></div>
+      </a>
+
+      <a class="post-item" href="/architectures/model-lifecycle-governance-sagemaker/">
+        <div class="meta"><span>AI Governance</span><span>Two regions</span><span>Live</span></div>
+        <h2>Model lifecycle and governance on SageMaker</h2>
+        <p class="ex">Training, registration, approval, deployment, and monitoring as one governed pipeline, with bias and explainability checks, drift detection, and the evidence trail an auditor expects.</p>
+        <div class="tags"><span class="tag">sagemaker</span><span class="tag">model-registry</span><span class="tag">governance</span></div>
+      </a>
+
+      <a class="post-item" href="/architectures/resilient-transaction-core/">
+        <div class="meta"><span>Resilience</span><span>Two regions</span><span>Live</span></div>
+        <h2>Resilient transaction processing core</h2>
+        <p class="ex">An idempotent, event driven backbone for high value transactions, designed against all six pillars of the Well Architected Framework, with the saga pattern, multi region recovery, and a clear recovery objective.</p>
+        <div class="tags"><span class="tag">event-driven</span><span class="tag">idempotency</span><span class="tag">well-architected</span></div>
+      </a>
+
+      <a class="post-item" href="/architectures/secure-rag-platform/">
+        <div class="meta"><span>Applied AI</span><span>Two regions</span><span>Live</span></div>
+        <h2>Secure enterprise retrieval augmented generation platform</h2>
+        <p class="ex">Private data grounding that never leaves the network, with managed retrieval, reranking, guardrails for prompt attacks and personal data, and continuous evaluation of answer quality.</p>
+        <div class="tags"><span class="tag">bedrock</span><span class="tag">knowledge-bases</span><span class="tag">retrieval</span></div>
+      </a>
+
+    </div>
+  </div>
+</main>
+
+<footer>
+  <div class="wrap foot">
+    <div class="links">
+      <a href="https://github.com/akanjilal-work">GitHub</a>
+      <a href="https://www.linkedin.com/in/akanjilal/">LinkedIn</a>
+      <a href="mailto:anirban.kanjilal@gmail.com">Email</a>
+    </div>
+    <div class="copy">© 2026 Anirban Kanjilal</div>
+  </div>
+</footer>
+
+</body>
+</html>

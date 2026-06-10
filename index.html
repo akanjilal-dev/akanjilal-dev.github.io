@@ -114,6 +114,50 @@
     </div>
   </section>
 
+  <section id="architectures">
+    <div class="wrap">
+      <div class="seclabel">Reference architectures</div>
+      <div class="cards">
+
+        <a class="card" href="/architectures/secure-landing-zone/">
+          <div class="card-top"><span class="repo">Secure landing zone</span><span class="chip">foundation</span></div>
+          <p>The governed foundation every other workload lands into: a multi account, two region organization on AWS Cloud WAN with service insertion, layered guardrails, and centralised inspection.</p>
+          <div class="tags"><span class="tag">aws</span><span class="tag">networking</span><span class="tag">guardrails</span></div>
+          <div class="go mono">Read the architecture</div>
+        </a>
+
+        <a class="card" href="/architectures/zero-trust-ai-gateway/">
+          <div class="card-top"><span class="repo">Zero trust AI gateway</span><span class="chip">AI security</span></div>
+          <p>The single chokepoint between agents and the models and tools they call: scoped identity, an allow listed tool registry, request and response validation, and a full audit trail.</p>
+          <div class="tags"><span class="tag">zero-trust</span><span class="tag">agents</span><span class="tag">mcp</span></div>
+          <div class="go mono">Read the architecture</div>
+        </a>
+
+        <a class="card" href="/architectures/secure-rag-platform/">
+          <div class="card-top"><span class="repo">Secure RAG platform</span><span class="chip">RAG</span></div>
+          <p>Private data grounding that never leaves the network, with managed retrieval, reranking, guardrails for prompt attacks and personal data, and continuous evaluation.</p>
+          <div class="tags"><span class="tag">rag</span><span class="tag">retrieval</span><span class="tag">security</span></div>
+          <div class="go mono">Read the architecture</div>
+        </a>
+
+        <a class="card" href="/architectures/resilient-transaction-core/">
+          <div class="card-top"><span class="repo">Resilient transaction core</span><span class="chip">payments</span></div>
+          <p>An idempotent, event driven backbone for high value transactions, designed against all six Well Architected pillars, with the saga pattern and multi region failover.</p>
+          <div class="tags"><span class="tag">payments</span><span class="tag">resilience</span><span class="tag">saga</span></div>
+          <div class="go mono">Read the architecture</div>
+        </a>
+
+        <a class="card" href="/architectures/model-lifecycle-governance-sagemaker/">
+          <div class="card-top"><span class="repo">Model lifecycle governance</span><span class="chip">MLOps</span></div>
+          <p>Training, registration, approval, deployment, and monitoring as one governed pipeline on SageMaker, with bias and explainability checks, drift detection, and the evidence trail auditors want.</p>
+          <div class="tags"><span class="tag">mlops</span><span class="tag">sagemaker</span><span class="tag">governance</span></div>
+          <div class="go mono">Read the architecture</div>
+        </a>
+
+      </div>
+    </div>
+  </section>
+
   <section id="background">
     <div class="wrap">
       <div class="seclabel">Background</div>
@@ -157,6 +201,26 @@
     <div class="copy">© 2026 Anirban Kanjilal · built and hosted on GitHub Pages</div>
   </div>
 </footer>
+
+<script>
+  // Collapse any card grid with more than three cards to a single row, with a
+  // toggle to reveal the rest. Applies to Selected work and Reference architectures.
+  // Default (no JS) shows every card, so the content degrades gracefully.
+  document.querySelectorAll(".cards").forEach(function (grid) {
+    var total = grid.children.length;
+    if (total <= 3) return;
+    grid.classList.add("collapsed");
+    var btn = document.createElement("button");
+    btn.className = "show-more mono";
+    btn.type = "button";
+    btn.textContent = "Show all " + total;
+    btn.addEventListener("click", function () {
+      var collapsed = grid.classList.toggle("collapsed");
+      btn.textContent = collapsed ? "Show all " + total : "Show less";
+    });
+    grid.insertAdjacentElement("afterend", btn);
+  });
+</script>
 
 </body>
 </html>

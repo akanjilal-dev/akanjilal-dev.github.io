@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Secure multi account, multi region landing zone for regulated workloads, Anirban Kanjilal</title>
+<meta name="description" content="A practitioner grade AWS landing zone for regulated and highly secured workloads across two regions, built on AWS Cloud WAN with service insertion, layered guardrails, multi region data and recovery, and a segmented cardholder data environment for the Payment Card Industry Data Security Standard.">
+<meta property="og:title" content="Secure multi account, multi region landing zone for regulated workloads">
+<meta property="og:description" content="AWS Cloud WAN, service insertion, two Canadian regions, real addressing, and a segmented cardholder data environment.">
+<meta property="og:type" content="article">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/site.css">
+</head>
+<body>
+
+<header class="bar">
+  <div class="wrap">
+    <a class="brand" href="/">akanjilal<span class="dot">.dev</span></a>
+    <nav class="nav" aria-label="Primary">
+      <a href="/#work">work</a>
+      <a href="/blog/">my blogs</a>
+      <a href="/architectures/">architectures</a>
+      <a href="/#background">background</a>
+      <a class="ext" href="https://github.com/akanjilal-work">github</a>
+      <a class="ext" href="https://www.linkedin.com/in/akanjilal/">linkedin</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <article class="article">
+    <div class="wrap">
+      <a class="back" href="/architectures/">Back to reference architectures</a>
+      <div class="article-head">
+        <div class="meta"><span>Reference architecture</span><span>Amazon Web Services</span><span>ca-central-1 and ca-west-1</span></div>
+        <h1>Secure multi account, multi region landing zone for regulated workloads</h1>
+        <p class="standfirst">A landing zone is the part of a cloud platform that exists before any application does. It is the set of accounts, the network, the identity model, the logging, and the guardrails that every workload then lands into, already governed. This reference architecture describes a landing zone for regulated and highly secured workloads of any kind, spread across two Canadian regions for resilience and data residency, built on AWS Cloud WAN as the network backbone, and carrying a segmented cardholder data environment so that systems in scope for the Payment Card Industry Data Security Standard run inside the same organization without dragging everything else into that scope.</p>
+      </div>
+
+      <div class="prose">
+        <p>Getting the foundation right once means that every team which follows inherits security and compliance by default, rather than rebuilding it and arriving at a different answer each time. The design here is deliberately practitioner facing. Everything that can be expressed as configuration is expressed as configuration, the addressing is real and planned, and the network is built the way AWS now recommends for more than one region, which is AWS Cloud WAN rather than a single Transit Gateway. The two regions are Canada Central, in Montreal, as the primary, and Canada West, in Calgary, as the secondary, which keeps data inside Canada while still giving a genuine second region to fail over to. AWS Control Tower establishes and continuously governs the baseline, and the Landing Zone Accelerator on Amazon Web Services expresses the parts that need to live as version controlled configuration so that the whole environment can be reviewed, audited, and rebuilt from source.</p>
+
+        <h2>Requirements</h2>
+
+        <p>Before the architecture, the requirements it has to satisfy. These are the functional needs, the quality attributes the platform is judged on, the constraints it must respect, and the assumptions it rests on. Every decision in the next section traces back to one or more of them.</p>
+
+        <h3>Functional requirements</h3>
+        <table>
+          <thead><tr><th>Number</th><th>Requirement</th></tr></thead>
+          <tbody>
+            <tr><td>1</td><td>Host production and non production workloads with strong isolation between them and between teams.</td></tr>
+            <tr><td>2</td><td>Provide an isolated environment for systems in scope for the Payment Card Industry Data Security Standard, with that scope kept as small as possible.</td></tr>
+            <tr><td>3</td><td>Connect the cloud estate to on premises data centres over private and inspected links.</td></tr>
+            <tr><td>4</td><td>Vend new accounts on demand, each created with the security baseline, the logging, and the network attachment already in place.</td></tr>
+            <tr><td>5</td><td>Centralize every audit and security record in one account that no routine operator can alter.</td></tr>
+            <tr><td>6</td><td>Force all traffic between networks, and all traffic to and from the internet, through inspection that the organization controls.</td></tr>
+            <tr><td>7</td><td>Recover from the loss of an entire region within defined and rehearsed objectives.</td></tr>
+          </tbody>
+        </table>
+
+        <h3>Quality attributes</h3>
+        <table>
+          <thead><tr><th>Number</th><th>Attribute</th><th>Intent</th></tr></thead>
+          <tbody>
+            <tr><td>1</td><td>Security</td><td>Defence in depth, least privilege, and an inspected path for every flow.</td></tr>
+            <tr><td>2</td><td>Reliability</td><td>Tolerate the loss of an availability zone with no human action.</td></tr>
+            <tr><td>3</td><td>Recoverability</td><td>Recovery point objective near zero for transactional data, and recovery time objective in minutes for a regional failover.</td></tr>
+            <tr><td>4</td><td>Auditability</td><td>Reconstruct who did what and when, with records retained for at least one year.</td></tr>
+            <tr><td>5</td><td>Operability</td><td>The whole environment defined as version controlled configuration that can be rebuilt from source.</td></tr>
+            <tr><td>6</td><td>Cost efficiency</td><td>Central shared services rather than duplication, and a warm standby rather than a full second copy.</td></tr>
+          </tbody>
+        </table>
+
+        <h3>Constraints and assumptions</h3>
+        <table>
+          <thead><tr><th>Number</th><th>Constraint</th></tr></thead>
+          <tbody>
+            <tr><td>1</td><td>All data must remain within Canada.</td></tr>
+            <tr><td>2</td><td>Only the two approved regions, Canada Central and Canada West, may be used.</td></tr>
+            <tr><td>3</td><td>The platform must support a Payment Card Industry assessment with minimized scope.</td></tr>
+            <tr><td>4</td><td>Managed Amazon Web Services services are preferred over self managed equivalents wherever one exists.</td></tr>
+          </tbody>
+        </table>
+        <table>
+          <thead><tr><th>Number</th><th>Assumption</th></tr></thead>
+          <tbody>
+            <tr><td>1</td><td>A corporate identity provider exists and can be federated for single sign on.</td></tr>
+            <tr><td>2</td><td>Workloads run primarily on containers and managed databases rather than long lived virtual machines.</td></tr>
+            <tr><td>3</td><td>At least two physically separate Direct Connect locations are available for hybrid connectivity.</td></tr>
+          </tbody>
+        </table>
+
+        <h2>Architecture decisions and rationale</h2>
+
+        <p>These are the decisions that shaped the design. Each one records what was chosen, what was considered and set aside, why the choice was made, and what it costs, so that a reader can challenge the reasoning rather than only inspect the result.</p>
+
+        <h3>1. A multi account organization rather than one large account</h3>
+        <p><strong>Decision.</strong> Divide the estate into many single purpose accounts grouped under organizational units, with each account a hard boundary.</p>
+        <p><strong>Alternatives.</strong> A single account, or a small handful of accounts, separated only by identity and access permissions.</p>
+        <p><strong>Rationale.</strong> An account is the strongest isolation boundary Amazon Web Services provides, so separating production, logging, security tooling, and the cardholder data environment into their own accounts limits the blast radius of any single mistake or compromise and gives clean billing and separation of duties. This serves functional requirements 1 and 5 and the security attribute.</p>
+        <p><strong>Consequences.</strong> More accounts mean more to govern, which is the reason the baseline is automated through the account factory rather than applied by hand.</p>
+
+        <h3>2. AWS Cloud WAN as the network backbone rather than a Transit Gateway</h3>
+        <p><strong>Decision.</strong> Use one AWS Cloud WAN core network with an edge in each region, and attach every network to it.</p>
+        <p><strong>Alternatives.</strong> A Transit Gateway in each region peered together, or direct peering between every pair of networks.</p>
+        <p><strong>Rationale.</strong> Cloud WAN expresses the segments, the routing, and the inspection in one version controlled policy that applies to both regions at once, which removes the per region route table drift that peered Transit Gateways accumulate, and the number of relationships to manage does not grow with the square of the number of networks. Its service insertion feature also provides centralized inspection without hand built routes. This serves the operability attribute and functional requirement 6.</p>
+        <p><strong>Consequences.</strong> Cloud WAN carries a higher hourly cost than a single Transit Gateway, which is accepted because at two regions the assurance and the operational savings outweigh it.</p>
+
+        <h3>3. Centralized inspection through service insertion rather than distributed firewalls</h3>
+        <p><strong>Decision.</strong> Run AWS Network Firewall in a dedicated inspection network in each region and steer every path through it using Cloud WAN service insertion.</p>
+        <p><strong>Alternatives.</strong> A firewall in every workload network, or hand built routes that force traffic through a central appliance.</p>
+        <p><strong>Rationale.</strong> A single declared chokepoint can be proven from one policy document, where distributed firewalls multiply cost and configuration and are easy to bypass by accident, and service insertion removes the fragile static routing that the older central appliance pattern required. This serves functional requirement 6 and the security attribute.</p>
+        <p><strong>Consequences.</strong> All traffic depends on the inspection networks, so they are built across two availability zones and exist in both regions for resilience.</p>
+
+        <h3>4. Hard segment isolation rather than relying on application controls</h3>
+        <p><strong>Decision.</strong> Set the isolate attachments property on the production, nonproduction, and cardholder data segments, so that networks within a segment cannot reach one another.</p>
+        <p><strong>Alternatives.</strong> Allowing free routing within a segment and relying on security groups and application authentication to prevent unwanted access.</p>
+        <p><strong>Rationale.</strong> Removing the route entirely is a stronger control than filtering on a route that exists, and it denies the lateral movement that an attacker relies on after a first foothold. This serves functional requirement 1 and the security attribute.</p>
+        <p><strong>Consequences.</strong> Any legitimate communication between two networks must pass through inspection, which is the intended behaviour and is accepted as slightly less direct.</p>
+
+        <h3>5. A dedicated account and segment for the cardholder data environment rather than tag based separation</h3>
+        <p><strong>Decision.</strong> Place the cardholder data environment in its own account and its own isolated Cloud WAN segment.</p>
+        <p><strong>Alternatives.</strong> Keeping it inside a shared workload account and separating it with tags, security groups, and naming.</p>
+        <p><strong>Rationale.</strong> The assessment scope for the Payment Card Industry standard is reduced most effectively by the strongest available boundaries, and an account boundary combined with an isolated network segment is far stronger than separation by convention inside a shared account. This serves functional requirement 2 and constraint 3.</p>
+        <p><strong>Consequences.</strong> The environment is less convenient to share resources with, which is exactly the point, and is accepted in exchange for a small and defensible assessment scope.</p>
+
+        <h3>6. Two regions with a warm standby rather than a single region or a fully active pair</h3>
+        <p><strong>Decision.</strong> Run a primary region and a secondary region in warm standby, with data replicated continuously and the standby promoted on failover.</p>
+        <p><strong>Alternatives.</strong> A single region with no regional recovery, or two regions both serving live traffic at all times.</p>
+        <p><strong>Rationale.</strong> A single region cannot meet the recovery requirement, and a pair that is fully active in both regions roughly doubles cost and adds the difficulty of resolving conflicting writes, which is more than this recovery objective needs. This serves functional requirement 7 and the recoverability attribute, within constraint 1.</p>
+        <p><strong>Consequences.</strong> A failover is a deliberate and rehearsed action that takes minutes rather than being instantaneous, which is acceptable for the stated recovery time objective.</p>
+
+        <h3>7. A minimal management account with delegated administration</h3>
+        <p><strong>Decision.</strong> Keep the management account nearly empty and run the network and security services from delegated administrator accounts.</p>
+        <p><strong>Alternatives.</strong> Operating the security and network services directly from the management account.</p>
+        <p><strong>Rationale.</strong> The management account holds the most dangerous privileges in the organization, so keeping routine operations out of it reduces the chance that an ordinary action becomes a serious incident. This serves the security attribute.</p>
+        <p><strong>Consequences.</strong> A small amount of one time setup is required to delegate administration of each service.</p>
+
+        <h3>8. The whole environment as version controlled configuration rather than console changes</h3>
+        <p><strong>Decision.</strong> Define the organization, the guardrails, the network policy, and the accounts as version controlled configuration through AWS Control Tower and the Landing Zone Accelerator.</p>
+        <p><strong>Alternatives.</strong> Configuring the environment by hand in the console and documenting it separately afterwards.</p>
+        <p><strong>Rationale.</strong> Configuration that lives in source can be reviewed, tested, audited, and rebuilt, which is what both operational excellence and a regulator expect, and it removes the drift that manual changes accumulate over time. This serves the operability and auditability attributes.</p>
+        <p><strong>Consequences.</strong> Changes move at the speed of a reviewed change request rather than a console click, which is a deliberate trade of speed for control.</p>
+
+        <h2>The account structure</h2>
+
+        <p>The first decision is to stop using one account for everything. A single account places production, development, security tooling, and logging inside the same blast radius and the same set of permissions, which is exactly what a regulated environment must avoid. Instead the organization is divided into accounts grouped under organizational units, where each account is a hard security and billing boundary and each organizational unit is a place to apply policy to many accounts at once. New accounts are not created by hand. They are vended through the Control Tower account factory, so that every account is born with the same baseline of guardrails, logging, and network attachment already in place.</p>
+
+        <figure class="diagram">
+          <img src="/assets/img/lz-org-structure.png" alt="A multi account AWS organization with Security, Infrastructure, Workloads, and PCI organizational units" loading="lazy">
+          <figcaption>The organization. Each account is a boundary, each organizational unit is where policy is applied to many accounts at once, and the security services are run from a delegated administrator rather than the management account.</figcaption>
+        </figure>
+
+        <p>The management account sits at the top and does almost nothing by design. It holds AWS Organizations, AWS Control Tower, and billing, and it is kept clean of workloads because its privileges are the most sensitive in the entire estate. The detection and network services are run from delegated administrator accounts rather than from the management account, which is the current AWS guidance and which keeps day to day operations out of the most dangerous account. Beneath the management account, the Security organizational unit holds two accounts. The Log Archive account is the immutable destination for every log in the organization, and it is an account that almost no human is allowed to touch. The Security Tooling account is the delegated administrator for the detection services, so that findings from every other account are aggregated and reviewed in one place rather than scattered.</p>
+
+        <p>The Infrastructure organizational unit also holds two accounts. The Network account owns the AWS Cloud WAN core network and all of the shared connectivity described below, and the Shared Services account holds the things that many workloads depend on, such as private interface endpoints, a directory for identity, name resolution rules, and the golden pipelines that build and deploy software. The Workloads organizational units separate production from everything that is not production, because the rules that should apply to a payment service are not the rules that should apply to a developer experiment. Finally, a dedicated organizational unit isolates the cardholder data environment, which lives in its own account so that the boundary around it is an account boundary, the strongest one available.</p>
+
+        <h2>Governance and guardrails</h2>
+
+        <p>Policy is applied in layers, and the layers are chosen so that the most important rules are the ones a person cannot accidentally remove. Service control policies are preventive and they describe what is forbidden, for example denying the ability to disable logging, denying the use of any region other than the two that are approved, and denying changes that would weaken encryption. Resource control policies, a more recent addition, restrict who may access a resource regardless of the permissions granted inside the account that owns it, which closes a class of gaps that account level permissions alone could not, such as a storage bucket policy that would otherwise allow access from outside the organization. Declarative policies, newer still, let you state a desired configuration for a service across the whole organization in a way that cannot be overridden locally and that continues to apply even to capabilities released in the future, which is how the organization can guarantee, for instance, that block public access stays on for every storage account forever. On top of these preventive controls, AWS Config rules act as the detective layer, continuously checking that resources match the intended state and recording every drift.</p>
+
+        <p>Human access follows the same principle of no standing privilege. People do not hold long lived credentials in any account. They sign in through AWS Identity and Access Management Identity Center, federated to the organization's existing identity provider, with multi factor authentication required, and they assume a role for a bounded period to do a specific job. The audit trail therefore records not only what happened but which human assumed which role to make it happen.</p>
+
+        <h2>The network backbone, AWS Cloud WAN</h2>
+
+        <p>For a single region, a Transit Gateway is enough. For two regions and a regulated posture, AWS Cloud WAN is the better choice, and it is the one AWS now steers customers toward. The reason is that Cloud WAN gives you one global core network, with a presence in each region called a core network edge, and you describe the whole thing, the segments, the routing, and the inspection, in a single policy document rather than assembling it from per region route tables that drift apart over time. The intent lives in one place, it is version controlled, and it is applied consistently to every region at once.</p>
+
+        <figure class="diagram">
+          <img src="/assets/img/lz-cloudwan-global.png" alt="An AWS Cloud WAN core network spanning ca-central-1 and ca-west-1, each with an inspection VPC and four workload VPCs" loading="lazy">
+          <figcaption>One global core network with an edge in each region. Every virtual private cloud attaches to its regional edge and is placed into a segment, and inter region traffic stays on the AWS backbone rather than traversing the public internet.</figcaption>
+        </figure>
+
+        <p>Each region runs its own inspection virtual private cloud, and the workload networks in each region attach to the local edge. Connectivity to the organization's data centres is provided by AWS Direct Connect attached to the core network, with a second Direct Connect location for the second region so that the loss of one facility does not sever the hybrid path. The inspection networks deliberately use addresses from the carrier grade range rather than the private range, which is a small but real practice that keeps the large private address blocks free for actual workloads.</p>
+
+        <h2>Segmentation and inspection, written once as policy</h2>
+
+        <p>The heart of the design is the segmentation. A Cloud WAN segment is an isolated routing domain, and this landing zone defines four of them, named shared, production, nonproduction, and pci, plus a network function group that represents the inspection virtual private clouds. A virtual private cloud is placed into a segment automatically based on a tag, so a network simply tagged as belonging to the production segment is attached to the right segment without anyone editing a route table. The production, nonproduction, and pci segments set the isolate attachments property, which means that even two networks inside the same segment cannot reach one another, removing the lateral movement that attackers rely on. The shared segment, which carries only the common endpoints and name resolution, is the one segment shared with all the others.</p>
+
+        <figure class="diagram">
+          <img src="/assets/img/lz-segmentation.png" alt="Cloud WAN segments steered through an inspection network function group using send via and send to actions" loading="lazy">
+          <figcaption>Segmentation and inspection expressed as intent. Traffic between segments is steered through the inspection network function group with a send via action, and traffic to the internet or on premises is steered with a send to action.</figcaption>
+        </figure>
+
+        <p>The inspection itself is handled by the Cloud WAN feature called service insertion, which AWS released for exactly this purpose. Rather than hand building the static routes that used to be required to force traffic through a firewall, you declare the intent in the policy. A send via action steers traffic that travels between virtual private clouds through the inspection network function group first, and a send to action steers traffic bound for the internet or on premises through the same inspection point. AWS Network Firewall runs inside each region's inspection network, performing stateful inspection, intrusion prevention, and domain filtering, and because service insertion is aware of both regions, it chooses an inspection network deterministically and falls back to the other region if one is unavailable. A representative excerpt of the core network policy looks like this.</p>
+
+        <pre><code>{
+  "version": "2021.12",
+  "core-network-configuration": {
+    "asn-ranges": ["64512-64555"],
+    "edge-locations": [
+      { "location": "ca-central-1" },
+      { "location": "ca-west-1" }
+    ]
+  },
+  "segments": [
+    { "name": "shared" },
+    { "name": "production",    "isolate-attachments": true, "require-attachment-acceptance": true },
+    { "name": "nonproduction", "isolate-attachments": true },
+    { "name": "pci",           "isolate-attachments": true, "require-attachment-acceptance": true }
+  ],
+  "network-function-groups": [
+    { "name": "inspection", "require-attachment-acceptance": true }
+  ],
+  "segment-actions": [
+    { "action": "share",    "segment": "shared", "share-with": "*" },
+    { "action": "send-via", "segment": "production", "mode": "single-hop",
+      "via": { "network-function-groups": ["inspection"] } },
+    { "action": "send-to",  "segment": "production",
+      "via": { "network-function-groups": ["inspection"] } },
+    { "action": "send-via", "segment": "pci", "mode": "single-hop",
+      "via": { "network-function-groups": ["inspection"] } }
+  ],
+  "attachment-policies": [
+    { "rule-number": 100,
+      "conditions": [{ "type": "tag-value", "key": "segment", "operator": "equals", "value": "pci" }],
+      "action": { "association-method": "constant", "segment": "pci" } },
+    { "rule-number": 200,
+      "conditions": [{ "type": "tag-value", "key": "segment", "operator": "equals", "value": "production" }],
+      "action": { "association-method": "constant", "segment": "production" } }
+  ]
+}</code></pre>
+
+        <p>Ingress from the internet is handled with dedicated inspection networks that place AWS Network Firewall behind a Gateway Load Balancer, so that traffic arriving from the internet is examined before it ever reaches an application network. The result is that every direction of travel, into the estate, out of the estate, and between networks, passes through a firewall that the organization controls, and that fact is provable from a single policy rather than inferred from dozens of route tables.</p>
+
+        <h2>Regional addressing in detail</h2>
+
+        <p>The addressing is planned rather than improvised, because the day you need to connect two of these environments together, or attach a data centre, overlapping ranges become a painful and expensive problem. Each region is given a clean block, the first region under one tenth of the private space and the second region under another, so that the two never collide and the region is obvious from the address. Within each region, every workload network spans two availability zones and is divided into public subnets that hold only the load balancers, private subnets that hold the application compute, and data subnets that hold the databases.</p>
+
+        <figure class="diagram">
+          <img src="/assets/img/lz-region-detail.png" alt="Region ca-central-1 in detail, with the inspection VPC, shared services, production, and cardholder data environment networks and their subnets and address ranges" loading="lazy">
+          <figcaption>One region in detail. Every network is a Cloud WAN attachment, the inspection network uses the carrier grade range, and the cardholder data environment has no public subnets at all.</figcaption>
+        </figure>
+
+        <table>
+          <thead><tr><th>Network</th><th>Segment</th><th>ca-central-1</th><th>ca-west-1</th></tr></thead>
+          <tbody>
+            <tr><td>vpc-inspection</td><td>inspection</td><td class="range">100.64.0.0/24</td><td class="range">100.64.64.0/24</td></tr>
+            <tr><td>vpc-shared-svc</td><td>shared</td><td class="range">10.4.0.0/16</td><td class="range">10.68.0.0/16</td></tr>
+            <tr><td>vpc-prod-payments</td><td>production</td><td class="range">10.16.0.0/16</td><td class="range">10.80.0.0/16</td></tr>
+            <tr><td>vpc-nonprod</td><td>nonproduction</td><td class="range">10.48.0.0/16</td><td class="range">10.112.0.0/16</td></tr>
+            <tr><td>vpc-pci-cde</td><td>pci</td><td class="range">10.32.0.0/16</td><td class="range">10.96.0.0/16</td></tr>
+          </tbody>
+        </table>
+
+        <p>One further habit keeps traffic off the public internet entirely. The Shared Services account hosts private interface endpoints for the Amazon Web Services interfaces that workloads call, and these are reachable through the shared segment, so a service in a workload account reaches Amazon Simple Storage Service or a queue over the private network rather than over the internet, which both reduces exposure and reduces the volume of traffic that has to traverse the inspection path.</p>
+
+        <h2>Resilience and data across two regions</h2>
+
+        <p>Two regions are only useful if the data and the recovery plan are designed for them, so the data tier is multi region from the start rather than as an afterthought. The primary database is an Amazon Aurora Global Database, which replicates from the primary region to the secondary in well under a second and can be promoted quickly when needed. Object storage is replicated between the regions with cross region replication, and encryption keys are AWS Key Management Service multi region keys, which share the same key identifier in both regions so that an object encrypted in one region can be decrypted in the other without re encrypting it. Traffic is directed to the healthy region by Amazon Route 53 together with the Application Recovery Controller, which performs readiness checks and supports a controlled, deliberate failover rather than an automatic one that might flap.</p>
+
+        <figure class="diagram">
+          <img src="/assets/img/lz-multiregion.png" alt="Two Canadian regions with Aurora Global Database, cross region storage replication, multi region keys, and Route 53 Application Recovery Controller" loading="lazy">
+          <figcaption>The data and recovery design. The second region runs as a warm standby that is promoted on failover, with a recovery point objective near zero and a recovery time objective measured in minutes.</figcaption>
+        </figure>
+
+        <p>The pattern here is a warm standby rather than a fully active second region, which is the right balance for most regulated workloads between the cost of running everything twice and the need to recover quickly. The recovery point objective is near zero because the database replicates continuously, and the recovery time objective is measured in minutes because the standby is already running and only needs to be promoted and have traffic shifted to it. The single most important discipline here is not the technology but the rehearsal. A failover that has never been practised is a hope, not a plan, so the regional failover is exercised on a schedule and the runbook is kept honest.</p>
+
+        <h2>Logging, detection, and encryption</h2>
+
+        <p>A regulated environment is one in which you can answer, after the fact and with evidence, who did what and when. Every account in every region sends its records to the Log Archive account, which receives an organization wide trail from AWS CloudTrail, the configuration history from AWS Config, and network flow logs, all written into an Amazon Simple Storage Service bucket that is protected with object lock so that records cannot be altered or deleted, and encrypted with a customer managed key. Because this account is almost untouchable, the audit trail remains trustworthy even against an attacker who has compromised a workload account. Detection is centralized in the Security Tooling account, which is the delegated administrator for Amazon GuardDuty for threat detection, AWS Security Hub for posture and standards conformance, Amazon Macie for discovering sensitive data, and Amazon Inspector for vulnerabilities, with Amazon Security Lake normalizing the findings from every account and region into one queryable place.</p>
+
+        <p>Encryption is on everywhere and the keys belong to the organization rather than to defaults. Data is encrypted in transit on every path and at rest in every store, using customer managed keys separated by account and by sensitivity so that the blast radius of any single key is small. The cardholder data environment uses its own keys, distinct from the rest of the estate, so that access to data elsewhere can never imply access to cardholder data.</p>
+
+        <h2>The cardholder data environment and the Payment Card Industry standard</h2>
+
+        <p>The single most valuable thing an architecture can do for the Payment Card Industry Data Security Standard is to make its scope small. The standard applies to every system that stores, processes, or transmits cardholder data, and to every system connected to those, so an environment without segmentation pulls almost everything into scope and makes the assessment enormous and expensive. This design does the opposite, and it does it in two reinforcing ways. The cardholder data environment lives in its own account and its own organizational unit, which is the strongest boundary available, and it also lives in its own Cloud WAN segment with the isolate attachments property set, so the network itself refuses to carry traffic into the environment except through the inspection path. The environment has no public subnets at all. It is reachable only through inspection and the AWS web application firewall, it holds its own keys, it captures its own network flow logs, it is scanned for vulnerabilities, and its audit history is retained for at least one year as the standard expects. Because both the account boundary and the network policy prevent anything else in the organization from reaching it, the rest of the estate stays out of scope, and the assessment becomes a question about one well defined account rather than about everything.</p>
+
+        <h2>How this serves the wider goals</h2>
+
+        <p>The structure also answers all six pillars of the AWS Well Architected Framework, which is worth stating plainly because a regulated platform is judged on more than security alone. Operational excellence comes from defining the whole environment, including the network policy, as version controlled configuration that can be reviewed, tested, and rebuilt. Security comes from the layered guardrails, the centralized inspection, and the segmentation described above. Reliability comes from spreading every tier across two availability zones within a region and across two regions for disaster recovery, with a rehearsed failover. Performance efficiency comes from placing workloads close to their users in region and from keeping service traffic on private endpoints rather than the public internet. Cost optimization comes from running the inspection and the shared services once and sharing them, rather than duplicating them in every account, and from running the second region as a warm standby rather than a full duplicate. Sustainability comes from favouring managed and serverless services that are scaled to actual demand rather than provisioned for peak and left running. This landing zone is the foundation that the other reference architectures in this collection are designed to sit inside.</p>
+      </div>
+
+      <section class="prose refs">
+        <h2>References</h2>
+        <ol>
+          <li>Amazon Web Services, Security Reference Architecture.<span class="src">https://docs.aws.amazon.com/prescriptive-guidance/latest/security-reference-architecture/welcome.html</span></li>
+          <li>Amazon Web Services, AWS Control Tower documentation.<span class="src">https://docs.aws.amazon.com/controltower/latest/userguide/what-is-control-tower.html</span></li>
+          <li>Amazon Web Services, Landing Zone Accelerator on Amazon Web Services.<span class="src">https://docs.aws.amazon.com/solutions/latest/landing-zone-accelerator-on-aws/solution-overview.html</span></li>
+          <li>Amazon Web Services, What is AWS Cloud WAN.<span class="src">https://docs.aws.amazon.com/network-manager/latest/cloudwan/what-is-cloudwan.html</span></li>
+          <li>Amazon Web Services, AWS Cloud WAN service insertion.<span class="src">https://docs.aws.amazon.com/network-manager/latest/cloudwan/cloudwan-policy-service-insertion.html</span></li>
+          <li>Amazon Web Services, AWS Cloud WAN core network policy versions.<span class="src">https://docs.aws.amazon.com/network-manager/latest/cloudwan/cloudwan-create-policy-version.html</span></li>
+          <li>Amazon Web Services, Organizations, service control policies and resource control policies.<span class="src">https://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_policies.html</span></li>
+          <li>Amazon Web Services, AWS Network Firewall deployment models.<span class="src">https://docs.aws.amazon.com/network-firewall/latest/developerguide/architectures.html</span></li>
+          <li>Amazon Web Services, Amazon Aurora Global Database.<span class="src">https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/aurora-global-database.html</span></li>
+          <li>Amazon Web Services, AWS Key Management Service multi region keys.<span class="src">https://docs.aws.amazon.com/kms/latest/developerguide/multi-region-keys-overview.html</span></li>
+          <li>Amazon Web Services, Payment Card Industry Data Security Standard compliance.<span class="src">https://aws.amazon.com/compliance/pci-dss/</span></li>
+          <li>Amazon Web Services, the Well Architected Framework.<span class="src">https://aws.amazon.com/architecture/well-architected/</span></li>
+        </ol>
+      </section>
+
+      <div class="article-foot">
+        <div class="cta-row">
+          <a class="btn primary" href="https://github.com/akanjilal-work/reference-architectures">See the repository</a>
+          <a class="btn" href="/architectures/">More architectures</a>
+        </div>
+      </div>
+    </div>
+  </article>
+</main>
+
+<footer>
+  <div class="wrap foot">
+    <div class="links">
+      <a href="https://github.com/akanjilal-work">GitHub</a>
+      <a href="https://www.linkedin.com/in/akanjilal/">LinkedIn</a>
+      <a href="mailto:anirban.kanjilal@gmail.com">Email</a>
+    </div>
+    <div class="copy">© 2026 Anirban Kanjilal</div>
+  </div>
+</footer>
+
+</body>
+</html>

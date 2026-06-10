@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Secure enterprise retrieval augmented generation platform, Anirban Kanjilal</title>
+<meta name="description" content="A multi region reference architecture for a secure retrieval augmented generation platform on Amazon Bedrock, grounding answers in private data that never leaves the network, honouring document level access at retrieval time, with guardrails on input and output and continuous evaluation.">
+<meta property="og:title" content="Secure enterprise retrieval augmented generation platform">
+<meta property="og:description" content="Private data grounding that never leaves the network, with access controlled retrieval, guardrails, and citations.">
+<meta property="og:type" content="article">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/site.css">
+</head>
+<body>
+
+<header class="bar">
+  <div class="wrap">
+    <a class="brand" href="/">akanjilal<span class="dot">.dev</span></a>
+    <nav class="nav" aria-label="Primary">
+      <a href="/#work">work</a>
+      <a href="/blog/">my blogs</a>
+      <a href="/architectures/">architectures</a>
+      <a href="/#background">background</a>
+      <a class="ext" href="https://github.com/akanjilal-work">github</a>
+      <a class="ext" href="https://www.linkedin.com/in/akanjilal/">linkedin</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <article class="article">
+    <div class="wrap">
+      <a class="back" href="/architectures/">Back to reference architectures</a>
+      <div class="article-head">
+        <div class="meta"><span>Reference architecture</span><span>Amazon Bedrock</span><span>ca-central-1 and ca-west-1</span></div>
+        <h1>Secure enterprise retrieval augmented generation platform</h1>
+        <p class="standfirst">Retrieval augmented generation lets a model answer from an organization's own documents rather than from its training alone. The promise is real, and so is the risk, because the moment a model can read private data, the platform has to make sure it only reads what the asking person is allowed to see, that nothing sensitive leaves the network, and that the answers are grounded and not invented. This reference architecture does that across two Canadian regions, on Amazon Bedrock, with access controls carried from ingestion through to retrieval, guardrails on both ends, and citations on every answer.</p>
+      </div>
+
+      <div class="prose">
+        <p>The naive version of this is easy and dangerous. Point a model at a pile of documents, let anyone ask anything, and hope the answers are right and that no one sees what they should not. The careful version treats retrieval as the security boundary it actually is. The question of which passages may be returned to a given user is answered at retrieval time from access controls captured when the documents were ingested, the inference happens entirely on the private network, the input and the output are both inspected, and every answer carries the sources it was built from so a person can check it.</p>
+
+        <h2>Requirements</h2>
+
+        <p>The requirements the platform has to satisfy, the quality attributes it is judged on, the constraints it must respect, and the assumptions it rests on.</p>
+
+        <h3>Functional requirements</h3>
+        <table>
+          <thead><tr><th>Number</th><th>Requirement</th></tr></thead>
+          <tbody>
+            <tr><td>1</td><td>Ground answers in the organization's private documents.</td></tr>
+            <tr><td>2</td><td>Return only the passages that the asking user is permitted to see.</td></tr>
+            <tr><td>3</td><td>Inspect questions and answers for prompt attacks and for personal data.</td></tr>
+            <tr><td>4</td><td>Cite the sources used in every answer.</td></tr>
+            <tr><td>5</td><td>Keep all data and all inference on the private network.</td></tr>
+            <tr><td>6</td><td>Continuously evaluate the quality and grounding of answers.</td></tr>
+            <tr><td>7</td><td>Serve the same knowledge from two regions.</td></tr>
+          </tbody>
+        </table>
+
+        <h3>Quality attributes</h3>
+        <table>
+          <thead><tr><th>Number</th><th>Attribute</th><th>Intent</th></tr></thead>
+          <tbody>
+            <tr><td>1</td><td>Security</td><td>A private network path, access controlled retrieval, and guardrails on both ends.</td></tr>
+            <tr><td>2</td><td>Grounding</td><td>Answers traceable to sources, with fabrication kept low.</td></tr>
+            <tr><td>3</td><td>Auditability</td><td>Record the question, the sources retrieved, and the answer, retained for at least one year.</td></tr>
+            <tr><td>4</td><td>Reliability</td><td>Tolerate the loss of an availability zone, and a region within the recovery objective.</td></tr>
+            <tr><td>5</td><td>Freshness</td><td>New and changed documents reflected in retrieval quickly.</td></tr>
+            <tr><td>6</td><td>Cost efficiency</td><td>Retrieve and generate in proportion to use.</td></tr>
+          </tbody>
+        </table>
+
+        <h3>Constraints and assumptions</h3>
+        <table>
+          <thead><tr><th>Number</th><th>Constraint</th></tr></thead>
+          <tbody>
+            <tr><td>1</td><td>Data residency in Canada and the two approved regions.</td></tr>
+            <tr><td>2</td><td>The platform sits inside the landing zone production segment.</td></tr>
+            <tr><td>3</td><td>Personal and confidential data must never leave the private network.</td></tr>
+            <tr><td>4</td><td>Document level access controls must be honoured at retrieval time.</td></tr>
+          </tbody>
+        </table>
+        <table>
+          <thead><tr><th>Number</th><th>Assumption</th></tr></thead>
+          <tbody>
+            <tr><td>1</td><td>Source documents carry, or can be assigned, access metadata.</td></tr>
+            <tr><td>2</td><td>Users authenticate and their entitlements are known at query time.</td></tr>
+            <tr><td>3</td><td>Foundation and embedding models are consumed through Amazon Bedrock.</td></tr>
+          </tbody>
+        </table>
+
+        <h2>Architecture decisions and rationale</h2>
+
+        <p>The decisions that shaped the platform, each with the alternative that was set aside and the cost that was accepted.</p>
+
+        <h3>1. Managed retrieval with Bedrock Knowledge Bases rather than a hand built pipeline</h3>
+        <p><strong>Decision.</strong> Use Amazon Bedrock Knowledge Bases to chunk, embed, and index the documents and to perform retrieval.</p>
+        <p><strong>Alternatives.</strong> Building the chunking, embedding, indexing, and retrieval as custom code over a self managed vector store.</p>
+        <p><strong>Rationale.</strong> The managed service handles the parts that are easy to get subtly wrong, including chunking strategy, embedding, and source attribution, which removes a large amount of code and lets the effort go into the security and the evaluation. This serves functional requirements 1 and 4.</p>
+        <p><strong>Consequences.</strong> The design depends on a managed service, accepted because retrieval plumbing is not where the organization's value lies.</p>
+
+        <h3>2. Access tags carried from ingestion to retrieval rather than filtering after the fact</h3>
+        <p><strong>Decision.</strong> Capture the access controls of each document at ingestion as metadata on every passage, and filter on them at retrieval time so only permitted passages are ever returned.</p>
+        <p><strong>Alternatives.</strong> Retrieving freely and trying to filter the answer afterwards, or relying on the model not to reveal what it should not.</p>
+        <p><strong>Rationale.</strong> The only safe place to enforce who can see what is at retrieval, before the passages reach the model, because once a passage is in the prompt it is effectively disclosed. This serves functional requirement 2 and constraint 4.</p>
+        <p><strong>Consequences.</strong> Ingestion must record access metadata accurately, which is the foundation the whole control rests on.</p>
+
+        <h3>3. Guardrails on input and output rather than trusting the model</h3>
+        <p><strong>Decision.</strong> Apply Bedrock Guardrails to the question on the way in and to the answer on the way out.</p>
+        <p><strong>Alternatives.</strong> Relying on the model's own behaviour to refuse attacks and to avoid leaking personal data.</p>
+        <p><strong>Rationale.</strong> A guardrail catches prompt attacks before they reach the model and catches personal data before it reaches the user, consistently and independently of the model. This serves functional requirement 3 and the security attribute.</p>
+        <p><strong>Consequences.</strong> Two inspection steps per query, a small and bounded cost.</p>
+
+        <h3>4. Everything on the private network rather than over the internet</h3>
+        <p><strong>Decision.</strong> Run the application and reach Amazon Bedrock, the vector store, and the documents over private endpoints inside the production segment, with no internet path.</p>
+        <p><strong>Alternatives.</strong> Calling the services over their public endpoints.</p>
+        <p><strong>Rationale.</strong> Keeping the data on the private network removes a whole class of exposure and satisfies the residency and confidentiality constraints. This serves functional requirement 5 and constraint 3.</p>
+        <p><strong>Consequences.</strong> Private endpoints must be provisioned, which the landing zone shared services already provide.</p>
+
+        <h3>5. Grounded generation with citations rather than free generation</h3>
+        <p><strong>Decision.</strong> Instruct the model to answer only from the retrieved passages and to cite them, and return the citations with the answer.</p>
+        <p><strong>Alternatives.</strong> Letting the model answer from its training and the context together without distinguishing them.</p>
+        <p><strong>Rationale.</strong> Grounding the answer in retrieved sources and showing them lets a person verify it and keeps fabrication low, which is what makes the answers usable in a regulated setting. This serves functional requirement 4 and the grounding attribute.</p>
+        <p><strong>Consequences.</strong> The model occasionally has to say it does not have enough to answer, which is the correct behaviour.</p>
+
+        <h3>6. Continuous evaluation rather than a one time test</h3>
+        <p><strong>Decision.</strong> Evaluate answer quality and grounding continuously on a sample of real traffic.</p>
+        <p><strong>Alternatives.</strong> Testing quality once before launch and assuming it holds.</p>
+        <p><strong>Rationale.</strong> The documents, the questions, and the models all change over time, so quality has to be watched continuously to catch regression. This serves functional requirement 6.</p>
+        <p><strong>Consequences.</strong> An evaluation pipeline runs alongside the platform, a modest and worthwhile cost.</p>
+
+        <h3>7. The same knowledge in two regions rather than one</h3>
+        <p><strong>Decision.</strong> Replicate the source documents to the second region, rebuild the index there, and serve from a warm standby.</p>
+        <p><strong>Alternatives.</strong> Serving from a single region.</p>
+        <p><strong>Rationale.</strong> The standby must answer from the same knowledge with the same guardrails and the same keys, so a failover does not change what the platform knows or how it is controlled. This serves functional requirement 7 and the reliability attribute.</p>
+        <p><strong>Consequences.</strong> The index is maintained in both regions, kept current as documents change.</p>
+
+        <h2>Ingestion</h2>
+
+        <p>Everything starts with the documents, and the security of the platform is decided here. Source files arrive in encrypted object storage, their access controls are captured as metadata, and then Bedrock Knowledge Bases chunks them into passages, embeds the passages, and indexes them in a vector store, with the access tags travelling with each passage. Because the tags are recorded at ingestion, retrieval can later return only what a given user may see.</p>
+
+        <figure class="diagram">
+          <img src="/assets/img/rag-ingest.png" alt="An ingestion pipeline that lands documents, records access tags, then chunks, embeds, and indexes them with the tags attached" loading="lazy">
+          <figcaption>Ingestion. The access controls captured here are what make access controlled retrieval possible later.</figcaption>
+        </figure>
+
+        <h2>The query path</h2>
+
+        <p>A question travels a fixed path inside the production network. The user's entitlements are checked so only permitted sources are searched, the question is inspected, the most relevant passages are retrieved and reranked, the model generates an answer grounded in them with citations, and the answer is inspected before it is returned. None of it touches the public internet.</p>
+
+        <figure class="diagram">
+          <img src="/assets/img/rag-query.png" alt="A six step query path inside the production VPC, from access check through inspection, retrieval, rerank, grounded generation, and output inspection" loading="lazy">
+          <figcaption>The query path. Retrieval is access controlled, generation is grounded and cited, and the input and output are both inspected.</figcaption>
+        </figure>
+
+        <p>The access control is enforced in the retrieval call itself, by filtering on the access metadata, so passages the user may not see are never even considered. A representative retrieval applies a hybrid search and a filter on the user's groups.</p>
+
+        <pre><code>{
+  "knowledgeBaseId": "kb-payments-policies",
+  "retrievalQuery": { "text": "what is the chargeback window for a card present sale" },
+  "retrievalConfiguration": {
+    "vectorSearchConfiguration": {
+      "numberOfResults": 8,
+      "overrideSearchType": "HYBRID",
+      "filter": {
+        "in": { "key": "access_group", "value": ["payments-ops", "all-staff"] }
+      }
+    }
+  }
+}</code></pre>
+
+        <h2>Across two regions</h2>
+
+        <p>The platform serves from both regions. The source documents replicate between them, the index is rebuilt in each, the guardrail policy and the keys are the same in both, and Amazon Route 53 directs questions to the healthy region. A failover therefore changes neither what the platform knows nor how it is controlled.</p>
+
+        <figure class="diagram">
+          <img src="/assets/img/rag-multiregion.png" alt="Two regions each with Bedrock, a rebuilt OpenSearch index, the same guardrails, and multi region keys, with Route 53 routing" loading="lazy">
+          <figcaption>Multi region. The same knowledge, the same guardrails, and the same keys in both regions, so the standby answers exactly as the primary would.</figcaption>
+        </figure>
+
+        <p>The discipline that makes this safe is the same one that runs through the whole collection. The interesting part is not that a model can answer from private data. It is that the platform can prove the answer came from sources the person was allowed to see, that nothing sensitive left the network, and that the answer can be checked against its citations. That is what turns a demonstration into something a regulated organization can put in front of its people.</p>
+      </div>
+
+      <section class="prose refs">
+        <h2>References</h2>
+        <ol>
+          <li>Amazon Web Services, Amazon Bedrock Knowledge Bases.<span class="src">https://docs.aws.amazon.com/bedrock/latest/userguide/knowledge-base.html</span></li>
+          <li>Amazon Web Services, Amazon OpenSearch Serverless vector search.<span class="src">https://docs.aws.amazon.com/opensearch-service/latest/developerguide/serverless-vector-search.html</span></li>
+          <li>Amazon Web Services, Amazon Bedrock Guardrails.<span class="src">https://aws.amazon.com/bedrock/guardrails/</span></li>
+          <li>Amazon Web Services, metadata filtering for Knowledge Bases.<span class="src">https://docs.aws.amazon.com/bedrock/latest/userguide/kb-test-config.html</span></li>
+          <li>Amazon Web Services, evaluation for Amazon Bedrock.<span class="src">https://docs.aws.amazon.com/bedrock/latest/userguide/evaluation.html</span></li>
+          <li>Amazon Web Services, use Amazon Bedrock through a private network with AWS PrivateLink.<span class="src">https://docs.aws.amazon.com/bedrock/latest/userguide/usingVPC.html</span></li>
+          <li>Amazon Web Services, Amazon Route 53 Application Recovery Controller.<span class="src">https://docs.aws.amazon.com/r53recovery/latest/dg/what-is-route-53-recovery.html</span></li>
+        </ol>
+      </section>
+
+      <div class="article-foot">
+        <div class="cta-row">
+          <a class="btn primary" href="https://github.com/akanjilal-work/reference-architectures">See the repository</a>
+          <a class="btn" href="/architectures/">More architectures</a>
+        </div>
+      </div>
+    </div>
+  </article>
+</main>
+
+<footer>
+  <div class="wrap foot">
+    <div class="links">
+      <a href="https://github.com/akanjilal-work">GitHub</a>
+      <a href="https://www.linkedin.com/in/akanjilal/">LinkedIn</a>
+      <a href="mailto:anirban.kanjilal@gmail.com">Email</a>
+    </div>
+    <div class="copy">© 2026 Anirban Kanjilal</div>
+  </div>
+</footer>
+
+</body>
+</html>
