@@ -167,6 +167,38 @@
           </tbody>
         </table>
 
+        <h3>The regulated baseline</h3>
+
+        <p>A standard is only as strong as the number attached to it. The settings below are the concrete values this pipeline is configured to in a highly regulated environment such as a payments platform under the Payment Card Industry Data Security Standard. They are deliberately strict, and an exception to any of them is explicit, approved, and time limited rather than silent.</p>
+
+        <table>
+          <thead><tr><th>Control</th><th>Required value in a regulated environment</th></tr></thead>
+          <tbody>
+            <tr><td>Protected main branch</td><td>No direct push, no force push, a linear history, and every required check green before a merge.</td></tr>
+            <tr><td>Signed commits</td><td>Required and verified on every commit.</td></tr>
+            <tr><td>Pull request review</td><td>2 approvals, at least one from a code owner. Self approval refused. Approvals dismissed on a new commit.</td></tr>
+            <tr><td>Test coverage</td><td>≥ 80% overall and ≥ 90% on money handling code, and never below the main branch.</td></tr>
+            <tr><td>Static analysis</td><td>0 new high or critical findings. Type checking in strict mode.</td></tr>
+            <tr><td>Dependency scanning</td><td>0 known high or critical vulnerabilities in shipped dependencies, each pinned by hash.</td></tr>
+            <tr><td>Software bill of materials</td><td>Generated in the CycloneDX format on every build and stored with the artifact.</td></tr>
+            <tr><td>Build provenance</td><td>Attested to supply chain level 3 and verified before a deploy.</td></tr>
+            <tr><td>Secret scanning</td><td>Push protection on. Any detected secret blocks the push.</td></tr>
+            <tr><td>Cloud credentials</td><td>No long lived keys. Federated through OpenID Connect, session lifetime ≤ 1 hour, a separate role per environment.</td></tr>
+            <tr><td>Image signing</td><td>Keyless signature required, verified by a cluster admission policy in both regions.</td></tr>
+            <tr><td>Image vulnerabilities</td><td>0 high or critical at deploy time. Base image rebuilt at least every 7 days. Runs as a non root user with a read only root filesystem.</td></tr>
+            <tr><td>Registry</td><td>Tag immutability on, continuous scanning by Amazon Inspector.</td></tr>
+            <tr><td>Artifact promotion</td><td>The same image digest from development through to production, never rebuilt.</td></tr>
+            <tr><td>Environments and approval</td><td>Development, test, staging, and production. A manual approval by a second authorised person gates the move to production.</td></tr>
+            <tr><td>Regions</td><td>2, ca-central-1 and ca-west-1.</td></tr>
+            <tr><td>Release strategy</td><td>Blue and green, or a canary at 10%, 50%, then 100%, with automatic rollback on a failed health check or an error budget breach.</td></tr>
+            <tr><td>Rollback time</td><td>≤ 5 minutes, with the previous version kept ready.</td></tr>
+            <tr><td>Encryption</td><td>Transport security version 1.2 or higher in transit, customer managed keys at rest.</td></tr>
+            <tr><td>Audit retention</td><td>Pipeline logs, scan reports, approvals, the bill of materials, and provenance kept for 7 years on storage under object lock.</td></tr>
+            <tr><td>Change record</td><td>Every production deploy linked to a change ticket and traceable from commit to running service.</td></tr>
+            <tr><td>Access</td><td>Least privilege on every role, with multi factor authentication on all human access.</td></tr>
+          </tbody>
+        </table>
+
         <h2>The developer journey</h2>
 
         <p>The journey begins before the pipeline does. On the developer's own machine, fast checks run on every commit, formatting and linting, the unit tests, a quick secret scan, and a signed commit, so that the most common mistakes never even reach the repository. The change then arrives as a pull request, which cannot be merged directly and which triggers the pipeline. From there the work runs on a GitHub hosted runner through a sequence of stages, each of which can fail the build, ending in a signed image pushed to the registry and a deployment to either platform.</p>
