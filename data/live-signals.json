@@ -1,0 +1,240 @@
+{
+  "generated_at": "2026-06-10T21:12:45Z",
+  "next_refresh_at": "2026-06-11T01:12:45Z",
+  "refresh_cadence_hours": 4,
+  "source_policy": "official_sources_api_backed_where_configured",
+  "summary": {
+    "operational": 14,
+    "degraded": 1,
+    "down": 0,
+    "unknown": 2,
+    "token_required": 1
+  },
+  "mcp": [
+    {
+      "provider": "AWS",
+      "repo": "awslabs/mcp",
+      "source_url": "https://github.com/awslabs/mcp",
+      "status": "operational",
+      "status_label": "live",
+      "server_count": null,
+      "recent": [
+        "Last pushed 2026-06-10T20:11:53Z",
+        "chore(cloudwatch): add Rashmi Dwaraka and Sarthak Bhat as codeowners (#3796)",
+        "docs(aurora-dsql): reflect native JSON/JSONB column support (#3789)",
+        "fix(aws-transform-mcp-server): Confine write path and block sensitive filenames on writes (#3696)"
+      ],
+      "last_checked": "2026-06-10T21:12:45Z",
+      "notes": "Official AWS Labs MCP servers repository."
+    },
+    {
+      "provider": "Google",
+      "repo": "google/mcp",
+      "source_url": "https://github.com/google/mcp",
+      "status": "operational",
+      "status_label": "live",
+      "server_count": null,
+      "recent": [
+        "Last pushed 2026-05-28T11:19:56Z",
+        "Merge pull request #53 from n-issei-777/fix/demographics-data",
+        "fix(bakery): strip median_household_income column from demographics.csv and fix dataset description",
+        "Updated the remote MCP servers and examples section (#44)"
+      ],
+      "last_checked": "2026-06-10T21:12:45Z",
+      "notes": "Official Google MCP repository signal."
+    },
+    {
+      "provider": "Microsoft",
+      "repo": "microsoft/mcp",
+      "source_url": "https://github.com/microsoft/mcp",
+      "status": "operational",
+      "status_label": "live",
+      "server_count": null,
+      "recent": [
+        "Last pushed 2026-06-10T19:24:40Z",
+        "[AzureBackup] Fix exception types for correct telemetry classification (#2841)",
+        "Fix Cosmos' `QueryItems` silently parsing non-success responses as data (#2836)",
+        "Embed app settings on publish build (#2782)"
+      ],
+      "last_checked": "2026-06-10T21:12:45Z",
+      "notes": "Official Microsoft MCP repository."
+    },
+    {
+      "provider": "Azure",
+      "repo": "Azure/azure-mcp",
+      "source_url": "https://github.com/Azure/azure-mcp",
+      "status": "degraded",
+      "status_label": "archived",
+      "server_count": null,
+      "recent": [
+        "Last pushed 2026-02-06T15:52:58Z",
+        "Archive repository and update development links (#1065)",
+        "Revise active development note in README (#1048)",
+        "Update README with new development location (#1038)"
+      ],
+      "last_checked": "2026-06-10T21:12:45Z",
+      "notes": "Archived repository retained as a migration signal; active development moved to microsoft/mcp."
+    }
+  ],
+  "quantum_feed": [
+    {
+      "vendor": "Amazon Braket",
+      "type": "release",
+      "title": "Realizing the fermionic Laughlin state on a trapped-ion quantum processor",
+      "summary": "This post was contributed by Lingnan Shen, Mao Lin, Cedric Yen-Yu Lin, Di Xiao, and Ting Cao Quantum computing is beginning to simulate forms of matter that are difficul...",
+      "url": "https://aws.amazon.com/blogs/quantum-computing/realizing-the-fermionic-laughlin-state-on-a-trapped-ion-quantum-processor/",
+      "published_at": "2026-06-09T17:29:06Z",
+      "last_checked": "2026-06-10T21:12:45Z",
+      "status": "operational"
+    },
+    {
+      "vendor": "Microsoft Azure Quantum",
+      "type": "announcement",
+      "title": "Azure Quantum Computing | Microsoft Azure",
+      "summary": "Public source reached; no structured feed was available.",
+      "url": "https://azure.microsoft.com/products/quantum",
+      "published_at": null,
+      "last_checked": "2026-06-10T21:12:45Z",
+      "status": "operational"
+    },
+    {
+      "vendor": "Google Quantum AI",
+      "type": "announcement",
+      "title": "4 ways researchers are collaborating with Co-Scientist to solve big problems",
+      "summary": "Colorful, stylized, spiky molecular structures",
+      "url": "https://blog.google/innovation-and-ai/technology/research/co-scientist-research-problems/",
+      "published_at": "2026-06-09T16:00:00Z",
+      "last_checked": "2026-06-10T21:12:45Z",
+      "status": "operational"
+    },
+    {
+      "vendor": "IBM Quantum",
+      "type": "release",
+      "title": "IBM Quantum Computing | Blog",
+      "summary": "Public source reached; no structured feed was available.",
+      "url": "https://www.ibm.com/quantum/blog",
+      "published_at": null,
+      "last_checked": "2026-06-10T21:12:45Z",
+      "status": "operational"
+    },
+    {
+      "vendor": "D-Wave",
+      "type": "announcement",
+      "title": "Newsroom | D-Wave",
+      "summary": "Public source reached; no structured feed was available.",
+      "url": "https://www.dwavesys.com/company/newsroom/",
+      "published_at": null,
+      "last_checked": "2026-06-10T21:12:45Z",
+      "status": "operational"
+    },
+    {
+      "vendor": "Rigetti",
+      "type": "announcement",
+      "title": "Rigetti Computing news | Rigetti Computing",
+      "summary": "Public source reached; no structured feed was available.",
+      "url": "https://www.rigetti.com/news",
+      "published_at": null,
+      "last_checked": "2026-06-10T21:12:45Z",
+      "status": "operational"
+    },
+    {
+      "vendor": "IonQ",
+      "type": "announcement",
+      "title": "IonQ Newsroom and Media Resources",
+      "summary": "Public source reached; no structured feed was available.",
+      "url": "https://ionq.com/news",
+      "published_at": null,
+      "last_checked": "2026-06-10T21:12:45Z",
+      "status": "operational"
+    },
+    {
+      "vendor": "Quantinuum",
+      "type": "announcement",
+      "title": "Quantinuum | News",
+      "summary": "Public source reached; no structured feed was available.",
+      "url": "https://www.quantinuum.com/news",
+      "published_at": null,
+      "last_checked": "2026-06-10T21:12:45Z",
+      "status": "operational"
+    },
+    {
+      "vendor": "Xanadu",
+      "type": "announcement",
+      "title": "Xanadu | Blog",
+      "summary": "Public source reached; no structured feed was available.",
+      "url": "https://www.xanadu.ai/blog",
+      "published_at": null,
+      "last_checked": "2026-06-10T21:12:45Z",
+      "status": "operational"
+    },
+    {
+      "vendor": "Pasqal",
+      "type": "announcement",
+      "title": "Newsroom - Pasqal",
+      "summary": "Public source reached; no structured feed was available.",
+      "url": "https://www.pasqal.com/news/",
+      "published_at": null,
+      "last_checked": "2026-06-10T21:12:45Z",
+      "status": "operational"
+    }
+  ],
+  "health": [
+    {
+      "vendor": "Amazon Braket",
+      "category": "quantum",
+      "status": "token_required",
+      "status_label": "token required",
+      "public_health": "unknown",
+      "device_feed": "not_configured",
+      "devices_checked": null,
+      "devices_available": null,
+      "queue_summary": null,
+      "source_url": "https://docs.aws.amazon.com/braket/latest/APIReference/API_GetDevice.html",
+      "last_checked": "2026-06-10T21:12:45Z",
+      "notes": "Device-level status requires configured AWS credentials."
+    },
+    {
+      "vendor": "GitHub Pages",
+      "category": "status",
+      "status": "operational",
+      "status_label": "live",
+      "public_health": "operational",
+      "device_feed": "public_sources_only",
+      "devices_checked": null,
+      "devices_available": null,
+      "queue_summary": null,
+      "source_url": "https://www.githubstatus.com/",
+      "last_checked": "2026-06-10T21:12:45Z",
+      "notes": "Public status source for the static site host."
+    },
+    {
+      "vendor": "Microsoft Azure Quantum",
+      "category": "quantum",
+      "status": "unknown",
+      "status_label": "public",
+      "public_health": "unknown",
+      "device_feed": "public_sources_only",
+      "devices_checked": null,
+      "devices_available": null,
+      "queue_summary": null,
+      "source_url": "https://azure.status.microsoft/en-us/status",
+      "last_checked": "2026-06-10T21:12:45Z",
+      "notes": "Public cloud status is checked where available; device-level telemetry is not called from the browser."
+    },
+    {
+      "vendor": "IBM Quantum",
+      "category": "quantum",
+      "status": "unknown",
+      "status_label": "public",
+      "public_health": "unknown",
+      "device_feed": "public_sources_only",
+      "devices_checked": null,
+      "devices_available": null,
+      "queue_summary": null,
+      "source_url": "https://cloud.ibm.com/status",
+      "last_checked": "2026-06-10T21:12:45Z",
+      "notes": "Public cloud status source; detailed backend queue data is not exposed to the browser."
+    }
+  ],
+  "errors": []
+}
