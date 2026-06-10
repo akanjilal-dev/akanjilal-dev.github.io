@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Retrieval augmented generation in production, an architecture that survives contact with real data, Anirban Kanjilal</title>
+<meta name="description" content="A practical architecture for retrieval augmented generation, covering ingestion, hybrid retrieval, reranking, generation, evaluation, and the failure modes that matter in production.">
+<meta property="og:title" content="Retrieval augmented generation in production">
+<meta property="og:description" content="The architecture, the failure modes, and the evaluation discipline that separate a demo from a system.">
+<meta property="og:type" content="article">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/site.css">
+</head>
+<body>
+
+<header class="bar">
+  <div class="wrap">
+    <a class="brand" href="/">akanjilal<span class="dot">.dev</span></a>
+    <nav class="nav" aria-label="Primary">
+      <a href="/#work">work</a>
+      <a href="/blog/">my blogs</a>
+      <a href="/#background">background</a>
+      <a class="ext" href="https://github.com/akanjilal-dev">github</a>
+      <a class="ext" href="https://www.linkedin.com/in/akanjilal/">linkedin</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <article class="article">
+    <div class="wrap">
+      <a class="back" href="/blog/">Back to writing</a>
+      <div class="article-head">
+        <div class="meta"><span>Applied AI</span><span>June 9, 2026</span><span>12 minute read</span></div>
+        <h1>Retrieval augmented generation in production, an architecture that survives contact with real data</h1>
+        <p class="standfirst">The tutorial version of retrieval augmented generation is four boxes and a happy path. The production version is a pipeline where most of the engineering effort goes into the retrieval step, the evaluation harness, and the failure modes, because a fluent answer grounded in the wrong document is worse than no answer at all. This is the architecture I would actually deploy, and the reasons behind each layer.</p>
+      </div>
+
+      <div class="prose">
+        <p>Retrieval augmented generation is the idea that, instead of trying to bake all of your knowledge into a model's weights, you keep the knowledge in systems that are good at search, retrieve the most relevant pieces at the moment of a question, and let the model compose an answer from them. The technique was introduced by Patrick Lewis and colleagues in their 2020 paper, <a href="https://arxiv.org/abs/2005.11401">Retrieval Augmented Generation for Knowledge Intensive Natural Language Processing Tasks</a>, and it has since become the default way to ground a language model in private or current data.</p>
+
+        <p>The reason it has become the default is practical. Fine tuning a model on your corpus is expensive, slow to update, and hard to audit. Retrieval keeps the knowledge outside the model, where you can govern it, version it, and change it without retraining anything. The catch, and the reason so many projects stall after the demo, is that the naive version fails at the retrieval step a great deal of the time. Industry write ups in 2026 routinely report that simple pipelines return the wrong supporting passages for a large share of real questions, and when that happens the model still produces a confident, well structured answer. It is just grounded in the wrong material. In production the retrieval step, not the generation step, is the bottleneck.</p>
+
+        <h2>The architecture, layer by layer</h2>
+
+        <p>Here is the shape of a pipeline that holds up under real traffic. Each stage exists to fix a specific way the naive version breaks.</p>
+
+        <figure class="diagram">
+          <svg viewBox="0 0 900 340" role="img" aria-label="A retrieval augmented generation pipeline with five stages and an evaluation layer beneath them">
+            <text x="20" y="32" class="lbl" font-size="13">Knowledge sources and the user question enter a pipeline of five stages</text>
+            <!-- stage boxes -->
+            <g>
+              <rect class="box" x="20" y="60" width="155" height="96" rx="12"/>
+              <text x="34" y="86" class="num" font-size="12">01</text>
+              <text x="34" y="108" class="lbl" font-size="13">Ingest and chunk</text>
+              <text x="34" y="128" class="sub" font-size="11">parse documents, split</text>
+              <text x="34" y="143" class="sub" font-size="11">into passages with metadata</text>
+            </g>
+            <g>
+              <rect class="box" x="205" y="60" width="155" height="96" rx="12"/>
+              <text x="219" y="86" class="num" font-size="12">02</text>
+              <text x="219" y="108" class="lbl" font-size="13">Embed and index</text>
+              <text x="219" y="128" class="sub" font-size="11">store vectors and keywords</text>
+              <text x="219" y="143" class="sub" font-size="11">in a hybrid index</text>
+            </g>
+            <g>
+              <rect class="boxa" x="390" y="60" width="155" height="96" rx="12"/>
+              <text x="404" y="86" class="num" font-size="12">03</text>
+              <text x="404" y="108" class="lbl" font-size="13">Retrieve</text>
+              <text x="404" y="128" class="sub" font-size="11">semantic and keyword</text>
+              <text x="404" y="143" class="sub" font-size="11">search, top candidates</text>
+            </g>
+            <g>
+              <rect class="boxa" x="575" y="60" width="155" height="96" rx="12"/>
+              <text x="589" y="86" class="num" font-size="12">04</text>
+              <text x="589" y="108" class="lbl" font-size="13">Rerank and compress</text>
+              <text x="589" y="128" class="sub" font-size="11">cross encoder scoring,</text>
+              <text x="589" y="143" class="sub" font-size="11">drop the noise</text>
+            </g>
+            <g>
+              <rect class="box" x="745" y="60" width="135" height="96" rx="12"/>
+              <text x="759" y="86" class="num" font-size="12">05</text>
+              <text x="759" y="108" class="lbl" font-size="13">Generate</text>
+              <text x="759" y="128" class="sub" font-size="11">compose an answer</text>
+              <text x="759" y="143" class="sub" font-size="11">with citations</text>
+            </g>
+            <!-- connectors -->
+            <line class="conn" x1="175" y1="108" x2="205" y2="108"/>
+            <line class="conn" x1="360" y1="108" x2="390" y2="108"/>
+            <line class="conna" x1="545" y1="108" x2="575" y2="108"/>
+            <line class="conn" x1="730" y1="108" x2="745" y2="108"/>
+            <circle class="dot" cx="190" cy="108" r="3"/>
+            <circle class="dot" cx="375" cy="108" r="3"/>
+            <circle class="dot" cx="560" cy="108" r="3"/>
+            <circle class="dot" cx="737.5" cy="108" r="3"/>
+            <!-- evaluation band -->
+            <rect class="band" x="20" y="200" width="860" height="92" rx="12"/>
+            <rect class="box" x="20" y="200" width="860" height="92" rx="12" fill="none"/>
+            <text x="40" y="232" class="lbl" font-size="13">Evaluation and guardrails wrap the whole pipeline</text>
+            <text x="40" y="256" class="sub" font-size="12">retrieval quality and groundedness measured continuously, for example with the open framework RAGAS,</text>
+            <text x="40" y="274" class="sub" font-size="12">plus access control on every source so the model only ever sees what the current user is allowed to see</text>
+          </svg>
+          <figcaption>A production pipeline. The two shaded stages, retrieval and reranking, are where most of the quality is won or lost.</figcaption>
+        </figure>
+
+        <h3>Ingestion and indexing</h3>
+        <p>Everything downstream depends on how you cut your documents into passages. Chunks that are too large dilute the signal, and chunks that are too small lose the context that makes them meaningful. You attach metadata to every passage, such as its source, its date, and its access level, because that metadata is what later lets you filter, cite, and govern. The passages are embedded into vectors and also indexed for keyword search, so that you can later combine both kinds of matching.</p>
+
+        <h3>Retrieval, where the naive version breaks</h3>
+        <p>The single most common failure is the semantic gap. A user asks how to cancel a subscription, and the relevant document is titled account termination policy, so a pure vector search that relies on meaning can still miss it, while a pure keyword search misses paraphrases. The fix that the industry has converged on is hybrid retrieval, which runs both semantic and keyword search and combines the results. You deliberately cast a wide net at this stage, pulling far more candidates than you intend to use, because it is cheaper to over retrieve and then filter than to miss the one passage that mattered.</p>
+
+        <h3>Reranking and compression</h3>
+        <p>Casting a wide net means most of what you retrieve is noise, and a context window full of loosely relevant passages produces a mediocre answer because the model averages across all of it. So a second pass uses a cross encoder, a model that reads the question and a candidate passage together and scores how well they actually match, to push the best handful to the top and discard the rest. Compression then strips the irrelevant sentences out of the passages that remain. These steps add latency, and the accuracy they buy is almost always worth it.</p>
+
+        <h3>Generation and citation</h3>
+        <p>Only now does the language model see anything. It receives the compressed, highly relevant passages and is asked to compose an answer and to cite which passage each claim came from. The citation step is not decoration. It is how a reviewer, or an auditor, or the user can check that the answer is actually grounded rather than confidently invented.</p>
+
+        <h2>When a flat index is not enough</h2>
+
+        <p>For questions that require connecting facts that live in different documents, a flat list of passages cannot help, because it has no notion of how passages relate to one another. This is the case for graph based retrieval, where the knowledge is organized as entities and the relationships between them. Microsoft's research on this approach, published as a graph based method for query focused summarization, showed meaningful gains on complex analytical questions that require reasoning across many connected facts. The honest tradeoff is that building and maintaining a graph is more work, and for a straightforward question and answer use case it can add noise rather than value. The guiding principle is to start with the simplest pipeline that could work and add complexity only when your evaluation numbers tell you to.</p>
+
+        <h2>Evaluation is the part you cannot skip</h2>
+
+        <p>The reason retrieval failures are dangerous is that they are invisible from the outside. The answer reads well. The only way to know whether your system is reliably correct rather than reliably fluent is to measure it, continuously, against a held out set of questions with known good answers. Open frameworks such as RAGAS score the things that matter, including whether the retrieved passages were actually relevant and whether the final answer is grounded in them rather than in the model's imagination. Treating evaluation as a first class part of the system, built in from the very beginning rather than bolted on at the end, is the single habit that most separates teams who ship reliable retrieval systems from teams who ship demos.</p>
+
+        <div class="callout"><p>The security view matters too. Retrieval pipelines are exactly the channel that indirect prompt injection travels through, which the OWASP project tracks under vector and embedding weaknesses. Every passage your system retrieves is untrusted content that the model will read, so the access controls on your sources and the validation of retrieved content are security controls, not just quality controls.</p></div>
+
+        <h2>The architect's summary</h2>
+
+        <p>Retrieval augmented generation is only as good as the context it can see. The model is downstream of the retriever, the retriever is downstream of the index, and the index is downstream of how well you governed and prepared your knowledge in the first place. If the source is stale, ungoverned, or poorly chunked, no amount of model cleverness will save the output. Spend your engineering effort where the quality actually lives, which is in retrieval, in reranking, and in the evaluation that tells you the truth about both.</p>
+      </div>
+
+      <section class="prose refs">
+        <h2>References</h2>
+        <ol>
+          <li>Patrick Lewis and colleagues, Retrieval Augmented Generation for Knowledge Intensive Natural Language Processing Tasks (2020).<span class="src">https://arxiv.org/abs/2005.11401</span></li>
+          <li>Microsoft Research, From Local to Global, a graph based retrieval approach to query focused summarization (2024).<span class="src">https://arxiv.org/abs/2404.16130</span></li>
+          <li>RAGAS, an open framework for evaluating retrieval augmented generation pipelines.<span class="src">https://github.com/explodinggradients/ragas</span></li>
+          <li>OWASP, Top 10 for Large Language Model Applications, vector and embedding weaknesses.<span class="src">https://genai.owasp.org/llm-top-10/</span></li>
+          <li>Comet, a practical guide to retrieval augmented generation architecture and production context (2026).<span class="src">https://www.comet.com/site/blog/retrieval-augmented-generation/</span></li>
+        </ol>
+      </section>
+
+      <div class="article-foot">
+        <div class="cta-row">
+          <a class="btn primary" href="https://github.com/akanjilal-dev">See the work</a>
+          <a class="btn" href="/blog/">More writing</a>
+        </div>
+      </div>
+    </div>
+  </article>
+</main>
+
+<footer>
+  <div class="wrap foot">
+    <div class="links">
+      <a href="https://github.com/akanjilal-dev">GitHub</a>
+      <a href="https://www.linkedin.com/in/akanjilal/">LinkedIn</a>
+      <a href="mailto:anirban.kanjilal@gmail.com">Email</a>
+    </div>
+    <div class="copy">© 2026 Anirban Kanjilal</div>
+  </div>
+</footer>
+
+</body>
+</html>

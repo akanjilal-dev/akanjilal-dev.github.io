@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The economics of agentic workflows, optimizing for cost and latency, Anirban Kanjilal</title>
+<meta name="description" content="Multi agent systems can be far more capable and far more expensive. A practical look at where the cost comes from, when it is worth paying, and the levers that control it.">
+<meta property="og:title" content="The economics of agentic workflows">
+<meta property="og:description" content="Where the token cost comes from, when multiple agents earn it, and the levers that control cost and latency.">
+<meta property="og:type" content="article">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/site.css">
+</head>
+<body>
+
+<header class="bar">
+  <div class="wrap">
+    <a class="brand" href="/">akanjilal<span class="dot">.dev</span></a>
+    <nav class="nav" aria-label="Primary">
+      <a href="/#work">work</a>
+      <a href="/blog/">my blogs</a>
+      <a href="/#background">background</a>
+      <a class="ext" href="https://github.com/akanjilal-dev">github</a>
+      <a class="ext" href="https://www.linkedin.com/in/akanjilal/">linkedin</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <article class="article">
+    <div class="wrap">
+      <a class="back" href="/blog/">Back to writing</a>
+      <div class="article-head">
+        <div class="meta"><span>Agentic systems</span><span>June 9, 2026</span><span>11 minute read</span></div>
+        <h1>The economics of agentic workflows, optimizing for cost and latency</h1>
+        <p class="standfirst">A system of cooperating agents can be dramatically more capable than a single model, and dramatically more expensive. The difference between a clever demonstration and something you can run at scale is whether you understand where the cost comes from, when it is worth paying, and which levers actually move it. This is a tour of that economics, with real numbers.</p>
+      </div>
+
+      <div class="prose">
+        <p>We have the clearest public data point on this from Anthropic, whose engineering team published a candid account of how they built the multi agent system behind their research feature. The architecture is an orchestrator and worker pattern. A lead agent receives a question, plans an approach, and spins up several subagents in parallel, each with its own context window, each chasing one independent thread, after which a separate pass reconciles their findings and attaches citations. On their internal evaluation this arrangement outperformed a strong single agent by a little over ninety percent. The price of that capability was striking. The system consumed roughly fifteen times the tokens of an ordinary chat interaction, and even a single agent uses around four times the tokens of a chat.</p>
+
+        <figure class="diagram">
+          <svg viewBox="0 0 900 230" role="img" aria-label="A bar chart comparing relative token cost of a chat, a single agent, and a multi agent system">
+            <text x="20" y="30" class="lbl" font-size="13">Relative token cost, compared with one ordinary chat</text>
+            <!-- chat -->
+            <text x="20" y="74" class="fillink" font-size="13">Chat</text>
+            <rect class="bartrack" x="180" y="60" width="680" height="20" rx="6"/>
+            <rect class="bar" x="180" y="60" width="45" height="20" rx="6"/>
+            <text x="236" y="75" class="num" font-size="12">about 1 times</text>
+            <!-- single agent -->
+            <text x="20" y="124" class="fillink" font-size="13">Single agent</text>
+            <rect class="bartrack" x="180" y="110" width="680" height="20" rx="6"/>
+            <rect class="bar" x="180" y="110" width="181" height="20" rx="6"/>
+            <text x="372" y="125" class="num" font-size="12">about 4 times</text>
+            <!-- multi agent -->
+            <text x="20" y="174" class="fillink" font-size="13">Multi agent</text>
+            <rect class="bartrack" x="180" y="160" width="680" height="20" rx="6"/>
+            <rect class="bar" x="180" y="160" width="680" height="20" rx="6"/>
+            <text x="600" y="174" class="lbl" font-size="12" fill="#fff">about 15 times</text>
+            <text x="20" y="212" class="sub" font-size="11">Figures reported by Anthropic for their research system. The right architecture is the one whose extra cost the task actually earns.</text>
+          </svg>
+          <figcaption>The capability of multiple agents is real, and so is the bill. The cost multiplier is the price of admission to the architecture.</figcaption>
+        </figure>
+
+        <h2>Where the cost actually comes from</h2>
+
+        <p>Tokens are the metered resource, and agentic systems spend them in three ways that a single chat does not. They make many more model calls, because planning, tool use, reflection, and synthesis are each separate turns. They carry much more context, because each step re reads the accumulated state of the task. And when they run several agents, they multiply both of those by the number of agents. A pattern where several agents debate across several rounds is the clearest example, because the cost grows with the number of agents multiplied by the number of rounds, and that product climbs quickly.</p>
+
+        <h2>When the cost is worth paying, and when it is not</h2>
+
+        <p>The decisive question is whether the task genuinely decomposes into independent parallel parts. Anthropic was direct about the limitation. Parallel subagents help only when the subtasks are truly independent. If one subagent needs another's findings before it can do its own work, the parallelism collapses into expensive serial execution with extra coordination overhead, and you pay the multiplier without earning it. Breadth first research, where the directions are independent and the answer is valuable, is a good fit. Tightly interdependent work such as coding and debugging, where every part depends on the others sharing the same context, is not. A separate body of research that asks why multi agent systems fail points to exactly this, where coordination and miscommunication between agents are common causes of failure.</p>
+
+        <figure class="diagram">
+          <svg viewBox="0 0 900 280" role="img" aria-label="An orchestrator and worker architecture with a lead agent, three parallel subagents, and a synthesis step">
+            <rect class="boxa" x="330" y="30" width="240" height="64" rx="12"/>
+            <text x="350" y="58" class="lbl" font-size="13">Lead agent, the orchestrator</text>
+            <text x="350" y="78" class="sub" font-size="11">plans, delegates, then synthesizes</text>
+            <!-- subagents -->
+            <rect class="box" x="60" y="150" width="220" height="64" rx="12"/>
+            <text x="78" y="178" class="lbl" font-size="12">Subagent, thread one</text>
+            <text x="78" y="197" class="sub" font-size="11">own context window</text>
+            <rect class="box" x="340" y="150" width="220" height="64" rx="12"/>
+            <text x="358" y="178" class="lbl" font-size="12">Subagent, thread two</text>
+            <text x="358" y="197" class="sub" font-size="11">own context window</text>
+            <rect class="box" x="620" y="150" width="220" height="64" rx="12"/>
+            <text x="638" y="178" class="lbl" font-size="12">Subagent, thread three</text>
+            <text x="638" y="197" class="sub" font-size="11">own context window</text>
+            <!-- connectors -->
+            <line class="conna" x1="450" y1="94" x2="170" y2="150"/>
+            <line class="conna" x1="450" y1="94" x2="450" y2="150"/>
+            <line class="conna" x1="450" y1="94" x2="730" y2="150"/>
+            <circle class="dot" cx="170" cy="150" r="3"/>
+            <circle class="dot" cx="450" cy="150" r="3"/>
+            <circle class="dot" cx="730" cy="150" r="3"/>
+            <text x="60" y="250" class="sub" font-size="11">Each subagent returns a condensed summary rather than its raw work, which keeps the lead agent's context, and therefore its cost, under control.</text>
+          </svg>
+          <figcaption>The orchestrator and worker pattern. It earns its cost only when the three threads are genuinely independent.</figcaption>
+        </figure>
+
+        <h2>The levers that move cost and latency</h2>
+
+        <p>Once you accept that tokens are a budget, the optimization work looks a lot like ordinary performance engineering.</p>
+
+        <p><strong>Choose the simplest architecture that works.</strong> Anthropic's own guidance on building effective agents argues for reaching for the simplest pattern first, and for using a fixed workflow rather than an open ended agent whenever the task is predictable enough to allow it. Most teams reach for multiple agents reflexively when a single well designed agent, or even a simple chain of steps, would do the job at a fraction of the cost.</p>
+
+        <p><strong>Route work to the right sized model.</strong> Not every step needs your most capable and most expensive model. A small fast model can handle routing decisions, classification, and easy steps, escalating to a larger model only when the work demands it. The research on cascading models, including the well known study on reducing cost while improving performance, shows how much can be saved by sending the easy questions to the cheap model and reserving the expensive one for the hard ones.</p>
+
+        <p><strong>Cache the stable context.</strong> When the same large instruction block or document is sent on every call, caching it avoids paying to process it again and again, which cuts both cost and latency.</p>
+
+        <p><strong>Return summaries, not transcripts.</strong> Subagents that hand back a condensed result rather than their entire working transcript keep the orchestrator's context small, which is the single biggest driver of cost in a deep multi agent run.</p>
+
+        <p><strong>Bound the loops.</strong> Give agents explicit budgets, maximum step counts, and early stopping conditions, so a confused agent cannot quietly spend a fortune circling a problem it cannot solve.</p>
+
+        <h2>Measure cost per outcome, not cost per token</h2>
+
+        <p>The metric that matters is not the price of a token. It is the cost of a successful outcome, which is the total spend divided by the rate at which the system actually produces the result you wanted. A cheaper per token system that fails half the time and has to be retried can easily cost more per successful outcome than an expensive system that succeeds the first time. This reframing is what lets you reason about agentic spend the way a business reasons about any other unit economics.</p>
+
+        <div class="callout"><p>This is financial discipline applied to a new kind of compute. In the same way that a payments platform runs under a cost ceiling, an accuracy target, and a latency budget all at once, an agentic system should be designed against those three constraints from the start, not measured against them after the bill arrives.</p></div>
+
+        <h2>The summary</h2>
+
+        <p>Multiple agents buy capability with tokens. Spend that budget deliberately. Use the simplest architecture the task allows, route work to the right sized model, cache what is stable, summarize what is returned, bound what can loop, and judge the whole thing by the cost of a successful outcome rather than the price of a token. That is how an agentic system stays affordable as it scales.</p>
+      </div>
+
+      <section class="prose refs">
+        <h2>References</h2>
+        <ol>
+          <li>Anthropic, How we built our multi agent research system (2025).<span class="src">https://www.anthropic.com/engineering/multi-agent-research-system</span></li>
+          <li>Anthropic, Building effective agents (2024).<span class="src">https://www.anthropic.com/research/building-effective-agents</span></li>
+          <li>Cemri and colleagues, Why do multi agent large language model systems fail (2025).<span class="src">https://arxiv.org/abs/2503.13657</span></li>
+          <li>Chen, Zaharia, and Zou, FrugalGPT, how to use large language models while reducing cost and improving performance (2024).<span class="src">https://arxiv.org/abs/2305.05176</span></li>
+        </ol>
+      </section>
+
+      <div class="article-foot">
+        <div class="cta-row">
+          <a class="btn primary" href="https://github.com/akanjilal-dev/llm-cost-guardrails">See llm-cost-guardrails</a>
+          <a class="btn" href="/blog/">More writing</a>
+        </div>
+      </div>
+    </div>
+  </article>
+</main>
+
+<footer>
+  <div class="wrap foot">
+    <div class="links">
+      <a href="https://github.com/akanjilal-dev">GitHub</a>
+      <a href="https://www.linkedin.com/in/akanjilal/">LinkedIn</a>
+      <a href="mailto:anirban.kanjilal@gmail.com">Email</a>
+    </div>
+    <div class="copy">© 2026 Anirban Kanjilal</div>
+  </div>
+</footer>
+
+</body>
+</html>

@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Production architectures for AI agents, from single agents to supervisor graphs, Anirban Kanjilal</title>
+<meta name="description" content="A reference architecture for deploying AI agents in production, covering orchestration, state and checkpointing, tool access, human oversight, and observability.">
+<meta property="og:title" content="Production architectures for AI agents">
+<meta property="og:description" content="The layers that turn an agent demo into a system you can operate, recover, and audit.">
+<meta property="og:type" content="article">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/site.css">
+</head>
+<body>
+
+<header class="bar">
+  <div class="wrap">
+    <a class="brand" href="/">akanjilal<span class="dot">.dev</span></a>
+    <nav class="nav" aria-label="Primary">
+      <a href="/#work">work</a>
+      <a href="/blog/">my blogs</a>
+      <a href="/#background">background</a>
+      <a class="ext" href="https://github.com/akanjilal-dev">github</a>
+      <a class="ext" href="https://www.linkedin.com/in/akanjilal/">linkedin</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <article class="article">
+    <div class="wrap">
+      <a class="back" href="/blog/">Back to writing</a>
+      <div class="article-head">
+        <div class="meta"><span>Agent deployment</span><span>June 9, 2026</span><span>13 minute read</span></div>
+        <h1>Production architectures for AI agents, from single agents to supervisor graphs</h1>
+        <p class="standfirst">Most agent projects die in the gap between a working demonstration and a system you can operate. The demonstration runs once on the happy path. The system has to resume after a failure, wait for a human, recover its state, stay within a budget, and leave an audit trail. This is the reference architecture that closes that gap, and the layers that make it work.</p>
+      </div>
+
+      <div class="prose">
+        <p>By 2026, a clear majority of organizations report having agents in production, and the barrier they cite most often is no longer cost. It is reliability. An agent that answers correctly in a demonstration and then behaves unpredictably under real traffic is the rule rather than the exception, and the reason is almost always architectural. The demonstration treats the agent as a single function call. Production requires treating it as a long running, stateful, recoverable process that interacts with untrusted inputs and consequential tools. Those are very different things to build.</p>
+
+        <h2>Start simpler than you think you need</h2>
+
+        <p>Before reaching for an autonomous agent, it is worth asking whether you need one. Anthropic's guidance on building effective agents draws a useful line between workflows, where the steps are known in advance and the system follows a fixed path, and agents, where the model decides its own steps at runtime. Many tasks that teams solve with an open ended agent are better served by a simple workflow, which is cheaper, more predictable, and far easier to operate. The patterns worth knowing, in roughly increasing order of autonomy, are chaining steps in sequence, routing a request to the right handler, running independent steps in parallel, an orchestrator that delegates to workers, and an evaluator that critiques and improves another model's output. Reach for the simplest one that solves the problem.</p>
+
+        <h2>The control flow problem</h2>
+
+        <p>When you do need a genuine agent, the central engineering challenge is control flow. A real agent needs to loop while it works, branch on what it finds, pause and resume, recover after a failure, and stop to wait for a human before doing something irreversible. A simple linear pipeline cannot express any of that. This is the reason graph based orchestration has become the dominant approach for serious deployments. Representing the agent as a graph, where each node is a step and the edges decide what happens next, makes the state of the task an explicit, inspectable thing rather than something hidden inside a single long model call. Frameworks built on this idea provide persistence layers that save a snapshot of the state at every step, which is the foundation everything else rests on.</p>
+
+        <figure class="diagram">
+          <svg viewBox="0 0 900 380" role="img" aria-label="A layered production architecture for an AI agent, with an observability column spanning all layers">
+            <text x="20" y="28" class="lbl" font-size="13">The layers that turn an agent into an operable system</text>
+            <!-- main stack -->
+            <rect class="box" x="20" y="44" width="690" height="58" rx="11"/>
+            <text x="36" y="70" class="lbl" font-size="13">Interface</text>
+            <text x="36" y="89" class="sub" font-size="11">a chat surface, an application programming interface, or a scheduled trigger</text>
+
+            <rect class="boxa" x="20" y="116" width="690" height="86" rx="11"/>
+            <text x="36" y="142" class="lbl" font-size="13">Orchestration, a state graph</text>
+            <text x="36" y="161" class="sub" font-size="11">routing, loops, branching, and a checkpoint written at every step</text>
+            <rect class="box" x="430" y="150" width="262" height="40" rx="8"/>
+            <text x="444" y="174" class="lbl" font-size="11">Human approval gate</text>
+
+            <rect class="box" x="20" y="216" width="690" height="58" rx="11"/>
+            <text x="36" y="242" class="lbl" font-size="13">Tool access through the secure gateway</text>
+            <text x="36" y="261" class="sub" font-size="11">allow listed, scoped, validated, and logged, as covered in the gateway article</text>
+
+            <rect class="box" x="20" y="288" width="690" height="58" rx="11"/>
+            <text x="36" y="314" class="lbl" font-size="13">Memory and durable state</text>
+            <text x="36" y="333" class="sub" font-size="11">the checkpoint store and conversation memory that let a run pause, resume, and recover</text>
+
+            <!-- observability column -->
+            <rect class="boxa" x="730" y="44" width="150" height="302" rx="11"/>
+            <text x="746" y="70" class="lbl" font-size="12">Observability</text>
+            <text x="746" y="92" class="sub" font-size="11">traces and</text>
+            <text x="746" y="107" class="sub" font-size="11">spans for</text>
+            <text x="746" y="122" class="sub" font-size="11">every step</text>
+            <text x="746" y="150" class="sub" font-size="11">token and</text>
+            <text x="746" y="165" class="sub" font-size="11">cost metrics</text>
+            <text x="746" y="193" class="sub" font-size="11">trajectory</text>
+            <text x="746" y="208" class="sub" font-size="11">evaluations</text>
+            <text x="746" y="236" class="sub" font-size="11">it spans</text>
+            <text x="746" y="251" class="sub" font-size="11">every layer</text>
+            <!-- connectors -->
+            <line class="conn" x1="365" y1="102" x2="365" y2="116"/>
+            <line class="conn" x1="365" y1="202" x2="365" y2="216"/>
+            <line class="conn" x1="365" y1="274" x2="365" y2="288"/>
+            <circle class="dot" cx="365" cy="102" r="3"/>
+            <circle class="dot" cx="365" cy="216" r="3"/>
+            <circle class="dot" cx="365" cy="288" r="3"/>
+          </svg>
+          <figcaption>A reference architecture. Observability is drawn as a column because it is not a layer you add at the end, it is something that must see every other layer.</figcaption>
+        </figure>
+
+        <h2>State and durability, the quiet foundation</h2>
+
+        <p>The persistence layer is what makes everything above it possible. When the state of a run is checkpointed at every step, three capabilities fall out almost for free. You can pause a run and resume it later, which is exactly what a human approval step needs. You can recover from a failure by resuming from the last good checkpoint rather than starting over. And you can replay a past run step by step to understand what happened, which is the difference between debugging an agent and merely guessing at it. In a framework like the graph based one that leads this space, compiling the graph with a checkpointer saves a snapshot at every step, organized into threads, and that single mechanism underpins human oversight, memory, recovery, and audit all at once.</p>
+
+        <h2>Tools, through the gateway</h2>
+
+        <p>An agent's tools are where it touches the real world, and therefore where it can do real damage. Everything I wrote in the gateway article applies here. Tool calls go through a single chokepoint that authenticates and scopes them, restricts them to an approved list, validates their inputs and outputs, and logs every invocation. In the deployment architecture, the gateway is simply the layer between orchestration and the outside world.</p>
+
+        <h2>Human oversight as a first class step</h2>
+
+        <p>For any action that is consequential and hard to reverse, the right design is to stop and ask a person. Because the state is checkpointed, this is clean rather than awkward. The graph reaches the approval node, the state is saved, a notification goes out, the run simply waits, and when the person approves it resumes exactly where it left off. This is the same dual control principle that governs money movement, expressed as a node in a graph.</p>
+
+        <h2>Observability, because you cannot operate what you cannot see</h2>
+
+        <p>A non deterministic system that takes actions in the world is not something you can run blind. You need a trace of every step, with the token count, the latency, and the cost attached, so that you can see where a run spent its time and its budget. You need evaluations of whole trajectories, not just final answers, so that you can tell whether the agent is reasoning well or simply arriving at the right answer by luck. The industry is standardizing this through the generative AI conventions of the OpenTelemetry project, and several mature platforms exist to capture and analyze the traces. The teams that succeed treat observability as something present from the first day, not bolted on after the first incident.</p>
+
+        <h2>Design for the ways agents fail</h2>
+
+        <p>Research into why multi agent systems fail points consistently at coordination, where agents duplicate work, miscommunicate, or drift from the shared goal. The architectural answers are the ones above. Clear task boundaries reduce duplication, checkpointed state makes failures recoverable, the gateway contains the damage a confused agent can do, human gates catch the consequential mistakes, and observability lets you find the rest. You do not prevent every failure. You make failures visible, bounded, and recoverable.</p>
+
+        <div class="callout"><p>Strip away the novelty and this is the architecture of any mission critical distributed system. You make operations recoverable, you keep durable state, you require dual control for risky actions, you instrument everything, and you contain the blast radius of any one component. The only genuinely new thing is that one of the components is non deterministic, which raises the importance of observation and human oversight rather than changing the fundamentals.</p></div>
+
+        <h2>The summary</h2>
+
+        <p>Start with the simplest pattern that solves the task. When you need a real agent, build it as a state graph with checkpointing, route its tools through a gateway, make human approval a first class step for anything consequential, and instrument every layer from the beginning. That is the architecture that survives the journey from a demonstration that works once to a system you can actually operate.</p>
+      </div>
+
+      <section class="prose refs">
+        <h2>References</h2>
+        <ol>
+          <li>Anthropic, Building effective agents (2024).<span class="src">https://www.anthropic.com/research/building-effective-agents</span></li>
+          <li>LangGraph, the persistence and checkpointing documentation.<span class="src">https://docs.langchain.com/oss/python/langgraph/persistence</span></li>
+          <li>Cemri and colleagues, Why do multi agent large language model systems fail (2025).<span class="src">https://arxiv.org/abs/2503.13657</span></li>
+          <li>OpenTelemetry, semantic conventions for generative AI systems.<span class="src">https://opentelemetry.io/docs/specs/semconv/gen-ai/</span></li>
+        </ol>
+      </section>
+
+      <div class="article-foot">
+        <div class="cta-row">
+          <a class="btn primary" href="https://github.com/akanjilal-dev">See the work</a>
+          <a class="btn" href="/blog/">More writing</a>
+        </div>
+      </div>
+    </div>
+  </article>
+</main>
+
+<footer>
+  <div class="wrap foot">
+    <div class="links">
+      <a href="https://github.com/akanjilal-dev">GitHub</a>
+      <a href="https://www.linkedin.com/in/akanjilal/">LinkedIn</a>
+      <a href="mailto:anirban.kanjilal@gmail.com">Email</a>
+    </div>
+    <div class="copy">© 2026 Anirban Kanjilal</div>
+  </div>
+</footer>
+
+</body>
+</html>

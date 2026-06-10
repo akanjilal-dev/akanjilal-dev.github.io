@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>An engineering control plane for AI governance, NIST, ISO 42001, and the EU AI Act, Anirban Kanjilal</title>
+<meta name="description" content="Three AI governance instruments, one engineering control plane. How to satisfy the NIST AI Risk Management Framework, ISO IEC 42001, and the EU AI Act without duplicating effort.">
+<meta property="og:title" content="An engineering control plane for AI governance">
+<meta property="og:description" content="NIST, ISO 42001, and the EU AI Act map onto one set of controls. Build them once.">
+<meta property="og:type" content="article">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/site.css">
+</head>
+<body>
+
+<header class="bar">
+  <div class="wrap">
+    <a class="brand" href="/">akanjilal<span class="dot">.dev</span></a>
+    <nav class="nav" aria-label="Primary">
+      <a href="/#work">work</a>
+      <a href="/blog/">my blogs</a>
+      <a href="/#background">background</a>
+      <a class="ext" href="https://github.com/akanjilal-dev">github</a>
+      <a class="ext" href="https://www.linkedin.com/in/akanjilal/">linkedin</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <article class="article">
+    <div class="wrap">
+      <a class="back" href="/blog/">Back to writing</a>
+      <div class="article-head">
+        <div class="meta"><span>AI Governance</span><span>June 9, 2026</span><span>12 minute read</span></div>
+        <h1>An engineering control plane for AI governance, across NIST, ISO 42001, and the EU AI Act</h1>
+        <p class="standfirst">Three different instruments now shape how organizations are expected to govern artificial intelligence. They look like three separate compliance burdens, and they are not. Read carefully, they describe substantially the same controls in three different dialects, which means an engineering team can build the controls once and produce the evidence each instrument asks for. This is how I would structure that work.</p>
+      </div>
+
+      <div class="prose">
+        <p>For most of the last decade, governing artificial intelligence was a matter of voluntary good intentions. That era has ended. The field is moving from optional guidelines to enforceable obligations, and an organization that deploys consequential systems now sits at the intersection of three instruments, each built for a different purpose and none sufficient on its own.</p>
+
+        <p>The first is the <a href="https://www.nist.gov/itl/ai-risk-management-framework">Artificial Intelligence Risk Management Framework</a> from the United States National Institute of Standards and Technology. It is a voluntary, risk based methodology organized around four functions, which are to govern, to map, to measure, and to manage. Its companion document, the Generative Artificial Intelligence Profile published as the publication numbered AI 600-1, adapts those functions to the specific risks of generative systems and names twelve risk categories, from confabulation to information security to harmful bias.</p>
+
+        <p>The second is the international standard for an artificial intelligence management system, published in late 2023 as ISO and IEC 42001. It is the first standard of its kind that an organization can actually be certified against, which matters, because certification is how you demonstrate maturity to a regulator, a partner, or a customer rather than merely asserting it.</p>
+
+        <p>The third is the European Union Artificial Intelligence Act, the regulation numbered 2024 stroke 1689, which is the world's first comprehensive and legally binding framework for the technology. It classifies systems by risk, bans a small set of unacceptable uses outright, and places substantial obligations on the systems it deems high risk. Its reach is extraterritorial, so an organization outside the Union whose systems are placed on the Union market or whose outputs affect people in the Union is within scope regardless of where it is headquartered.</p>
+
+        <h2>The timeline that makes this urgent</h2>
+
+        <p>The Act applies in phases. The prohibitions on unacceptable uses, together with the obligation to ensure staff have adequate understanding of the technology, took effect in February 2025. The obligations on general purpose models followed in August 2025. The substantial obligations on high risk systems were set to apply from August 2026, although a political agreement reached in May 2026, often referred to as the simplification package, has deferred parts of the high risk timeline. The deadlines moved, but the work required to meet them did not, so the only thing the deferral changes is the length of the runway. The penalties are designed to be felt even by the largest organizations, reaching up to thirty five million euros or seven percent of worldwide annual turnover for the most serious violations.</p>
+
+        <h2>The insight, three dialects of the same controls</h2>
+
+        <p>Here is the part that turns a daunting compliance picture into a tractable engineering project. These three instruments overlap heavily in substance. The framework from NIST provides the risk management methodology. The standard provides the auditable management system. The Act provides the legally binding obligations. An organization that implements all three, using the published crosswalks to align them, does almost no duplicated work, because the controls underneath are shared. The standard alone maps closely to seven core articles of the Act, covering risk management, data governance, technical documentation, record keeping, transparency, human oversight, and quality management.</p>
+
+        <figure class="diagram">
+          <svg viewBox="0 0 900 380" role="img" aria-label="Three governance frameworks mapping down into one shared engineering control plane">
+            <text x="20" y="28" class="lbl" font-size="13">Three instruments, expressed in different dialects</text>
+            <!-- three frameworks -->
+            <rect class="box" x="20" y="44" width="270" height="86" rx="12"/>
+            <text x="36" y="72" class="lbl" font-size="13">NIST AI RMF</text>
+            <text x="36" y="94" class="sub" font-size="11">govern, map, measure, manage</text>
+            <text x="36" y="111" class="sub" font-size="11">the risk methodology</text>
+            <rect class="box" x="315" y="44" width="270" height="86" rx="12"/>
+            <text x="331" y="72" class="lbl" font-size="13">ISO and IEC 42001</text>
+            <text x="331" y="94" class="sub" font-size="11">a certifiable management system</text>
+            <text x="331" y="111" class="sub" font-size="11">the auditable structure</text>
+            <rect class="box" x="610" y="44" width="270" height="86" rx="12"/>
+            <text x="626" y="72" class="lbl" font-size="13">EU AI Act</text>
+            <text x="626" y="94" class="sub" font-size="11">articles nine to seventeen</text>
+            <text x="626" y="111" class="sub" font-size="11">the legal obligation</text>
+            <!-- connectors down -->
+            <line class="conn" x1="155" y1="130" x2="155" y2="176"/>
+            <line class="conn" x1="450" y1="130" x2="450" y2="176"/>
+            <line class="conn" x1="745" y1="130" x2="745" y2="176"/>
+            <circle class="dot" cx="155" cy="176" r="3"/>
+            <circle class="dot" cx="450" cy="176" r="3"/>
+            <circle class="dot" cx="745" cy="176" r="3"/>
+            <!-- control plane band -->
+            <rect class="boxa" x="20" y="186" width="860" height="178" rx="14"/>
+            <text x="40" y="214" class="lbl" font-size="14">One engineering control plane, built once</text>
+            <g>
+              <rect class="box" x="40" y="226" width="195" height="56" rx="9"/>
+              <text x="54" y="250" class="lbl" font-size="12">Inventory and classify</text>
+              <text x="54" y="268" class="sub" font-size="11">every system, by risk</text>
+              <rect class="box" x="245" y="226" width="195" height="56" rx="9"/>
+              <text x="259" y="250" class="lbl" font-size="12">Risk assessment</text>
+              <text x="259" y="268" class="sub" font-size="11">documented, ongoing</text>
+              <rect class="box" x="450" y="226" width="195" height="56" rx="9"/>
+              <text x="464" y="250" class="lbl" font-size="12">Data governance</text>
+              <text x="464" y="268" class="sub" font-size="11">lineage and quality</text>
+              <rect class="box" x="655" y="226" width="205" height="56" rx="9"/>
+              <text x="669" y="250" class="lbl" font-size="12">Evaluation and testing</text>
+              <text x="669" y="268" class="sub" font-size="11">measured, repeatable</text>
+              <rect class="box" x="40" y="292" width="260" height="56" rx="9"/>
+              <text x="54" y="316" class="lbl" font-size="12">Monitoring and logging</text>
+              <text x="54" y="334" class="sub" font-size="11">runtime behaviour, an audit trail</text>
+              <rect class="box" x="310" y="292" width="260" height="56" rx="9"/>
+              <text x="324" y="316" class="lbl" font-size="12">Human oversight</text>
+              <text x="324" y="334" class="sub" font-size="11">a person can review and intervene</text>
+              <rect class="box" x="580" y="292" width="280" height="56" rx="9"/>
+              <text x="594" y="316" class="lbl" font-size="12">Technical documentation</text>
+              <text x="594" y="334" class="sub" font-size="11">evidence generated as you build</text>
+            </g>
+          </svg>
+          <figcaption>Each instrument asks for the same underlying controls. Build the control plane once, and each framework becomes a different report drawn from the same evidence.</figcaption>
+        </figure>
+
+        <h2>Turning governance into engineering</h2>
+
+        <p>The mistake that makes governance painful is treating it as a separate compliance checklist that someone fills in after the system is built. The far better approach, and the one that fits how engineering teams actually work, is to express each control as something the system produces as a side effect of being built well. A system inventory becomes a registry that every deployment writes to automatically. A risk assessment becomes a structured document attached to each system and reviewed at defined gates. Data governance becomes lineage and quality metrics captured in the pipeline. Evaluation becomes a test suite that runs continuously, the same discipline I wrote about for retrieval systems. Monitoring and logging become the same observability you already run, extended to record model behaviour. Human oversight becomes an approval step in the workflow. And technical documentation becomes evidence generated as you go, rather than archaeology performed under deadline.</p>
+
+        <p>Done this way, the three instruments stop being three projects. They become three views over one body of evidence. When the auditor arrives for the standard, when leadership asks about alignment with the framework, and when the regulator asks about the Act, you are drawing different reports from the same control plane.</p>
+
+        <h2>The payments lens</h2>
+
+        <p>None of this is unfamiliar to anyone who has worked in a regulated industry. Payments, banking, and utilities have lived under exactly this model for decades, where controls are designed in, evidence is generated continuously, and an external party can audit the result. Artificial intelligence is simply another regulated workload arriving into an organization that, if it is in one of these industries, already knows how to do this. The advantage goes to teams that recognize the pattern and reuse the muscle they already have, rather than treating AI governance as something exotic.</p>
+
+        <div class="callout"><p>A certification against the management system standard is not the same thing as a conformity assessment under the Act, and neither one is a substitute for advice from a qualified professional about your specific situation. This article describes an engineering approach to organizing the work. It is not legal advice, and the regulatory details continue to move.</p></div>
+
+        <h2>The summary</h2>
+
+        <p>Treat the three instruments as three dialects describing one set of controls, build those controls into the way your systems are made rather than bolting them on afterwards, and generate the evidence as a by product of good engineering. That turns a frightening compliance picture into something a competent engineering organization already knows how to deliver.</p>
+      </div>
+
+      <section class="prose refs">
+        <h2>References</h2>
+        <ol>
+          <li>NIST, Artificial Intelligence Risk Management Framework, and the Generative Artificial Intelligence Profile, publication AI 600-1.<span class="src">https://www.nist.gov/itl/ai-risk-management-framework</span></li>
+          <li>NIST, Generative Artificial Intelligence Profile, full text.<span class="src">https://nvlpubs.nist.gov/nistpubs/ai/NIST.AI.600-1.pdf</span></li>
+          <li>ISO and IEC 42001, the artificial intelligence management system standard (2023).<span class="src">https://www.iso.org/standard/81230.html</span></li>
+          <li>European Commission, the regulatory framework for artificial intelligence, the EU AI Act.<span class="src">https://digital-strategy.ec.europa.eu/en/policies/regulatory-framework-ai</span></li>
+          <li>A plain language comparison of the EU AI Act, the NIST framework, and ISO and IEC 42001 (2026).<span class="src">https://gaicc.org/blog/ai-governance-comparison-eu-ai-act-nist-iso-42001/</span></li>
+        </ol>
+      </section>
+
+      <div class="article-foot">
+        <div class="cta-row">
+          <a class="btn primary" href="https://github.com/akanjilal-dev">See the work</a>
+          <a class="btn" href="/blog/">More writing</a>
+        </div>
+      </div>
+    </div>
+  </article>
+</main>
+
+<footer>
+  <div class="wrap foot">
+    <div class="links">
+      <a href="https://github.com/akanjilal-dev">GitHub</a>
+      <a href="https://www.linkedin.com/in/akanjilal/">LinkedIn</a>
+      <a href="mailto:anirban.kanjilal@gmail.com">Email</a>
+    </div>
+    <div class="copy">© 2026 Anirban Kanjilal</div>
+  </div>
+</footer>
+
+</body>
+</html>
