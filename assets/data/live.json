@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-06-11T04:18:09Z",
-  "next_refresh_at": "2026-06-11T08:18:09Z",
+  "generated_at": "2026-06-11T04:40:25Z",
+  "next_refresh_at": "2026-06-11T08:40:25Z",
   "refresh_cadence_hours": 4,
   "mcp": {
     "providers": [
@@ -112,7 +112,7 @@
             "provider": "IBM",
             "qubits": 156,
             "status": "online",
-            "queue": 3
+            "queue": 67
           },
           {
             "name": "ibm_marrakesh",
@@ -126,7 +126,7 @@
             "provider": "IBM",
             "qubits": 156,
             "status": "online",
-            "queue": 1
+            "queue": 3
           }
         ],
         "url": "https://quantum.ibm.com"
