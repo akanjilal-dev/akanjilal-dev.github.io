@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-06-11T04:40:25Z",
-  "next_refresh_at": "2026-06-11T08:40:25Z",
+  "generated_at": "2026-06-11T05:35:12Z",
+  "next_refresh_at": "2026-06-11T09:35:12Z",
   "refresh_cadence_hours": 4,
   "mcp": {
     "providers": [
@@ -51,54 +51,31 @@
         "provider": "Amazon Braket",
         "status": "operational",
         "source": "api",
-        "device_count": 7,
+        "device_count": 3,
         "online_count": 2,
         "devices": [
           {
-            "name": "Aria 1",
+            "name": "IonQ Forte Enterprise 1",
             "provider": "IonQ",
-            "qubits": 25,
-            "status": "offline"
+            "qubits": 36,
+            "status": "online"
           },
           {
-            "name": "Aquila",
+            "name": "QuEra Aquila",
             "provider": "QuEra",
             "qubits": 256,
             "status": "online"
           },
           {
-            "name": "Harmony",
-            "provider": "IonQ",
-            "qubits": 11,
-            "status": "offline"
-          },
-          {
-            "name": "Aria 2",
-            "provider": "IonQ",
-            "qubits": 25,
-            "status": "offline"
-          },
-          {
-            "name": "Borealis",
-            "provider": "Xanadu",
-            "qubits": null,
-            "status": "offline"
-          },
-          {
-            "name": "Forte 1",
+            "name": "IonQ Forte 1",
             "provider": "IonQ",
             "qubits": 36,
             "status": "offline"
-          },
-          {
-            "name": "Forte Enterprise 1",
-            "provider": "IonQ",
-            "qubits": 36,
-            "status": "online"
           }
         ],
-        "url": "https://aws.amazon.com/braket/",
-        "region": "us-east-1"
+        "url": "https://us-east-1.console.aws.amazon.com/braket/home?region=us-east-1#/devices",
+        "region": "us-east-1",
+        "note": "IonQ Forte Enterprise 1 36q (online), QuEra Aquila 256q (online), IonQ Forte 1 36q (offline)"
       },
       {
         "provider": "IBM Quantum",
@@ -112,21 +89,21 @@
             "provider": "IBM",
             "qubits": 156,
             "status": "online",
-            "queue": 67
+            "queue": 1
           },
           {
             "name": "ibm_marrakesh",
             "provider": "IBM",
             "qubits": 156,
             "status": "online",
-            "queue": 0
+            "queue": 1
           },
           {
             "name": "ibm_kingston",
             "provider": "IBM",
             "qubits": 156,
             "status": "online",
-            "queue": 3
+            "queue": 1
           }
         ],
         "url": "https://quantum.ibm.com"
