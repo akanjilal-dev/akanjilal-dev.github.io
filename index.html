@@ -21,7 +21,6 @@
     <nav class="nav" aria-label="Primary">
       <a href="#work">work</a>
       <a href="/blog/">my blogs</a>
-      <a href="/live/">live</a>
       <a href="#background">background</a>
       <a class="ext" href="https://github.com/akanjilal-work">github</a>
       <a class="ext" href="https://www.linkedin.com/in/akanjilal/">linkedin</a>
@@ -32,6 +31,7 @@
 <main>
   <section class="hero">
     <div class="wrap">
+      <div class="hero-main">
       <div class="eyebrow reveal d1"><span class="pin" aria-hidden="true"></span> Guelph, Ontario &nbsp;·&nbsp; open to advisory, speaking and collaboration</div>
       <h1 class="name reveal d2">Anirban&nbsp;Kanjilal</h1>
       <div class="role mono reveal d2">Solutions Architect &nbsp;·&nbsp; Cloud &nbsp;·&nbsp; Security &nbsp;·&nbsp; AI &nbsp;·&nbsp; Quantum</div>
@@ -53,6 +53,24 @@
           <div class="tick"><div class="n mono">05</div><div class="l">Agentic systems</div></div>
         </div>
       </div>
+      </div><!-- /hero-main -->
+
+      <aside class="live-box reveal d4" id="live-box" aria-label="Live signals: Model Context Protocol servers and quantum devices">
+        <div class="lb-head">
+          <span class="lb-title">LIVE SIGNALS</span>
+          <span class="lb-stamp" id="lb-stamp">loading</span>
+        </div>
+        <div class="lb-sub">mcp servers · quantum devices · health</div>
+        <div class="lb-section">
+          <div class="lb-cap">Model Context Protocol servers</div>
+          <div class="lb-rows" id="lb-mcp"><div class="lb-loading">reading vendor repositories</div></div>
+        </div>
+        <div class="lb-section">
+          <div class="lb-cap">Quantum devices and health</div>
+          <div class="lb-rows" id="lb-quantum"><div class="lb-loading">reading vendor status</div></div>
+        </div>
+        <div class="lb-foot">Official sources · refreshed every four hours</div>
+      </aside>
     </div>
   </section>
 
@@ -228,6 +246,53 @@
     });
     grid.insertAdjacentElement("afterend", btn);
   });
+</script>
+
+<script>
+  // Live signals box: read the same-origin JSON baked by the refresh-live workflow.
+  // The page never calls a vendor API and never sees a secret.
+  (function () {
+    var DOT = { operational: "ok", online: "ok", available: "ok",
+                degraded: "warn", partial: "warn", stale: "warn",
+                down: "bad", outage: "bad",
+                token_required: "na", unknown: "na", public: "na", error: "na", missing: "na" };
+    var dc = function (s) { return DOT[s] || "na"; };
+    var esc = function (s) { var d = document.createElement("div"); d.textContent = s == null ? "" : String(s); return d.innerHTML; };
+    function row(url, status, name, val, title) {
+      var t = title ? ' title="' + esc(title) + '"' : '';
+      var inner = '<span class="lb-dot ' + dc(status) + '"></span>'
+        + '<span class="lb-name">' + esc(name) + '</span>'
+        + '<span class="lb-val">' + esc(val) + '</span>';
+      return url ? '<a class="lb-row" href="' + esc(url) + '"' + t + '>' + inner + '</a>'
+                 : '<div class="lb-row"' + t + '>' + inner + '</div>';
+    }
+    function setRows(id, html) { var el = document.getElementById(id); if (el) el.innerHTML = html || '<div class="lb-loading">no data</div>'; }
+    function mcpVal(p) { return p.server_count != null ? (p.server_count + (p.server_count === 1 ? " server" : " servers")) : "available"; }
+    function qVal(p) {
+      if (p.source === "token_required") return "connect a key";
+      if (p.source === "public") return "status only";
+      if (p.device_count != null) return (p.online_count != null ? p.online_count + " / " + p.device_count : p.device_count) + " online";
+      return "status";
+    }
+    fetch("/assets/data/live.json", { cache: "no-store" })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (d) {
+        var stamp = document.getElementById("lb-stamp");
+        if (!d) { if (stamp) stamp.textContent = "unavailable"; setRows("lb-mcp", ""); setRows("lb-quantum", ""); return; }
+        if (stamp) stamp.textContent = d.generated_at
+          ? "refreshed " + new Date(d.generated_at).toLocaleDateString("en-CA", { month: "short", day: "numeric" })
+          : "";
+        var mcp = (d.mcp && d.mcp.providers) || [];
+        setRows("lb-mcp", mcp.map(function (p) {
+          return row(p.url, p.status, p.provider, mcpVal(p), (p.servers && p.servers.length) ? p.servers.join(", ") : "");
+        }).join(""));
+        var q = (d.quantum && d.quantum.providers) || [];
+        setRows("lb-quantum", q.map(function (p) {
+          return row(p.url, p.status, p.provider, qVal(p), p.note || "");
+        }).join(""));
+      })
+      .catch(function () { var s = document.getElementById("lb-stamp"); if (s) s.textContent = "unavailable"; });
+  })();
 </script>
 
 </body>

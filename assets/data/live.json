@@ -1,0 +1,22 @@
+{
+  "generated_at": "2026-06-10T18:00:00Z",
+  "next_refresh_at": "2026-06-10T22:00:00Z",
+  "refresh_cadence_hours": 4,
+  "seed": true,
+  "mcp": {
+    "providers": [
+      { "provider": "AWS", "repo": "awslabs/mcp", "url": "https://github.com/awslabs/mcp", "server_count": null, "servers": [], "status": "operational" },
+      { "provider": "Google", "repo": "googleapis/gcloud-mcp", "url": "https://github.com/googleapis/gcloud-mcp", "server_count": null, "servers": [], "status": "operational" },
+      { "provider": "Microsoft", "repo": "Azure/azure-mcp", "url": "https://github.com/Azure/azure-mcp", "server_count": null, "servers": [], "status": "operational" }
+    ]
+  },
+  "quantum": {
+    "providers": [
+      { "provider": "Amazon Braket", "status": "token_required", "source": "token_required", "device_count": null, "online_count": null, "devices": [], "url": "https://aws.amazon.com/braket/", "note": "Add the AWS_* secrets to show live devices." },
+      { "provider": "IBM Quantum", "status": "token_required", "source": "token_required", "device_count": null, "online_count": null, "devices": [], "url": "https://quantum.ibm.com", "note": "Add IBM_QUANTUM_TOKEN to show live devices." },
+      { "provider": "Microsoft Azure Quantum", "status": "token_required", "source": "token_required", "device_count": null, "online_count": null, "devices": [], "url": "https://azure.microsoft.com/products/quantum", "note": "Add the AZURE_* secrets to show live devices." },
+      { "provider": "Google Quantum AI", "status": "public", "source": "public", "device_count": null, "online_count": null, "devices": [], "url": "https://quantumai.google/", "note": "No public device availability API." }
+    ]
+  },
+  "errors": []
+}
