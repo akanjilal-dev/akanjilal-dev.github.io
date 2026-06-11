@@ -1,0 +1,78 @@
+<svg viewBox="0 0 1180 520" role="img" xmlns="http://www.w3.org/2000/svg" aria-label="The ECR repository policy allows PutImage only from the runner task role and explicitly denies every other principal. A laptop or a rogue pipeline is refused at the registry, so even an image built elsewhere cannot reach the repository the platform deploys from. Deploy targets pull only from here and verify the cosign signature before admitting an image.">
+
+  <style>
+    .bg{fill:#FFFFFF}
+    text{font-family:'IBM Plex Sans',system-ui,sans-serif}
+    .eyebrow{font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:13px;letter-spacing:2.5px;fill:#4B3FE4;font-weight:600}
+    .head{font-size:21px;font-weight:700;fill:#10131C}
+    .box{fill:#FFFFFF;stroke:#DCE1EE;stroke-width:1.5}
+    .lbl{fill:#10131C;font-size:13.5px;font-weight:600}
+    .sub{fill:#586079;font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:10.5px}
+    .conn{stroke:#AEB5C8;stroke-width:1.6;fill:none}
+    .clbl{fill:#737B92;font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:10px}
+    .leg{fill:#737B92;font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:11px}
+    .wm{fill:#AEB5C8;font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:11px}
+    .tagtext{fill:#FFFFFF;font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:11px;font-weight:600;letter-spacing:.4px}
+    .num{fill:#FFFFFF;font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:12px;font-weight:700}
+    @media (prefers-color-scheme:dark){
+      .bg{fill:#0C0F22}
+      .head{fill:#E9EBF6}
+      .eyebrow{fill:#8E80FF}
+      .box{fill:#12162E;stroke:#242A4A}
+      .lbl{fill:#E9EBF6}
+      .sub,.clbl,.leg{fill:#9AA0BC}
+      .conn{stroke:#3C4368}
+      .wm{fill:#444B70}
+    }
+  </style>
+
+    <defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#AEB5C8"/></marker><marker id="ah2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#AEB5C8"/></marker><marker id="ahs" viewBox="0 0 10 10" refX="1" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M10,0 L0,5 L10,10 z" fill="#AEB5C8"/></marker><marker id="ahG" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#3F8C2E"/></marker><marker id="ahR" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#C7131F"/></marker></defs>
+    <rect class="bg" x="0" y="0" width="1180" height="520"/>
+    <text class="eyebrow" x="26" y="34">MANAGED GHA RUNNERS · ENFORCEMENT</text>
+    <text class="head" x="26" y="62">Only the runner's task role can land an image</text>
+    <rect class="box" x="44" y="120" width="270" height="58" rx="11"/>
+    <rect x="58" y="136.0" width="26" height="26" rx="6" fill="#ED7100"/>
+    <text class="lbl" x="98" y="147.0">Runner task role</text>
+    <text class="sub" x="98" y="164.0">the only allowed identity</text>
+    <rect class="box" x="44" y="250" width="270" height="58" rx="11"/>
+    <rect x="58" y="266.0" width="26" height="26" rx="6" fill="#64748B"/>
+    <text class="lbl" x="98" y="277.0">Laptop / local build</text>
+    <text class="sub" x="98" y="294.0">any other principal</text>
+    <rect class="box" x="44" y="330" width="270" height="58" rx="11"/>
+    <rect x="58" y="346.0" width="26" height="26" rx="6" fill="#64748B"/>
+    <text class="lbl" x="98" y="357.0">Rogue CI pipeline</text>
+    <text class="sub" x="98" y="374.0">built outside the plane</text>
+    <rect class="box" x="470" y="170" width="290" height="150" rx="14"/>
+    <rect x="488" y="188" width="26" height="26" rx="6" fill="#3F8C2E"/>
+    <text class="lbl" x="522" y="206">Amazon ECR · app repo</text>
+    <text class="sub" x="490" y="236">repository policy</text>
+    <rect x="490" y="248" width="250" height="26" rx="6" fill="#3F8C2E" opacity="0.12"/>
+    <text x="500" y="265" fill="#3F8C2E" font-family="IBM Plex Mono,monospace" font-size="11" font-weight="600">Allow PutImage · runner role</text>
+    <rect x="490" y="280" width="250" height="26" rx="6" fill="#C7131F" opacity="0.10"/>
+    <text x="500" y="297" fill="#C7131F" font-family="IBM Plex Mono,monospace" font-size="11" font-weight="600">Deny PutImage · everyone else</text>
+    <path d="M 314 149 L 468 210" fill="none" stroke="#3F8C2E" stroke-width="1.8" marker-end="url(#ahG)"/>
+    <text x="392.0" y="175" text-anchor="middle" fill="#3F8C2E" font-family="IBM Plex Mono,monospace" font-size="10.5" font-weight="600">PutImage allowed</text>
+    <circle cx="444" cy="214" r="11" fill="#FFFFFF" stroke="#3F8C2E" stroke-width="1.8"/>
+    <path d="M 439 214 L 442.5 218 L 449.5 209.5" fill="none" stroke="#3F8C2E" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M 314 279 L 440 268" fill="none" stroke="#C7131F" stroke-width="1.8" marker-end="url(#ahR)" stroke-dasharray="6 5"/>
+    <text x="362.0" y="268" text-anchor="middle" fill="#C7131F" font-family="IBM Plex Mono,monospace" font-size="10.5" font-weight="600">denied</text>
+    <circle cx="444" cy="268" r="11" fill="#FFFFFF" stroke="#C7131F" stroke-width="1.8"/>
+    <path d="M 439.05 263.05 L 448.95 272.95 M 448.95 263.05 L 439.05 272.95" stroke="#C7131F" stroke-width="1.8" stroke-linecap="round"/>
+    <path d="M 314 359 L 440 290" fill="none" stroke="#C7131F" stroke-width="1.8" marker-end="url(#ahR)" stroke-dasharray="6 5"/>
+    <circle cx="444" cy="292" r="11" fill="#FFFFFF" stroke="#C7131F" stroke-width="1.8"/>
+    <path d="M 439.05 287.05 L 448.95 296.95 M 448.95 287.05 L 439.05 296.95" stroke="#C7131F" stroke-width="1.8" stroke-linecap="round"/>
+    <rect class="box" x="830" y="210" width="290" height="72" rx="11"/>
+    <rect x="844" y="233.0" width="26" height="26" rx="6" fill="#ED7100"/>
+    <text class="lbl" x="884" y="232">Deploy targets</text>
+    <text class="sub" x="884" y="249">pull-only · cosign verify</text>
+    <text class="sub" x="884" y="263">EKS / ECS / Lambda admission</text>
+    <path class="conn" d="M 760 245 L 828 246" marker-end="url(#ah)"/>
+    <text class="clbl" x="795.0" y="236" text-anchor="middle">pull-only</text>
+    <rect x="24" y="484" width="12" height="12" rx="3" fill="#C7131F"/>
+    <text class="leg" x="42" y="494">Security</text>
+    <rect x="114.8" y="484" width="12" height="12" rx="3" fill="#ED7100"/>
+    <text class="leg" x="132.8" y="494">Compute</text>
+    <rect x="198.0" y="484" width="12" height="12" rx="3" fill="#3F8C2E"/>
+    <text class="leg" x="216.0" y="494">Storage</text>
+    <text class="wm" x="1156" y="494" text-anchor="end">akanjilal.dev</text>
+</svg>

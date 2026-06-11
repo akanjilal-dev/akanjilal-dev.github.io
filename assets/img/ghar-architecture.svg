@@ -1,0 +1,121 @@
+<svg viewBox="0 0 1180 660" role="img" xmlns="http://www.w3.org/2000/svg" aria-label="GitHub Enterprise Server in the VPC posts a workflow_job webhook to a private API Gateway, a webhook Lambda verifies and enqueues to SQS, a scale-up Lambda mints a single-use JIT config and runs one Fargate task that builds and pushes a signed image to ECR, which deploy targets pull and verify. Secrets Manager, KMS and CloudWatch support it.">
+
+  <style>
+    .bg{fill:#FFFFFF}
+    text{font-family:'IBM Plex Sans',system-ui,sans-serif}
+    .eyebrow{font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:13px;letter-spacing:2.5px;fill:#4B3FE4;font-weight:600}
+    .head{font-size:21px;font-weight:700;fill:#10131C}
+    .box{fill:#FFFFFF;stroke:#DCE1EE;stroke-width:1.5}
+    .lbl{fill:#10131C;font-size:13.5px;font-weight:600}
+    .sub{fill:#586079;font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:10.5px}
+    .conn{stroke:#AEB5C8;stroke-width:1.6;fill:none}
+    .clbl{fill:#737B92;font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:10px}
+    .leg{fill:#737B92;font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:11px}
+    .wm{fill:#AEB5C8;font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:11px}
+    .tagtext{fill:#FFFFFF;font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:11px;font-weight:600;letter-spacing:.4px}
+    .num{fill:#FFFFFF;font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:12px;font-weight:700}
+    @media (prefers-color-scheme:dark){
+      .bg{fill:#0C0F22}
+      .head{fill:#E9EBF6}
+      .eyebrow{fill:#8E80FF}
+      .box{fill:#12162E;stroke:#242A4A}
+      .lbl{fill:#E9EBF6}
+      .sub,.clbl,.leg{fill:#9AA0BC}
+      .conn{stroke:#3C4368}
+      .wm{fill:#444B70}
+    }
+  </style>
+
+    <defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#AEB5C8"/></marker><marker id="ah2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#AEB5C8"/></marker><marker id="ahs" viewBox="0 0 10 10" refX="1" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M10,0 L0,5 L10,10 z" fill="#AEB5C8"/></marker><marker id="ahG" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#3F8C2E"/></marker><marker id="ahR" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#C7131F"/></marker></defs>
+    <rect class="bg" x="0" y="0" width="1180" height="660"/>
+    <text class="eyebrow" x="26" y="34">MANAGED GHA RUNNERS · ARCHITECTURE</text>
+    <text class="head" x="26" y="62">One queued job becomes one ephemeral runner, then vanishes</text>
+    <rect x="20" y="92" width="1140" height="446" rx="16" fill="none" stroke="#7A4FE0" stroke-width="1.6" stroke-dasharray="7 6" opacity="0.85"/>
+    <rect x="38" y="79" width="308.0" height="26" rx="8" fill="#7A4FE0"/>
+    <text class="tagtext" x="192.0" y="96" text-anchor="middle">AWS ACCOUNT · PRIVATE VPC · NO IGW / NAT</text>
+    <rect class="box" x="40" y="140" width="196" height="62" rx="11"/>
+    <rect x="54" y="158.0" width="26" height="26" rx="6" fill="#64748B"/>
+    <text class="lbl" x="94" y="162">GitHub Enterprise</text>
+    <text class="sub" x="94" y="179">Server · in-VPC</text>
+    <text class="sub" x="94" y="193">RFC1918 event source</text>
+    <rect class="box" x="268" y="140" width="196" height="62" rx="11"/>
+    <rect x="282" y="158.0" width="26" height="26" rx="6" fill="#7A4FE0"/>
+    <text class="lbl" x="322" y="162">API Gateway</text>
+    <text class="sub" x="322" y="179">private REST API</text>
+    <text class="sub" x="322" y="193">execute-api endpoint</text>
+    <rect class="box" x="496" y="140" width="196" height="62" rx="11"/>
+    <rect x="510" y="158.0" width="26" height="26" rx="6" fill="#ED7100"/>
+    <text class="lbl" x="550" y="162">Webhook Lambda</text>
+    <text class="sub" x="550" y="179">verify HMAC · filter</text>
+    <text class="sub" x="550" y="193">enqueue · no egress</text>
+    <rect class="box" x="724" y="140" width="196" height="62" rx="11"/>
+    <rect x="738" y="158.0" width="26" height="26" rx="6" fill="#C0276B"/>
+    <text class="lbl" x="778" y="162">SQS jobs queue</text>
+    <text class="sub" x="778" y="179">buffer + retry</text>
+    <text class="sub" x="778" y="193">DLQ on poison</text>
+    <rect class="box" x="952" y="140" width="196" height="62" rx="11"/>
+    <rect x="966" y="158.0" width="26" height="26" rx="6" fill="#ED7100"/>
+    <text class="lbl" x="1006" y="162">Scale-up Lambda</text>
+    <text class="sub" x="1006" y="179">JIT config · RunTask</text>
+    <text class="sub" x="1006" y="193">reserved concurrency</text>
+    <path class="conn" d="M 236 171.0 L 266 171.0" marker-end="url(#ah)"/>
+    <text class="clbl" x="252.0" y="134" text-anchor="middle">workflow_job</text>
+    <path class="conn" d="M 464 171.0 L 494 171.0" marker-end="url(#ah)"/>
+    <text class="clbl" x="480.0" y="134" text-anchor="middle">202 · enqueue</text>
+    <path class="conn" d="M 692 171.0 L 722 171.0" marker-end="url(#ah)"/>
+    <text class="clbl" x="708.0" y="134" text-anchor="middle">deliver batch</text>
+    <path class="conn" d="M 920 171.0 L 950 171.0" marker-end="url(#ah)"/>
+    <text class="clbl" x="936.0" y="134" text-anchor="middle">mint JIT</text>
+    <rect class="box" x="268" y="330" width="196" height="62" rx="11"/>
+    <rect x="282" y="348.0" width="26" height="26" rx="6" fill="#ED7100"/>
+    <text class="lbl" x="322" y="352">ECS Fargate runner</text>
+    <text class="sub" x="322" y="369">rootless BuildKit</text>
+    <text class="sub" x="322" y="383">one job · microVM</text>
+    <rect class="box" x="552" y="330" width="196" height="62" rx="11"/>
+    <rect x="566" y="348.0" width="26" height="26" rx="6" fill="#3F8C2E"/>
+    <text class="lbl" x="606" y="352">Amazon ECR</text>
+    <text class="sub" x="606" y="369">immutable · KMS</text>
+    <text class="sub" x="606" y="383">scan-on-push</text>
+    <rect class="box" x="836" y="330" width="196" height="62" rx="11"/>
+    <rect x="850" y="348.0" width="26" height="26" rx="6" fill="#ED7100"/>
+    <text class="lbl" x="890" y="352">Deploy targets</text>
+    <text class="sub" x="890" y="369">pull-only</text>
+    <text class="sub" x="890" y="383">verify signature</text>
+    <path class="conn" d="M 1050.0 202 L 1050.0 308 L 464 308 L 464 328" fill="none" marker-end="url(#ah)"/>
+    <text class="clbl" x="748.0" y="302" text-anchor="middle">RunTask · private subnet</text>
+    <path class="conn" d="M 464 361.0 L 550 361.0" marker-end="url(#ah)"/>
+    <text class="clbl" x="508.0" y="324" text-anchor="middle">build · push</text>
+    <path class="conn" d="M 748 361.0 L 834 361.0" marker-end="url(#ah)"/>
+    <text class="clbl" x="792.0" y="324" text-anchor="middle">pull-only</text>
+    <path class="conn" d="M 268 361.0 L 138.0 361.0 L 138.0 202" fill="none" stroke-dasharray="5 5" marker-end="url(#ah)" marker-start="url(#ahs)"/>
+    <text class="clbl" x="148.0" y="270.0" text-anchor="start">register · long-poll one job</text>
+    <rect class="box" x="40" y="458" width="220" height="56" rx="11"/>
+    <rect x="54" y="473.0" width="26" height="26" rx="6" fill="#C7131F"/>
+    <text class="lbl" x="94" y="484.0">Secrets Manager</text>
+    <text class="sub" x="94" y="501.0">App key · webhook secret</text>
+    <rect class="box" x="324" y="458" width="220" height="56" rx="11"/>
+    <rect x="338" y="473.0" width="26" height="26" rx="6" fill="#C7131F"/>
+    <text class="lbl" x="378" y="484.0">AWS KMS</text>
+    <text class="sub" x="378" y="501.0">image signing key</text>
+    <rect class="box" x="608" y="458" width="220" height="56" rx="11"/>
+    <rect x="622" y="473.0" width="26" height="26" rx="6" fill="#7A4FE0"/>
+    <text class="lbl" x="662" y="484.0">VPC endpoints</text>
+    <text class="sub" x="662" y="501.0">account-scoped · PrivateLink</text>
+    <rect class="box" x="892" y="458" width="248" height="56" rx="11"/>
+    <rect x="906" y="473.0" width="26" height="26" rx="6" fill="#C0276B"/>
+    <text class="lbl" x="946" y="484.0">CloudWatch</text>
+    <text class="sub" x="946" y="501.0">alarms · DLQ · age of oldest</text>
+    <path class="conn" d="M 150 458 L 150 208 L 594.0 208 L 594.0 202" fill="none" stroke-dasharray="3 5" opacity="0.7"/>
+    <path class="conn" d="M 434 458 L 434 398 L 366.0 398 L 366.0 392" fill="none" stroke-dasharray="3 5" opacity="0.7"/>
+    <rect x="24" y="624" width="12" height="12" rx="3" fill="#C7131F"/>
+    <text class="leg" x="42" y="634">Security</text>
+    <rect x="114.8" y="624" width="12" height="12" rx="3" fill="#7A4FE0"/>
+    <text class="leg" x="132.8" y="634">Networking</text>
+    <rect x="220.8" y="624" width="12" height="12" rx="3" fill="#ED7100"/>
+    <text class="leg" x="238.8" y="634">Compute</text>
+    <rect x="304.0" y="624" width="12" height="12" rx="3" fill="#3F8C2E"/>
+    <text class="leg" x="322.0" y="634">Storage</text>
+    <rect x="387.2" y="624" width="12" height="12" rx="3" fill="#C0276B"/>
+    <text class="leg" x="405.2" y="634">Governance</text>
+    <text class="wm" x="1156" y="634" text-anchor="end">akanjilal.dev</text>
+</svg>

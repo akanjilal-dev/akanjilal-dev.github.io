@@ -1,0 +1,106 @@
+<svg viewBox="0 0 1180 560" role="img" xmlns="http://www.w3.org/2000/svg" aria-label="A single build runs eight steps: verify and enqueue, mint a single-use JIT config, RunTask on Fargate, register and long-poll for one job, build with rootless BuildKit, push to ECR with task-role auth, sign and attest with cosign and KMS, then verify and exit. The result is a signed image in ECR that deploy targets admit.">
+
+  <style>
+    .bg{fill:#FFFFFF}
+    text{font-family:'IBM Plex Sans',system-ui,sans-serif}
+    .eyebrow{font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:13px;letter-spacing:2.5px;fill:#4B3FE4;font-weight:600}
+    .head{font-size:21px;font-weight:700;fill:#10131C}
+    .box{fill:#FFFFFF;stroke:#DCE1EE;stroke-width:1.5}
+    .lbl{fill:#10131C;font-size:13.5px;font-weight:600}
+    .sub{fill:#586079;font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:10.5px}
+    .conn{stroke:#AEB5C8;stroke-width:1.6;fill:none}
+    .clbl{fill:#737B92;font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:10px}
+    .leg{fill:#737B92;font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:11px}
+    .wm{fill:#AEB5C8;font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:11px}
+    .tagtext{fill:#FFFFFF;font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:11px;font-weight:600;letter-spacing:.4px}
+    .num{fill:#FFFFFF;font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:12px;font-weight:700}
+    @media (prefers-color-scheme:dark){
+      .bg{fill:#0C0F22}
+      .head{fill:#E9EBF6}
+      .eyebrow{fill:#8E80FF}
+      .box{fill:#12162E;stroke:#242A4A}
+      .lbl{fill:#E9EBF6}
+      .sub,.clbl,.leg{fill:#9AA0BC}
+      .conn{stroke:#3C4368}
+      .wm{fill:#444B70}
+    }
+  </style>
+
+    <defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#AEB5C8"/></marker><marker id="ah2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#AEB5C8"/></marker><marker id="ahs" viewBox="0 0 10 10" refX="1" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M10,0 L0,5 L10,10 z" fill="#AEB5C8"/></marker><marker id="ahG" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#3F8C2E"/></marker><marker id="ahR" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#C7131F"/></marker></defs>
+    <rect class="bg" x="0" y="0" width="1180" height="560"/>
+    <text class="eyebrow" x="26" y="34">MANAGED GHA RUNNERS · BUILD LIFECYCLE</text>
+    <text class="head" x="26" y="62">One build, eight steps, then the runner is gone</text>
+    <rect x="324" y="90" width="572" height="404.0" rx="16" fill="none" stroke="#C7131F" stroke-width="1.6" stroke-dasharray="7 6" opacity="0.85"/>
+    <rect x="342" y="77" width="160.0" height="26" rx="8" fill="#C7131F"/>
+    <text class="tagtext" x="422.0" y="94" text-anchor="middle">ONE EPHEMERAL RUNNER</text>
+    <rect class="box" x="340" y="104.0" width="540" height="44" rx="11"/>
+    <rect x="354" y="111.0" width="30" height="30" rx="8" fill="#ED7100"/>
+    <text class="num" x="370" y="130.0" text-anchor="middle">01</text>
+    <text class="lbl" x="400" y="124.0">Verify &amp; enqueue</text>
+    <text class="sub" x="400" y="141.0">HMAC check · label gate · SQS</text>
+    <rect class="box" x="340" y="153.5" width="540" height="44" rx="11"/>
+    <rect x="354" y="160.5" width="30" height="30" rx="8" fill="#C7131F"/>
+    <text class="num" x="370" y="179.5" text-anchor="middle">02</text>
+    <text class="lbl" x="400" y="173.5">Mint JIT config</text>
+    <text class="sub" x="400" y="190.5">App JWT → token → single-use runner</text>
+    <rect class="box" x="340" y="203.0" width="540" height="44" rx="11"/>
+    <rect x="354" y="210.0" width="30" height="30" rx="8" fill="#ED7100"/>
+    <text class="num" x="370" y="229.0" text-anchor="middle">03</text>
+    <text class="lbl" x="400" y="223.0">RunTask on Fargate</text>
+    <text class="sub" x="400" y="240.0">private subnet · JIT as task override</text>
+    <rect class="box" x="340" y="252.5" width="540" height="44" rx="11"/>
+    <rect x="354" y="259.5" width="30" height="30" rx="8" fill="#64748B"/>
+    <text class="num" x="370" y="278.5" text-anchor="middle">04</text>
+    <text class="lbl" x="400" y="272.5">Register &amp; long-poll</text>
+    <text class="sub" x="400" y="289.5">runner takes exactly one job</text>
+    <rect class="box" x="340" y="302.0" width="540" height="44" rx="11"/>
+    <rect x="354" y="309.0" width="30" height="30" rx="8" fill="#ED7100"/>
+    <text class="num" x="370" y="328.0" text-anchor="middle">05</text>
+    <text class="lbl" x="400" y="322.0">Build, rootless</text>
+    <text class="sub" x="400" y="339.0">buildctl → OCI image · no daemon</text>
+    <rect class="box" x="340" y="351.5" width="540" height="44" rx="11"/>
+    <rect x="354" y="358.5" width="30" height="30" rx="8" fill="#3F8C2E"/>
+    <text class="num" x="370" y="377.5" text-anchor="middle">06</text>
+    <text class="lbl" x="400" y="371.5">Push to ECR</text>
+    <text class="sub" x="400" y="388.5">task-role auth · no static creds</text>
+    <rect class="box" x="340" y="401.0" width="540" height="44" rx="11"/>
+    <rect x="354" y="408.0" width="30" height="30" rx="8" fill="#C7131F"/>
+    <text class="num" x="370" y="427.0" text-anchor="middle">07</text>
+    <text class="lbl" x="400" y="421.0">Sign &amp; attest</text>
+    <text class="sub" x="400" y="438.0">cosign + KMS · SBOM · no public tlog</text>
+    <rect class="box" x="340" y="450.5" width="540" height="44" rx="11"/>
+    <rect x="354" y="457.5" width="30" height="30" rx="8" fill="#7A4FE0"/>
+    <text class="num" x="370" y="476.5" text-anchor="middle">08</text>
+    <text class="lbl" x="400" y="470.5">Verify &amp; exit</text>
+    <text class="sub" x="400" y="487.5">verify own signature · task stops</text>
+    <rect class="box" x="40" y="264.0" width="232" height="60" rx="11"/>
+    <rect x="54" y="281.0" width="26" height="26" rx="6" fill="#64748B"/>
+    <text class="lbl" x="94" y="286.0">Queued job</text>
+    <text class="sub" x="94" y="303.0">runs-on: self-hosted,</text>
+    <text class="sub" x="94" y="317.0">ecs · from GHES in-VPC</text>
+    <path class="conn" d="M 272 294.0 L 326 126.0" marker-end="url(#ah)"/>
+    <rect class="box" x="916" y="124" width="244" height="60" rx="11"/>
+    <rect x="930" y="141.0" width="26" height="26" rx="6" fill="#3F8C2E"/>
+    <text class="lbl" x="970" y="152.0">Signed image in ECR</text>
+    <text class="sub" x="970" y="169.0">immutable · KMS-signed</text>
+    <path class="conn" d="M 896 292.0 L 914 154" marker-end="url(#ah)"/>
+    <rect class="box" x="916" y="220" width="244" height="60" rx="11"/>
+    <rect x="930" y="237.0" width="26" height="26" rx="6" fill="#ED7100"/>
+    <text class="lbl" x="970" y="248.0">Deploy admits it</text>
+    <text class="sub" x="970" y="265.0">cosign verify passes</text>
+    <path class="conn" d="M 896 292.0 L 914 250" marker-end="url(#ah)"/>
+    <rect class="box" x="916" y="316" width="244" height="60" rx="11"/>
+    <rect x="930" y="333.0" width="26" height="26" rx="6" fill="#64748B"/>
+    <text class="lbl" x="970" y="344.0">Runner deregisters</text>
+    <text class="sub" x="970" y="361.0">task stops · capacity freed</text>
+    <path class="conn" d="M 896 292.0 L 914 346" marker-end="url(#ah)"/>
+    <rect x="24" y="524" width="12" height="12" rx="3" fill="#C7131F"/>
+    <text class="leg" x="42" y="534">Security</text>
+    <rect x="114.8" y="524" width="12" height="12" rx="3" fill="#ED7100"/>
+    <text class="leg" x="132.8" y="534">Compute</text>
+    <rect x="198.0" y="524" width="12" height="12" rx="3" fill="#3F8C2E"/>
+    <text class="leg" x="216.0" y="534">Storage</text>
+    <rect x="281.2" y="524" width="12" height="12" rx="3" fill="#7A4FE0"/>
+    <text class="leg" x="299.2" y="534">Networking</text>
+    <text class="wm" x="1156" y="534" text-anchor="end">akanjilal.dev</text>
+</svg>

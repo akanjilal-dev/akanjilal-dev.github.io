@@ -61,6 +61,13 @@
       <div class="cards">
 
         <div class="card">
+          <div class="card-top"><span class="repo">gha-ecs-runner</span><span class="chip">walkthrough</span></div>
+          <p>Self-hosted GitHub Actions runners on ECS Fargate that build container images privately and push them to Amazon ECR, with the registry locked so only the runner can push and every image signed in the account. One task, one job, one artifact, then it vanishes. Full Terraform, runner image, and control plane.</p>
+          <div class="tags"><span class="tag">aws</span><span class="tag">ci-cd</span><span class="tag">supply-chain</span></div>
+          <div class="go mono"><a href="/architectures/managed-gha-runners-ecs/">The architecture</a> &nbsp;·&nbsp; <a href="https://github.com/akanjilal-work/gha-ecs-runner">Read the code</a> &nbsp;·&nbsp; <a href="/demo/gha-ecs-runner/">Walkthrough</a></div>
+        </div>
+
+        <div class="card">
           <div class="card-top"><span class="repo">llm-security-lab</span><span class="chip live">live demo</span></div>
           <p>Prompt injection shown rather than described. Vulnerable and hardened versions of real language model risks, each mapped to the OWASP Top 10 for language model applications, MITRE ATLAS, and the NIST framework. It runs offline with no keys required.</p>
           <div class="tags"><span class="tag">security</span><span class="tag">owasp</span><span class="tag">atlas</span></div>
@@ -158,6 +165,13 @@
           <div class="card-top"><span class="repo">Build and deploy pipeline</span><span class="chip">delivery</span></div>
           <p>From a commit to production as one pipeline on GitHub Actions: static and dynamic analysis, dependency and image scanning, signing and provenance, keyless promotion across accounts, and a guarded release to Kubernetes with GitOps and to the container service with blue and green.</p>
           <div class="tags"><span class="tag">ci-cd</span><span class="tag">supply-chain</span><span class="tag">gitops</span></div>
+          <div class="go mono">Read the architecture</div>
+        </a>
+
+        <a class="card" href="/architectures/managed-gha-runners-ecs/">
+          <div class="card-top"><span class="repo">Managed GHA runners on ECS</span><span class="chip">delivery</span></div>
+          <p>Self-hosted GitHub Actions runners as ephemeral Fargate tasks that build images daemonlessly, sign them in the account with KMS, and push to ECR, with the registry locked so the runner is the only identity that can push. One task, one job, one artifact, then it vanishes.</p>
+          <div class="tags"><span class="tag">ci-cd</span><span class="tag">supply-chain</span><span class="tag">fargate</span></div>
           <div class="go mono">Read the architecture</div>
         </a>
 

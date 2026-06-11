@@ -1,0 +1,82 @@
+<svg viewBox="0 0 1180 540" role="img" xmlns="http://www.w3.org/2000/svg" aria-label="After the build pushes the image to ECR, cosign signs it with an in-account AWS KMS key and the transparency log disabled, so there is no call to public Sigstore Fulcio or Rekor. The signature and a syft SBOM attestation are stored as OCI artifacts in ECR. Deploy targets verify the signature with the KMS public key before admitting the image.">
+
+  <style>
+    .bg{fill:#FFFFFF}
+    text{font-family:'IBM Plex Sans',system-ui,sans-serif}
+    .eyebrow{font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:13px;letter-spacing:2.5px;fill:#4B3FE4;font-weight:600}
+    .head{font-size:21px;font-weight:700;fill:#10131C}
+    .box{fill:#FFFFFF;stroke:#DCE1EE;stroke-width:1.5}
+    .lbl{fill:#10131C;font-size:13.5px;font-weight:600}
+    .sub{fill:#586079;font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:10.5px}
+    .conn{stroke:#AEB5C8;stroke-width:1.6;fill:none}
+    .clbl{fill:#737B92;font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:10px}
+    .leg{fill:#737B92;font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:11px}
+    .wm{fill:#AEB5C8;font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:11px}
+    .tagtext{fill:#FFFFFF;font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:11px;font-weight:600;letter-spacing:.4px}
+    .num{fill:#FFFFFF;font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:12px;font-weight:700}
+    @media (prefers-color-scheme:dark){
+      .bg{fill:#0C0F22}
+      .head{fill:#E9EBF6}
+      .eyebrow{fill:#8E80FF}
+      .box{fill:#12162E;stroke:#242A4A}
+      .lbl{fill:#E9EBF6}
+      .sub,.clbl,.leg{fill:#9AA0BC}
+      .conn{stroke:#3C4368}
+      .wm{fill:#444B70}
+    }
+  </style>
+
+    <defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#AEB5C8"/></marker><marker id="ah2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#AEB5C8"/></marker><marker id="ahs" viewBox="0 0 10 10" refX="1" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M10,0 L0,5 L10,10 z" fill="#AEB5C8"/></marker><marker id="ahG" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#3F8C2E"/></marker><marker id="ahR" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#C7131F"/></marker></defs>
+    <rect class="bg" x="0" y="0" width="1180" height="540"/>
+    <text class="eyebrow" x="26" y="34">MANAGED GHA RUNNERS · IN-ACCOUNT SIGNING</text>
+    <text class="head" x="26" y="62">Signed in the account, with no public Sigstore</text>
+    <rect class="box" x="40" y="150" width="210" height="64" rx="11"/>
+    <rect x="54" y="169.0" width="26" height="26" rx="6" fill="#ED7100"/>
+    <text class="lbl" x="94" y="172">buildctl build</text>
+    <text class="sub" x="94" y="189">rootless BuildKit</text>
+    <text class="sub" x="94" y="203">OCI image</text>
+    <rect class="box" x="300" y="150" width="210" height="64" rx="11"/>
+    <rect x="314" y="169.0" width="26" height="26" rx="6" fill="#3F8C2E"/>
+    <text class="lbl" x="354" y="172">Push to ECR</text>
+    <text class="sub" x="354" y="189">task-role auth</text>
+    <text class="sub" x="354" y="203">immutable tag</text>
+    <rect class="box" x="560" y="150" width="210" height="64" rx="11"/>
+    <rect x="574" y="169.0" width="26" height="26" rx="6" fill="#C7131F"/>
+    <text class="lbl" x="614" y="172">cosign sign</text>
+    <text class="sub" x="614" y="189">--tlog-upload=false</text>
+    <text class="sub" x="614" y="203">key: awskms:///alias</text>
+    <rect class="box" x="820" y="150" width="230" height="64" rx="11"/>
+    <rect x="834" y="169.0" width="26" height="26" rx="6" fill="#3F8C2E"/>
+    <text class="lbl" x="874" y="172">Signature + SBOM</text>
+    <text class="sub" x="874" y="189">stored in ECR</text>
+    <text class="sub" x="874" y="203">as OCI artifacts</text>
+    <path class="conn" d="M 250 182.0 L 298 182.0" marker-end="url(#ah)"/>
+    <path class="conn" d="M 510 182.0 L 558 182.0" marker-end="url(#ah)"/>
+    <path class="conn" d="M 770 182.0 L 818 182.0" marker-end="url(#ah)"/>
+    <rect class="box" x="550" y="290" width="230" height="60" rx="11"/>
+    <rect x="564" y="307.0" width="26" height="26" rx="6" fill="#C7131F"/>
+    <text class="lbl" x="604" y="318.0">AWS KMS signing key</text>
+    <text class="sub" x="604" y="335.0">ECC_NIST_P256 · in-account</text>
+    <path class="conn" d="M 665.0 214 L 665.0 288" marker-end="url(#ah)"/>
+    <text class="clbl" x="713.0" y="250" text-anchor="middle">kms:Sign</text>
+    <rect x="550" y="380" width="230" height="56" rx="11" fill="none" stroke="#C7131F" stroke-width="1.5" stroke-dasharray="6 5"/>
+    <text class="sub" x="568" y="404">Public Sigstore</text>
+    <text class="sub" x="568" y="420">Fulcio CA · Rekor log</text>
+    <circle cx="754" cy="408" r="13" fill="#FFFFFF" stroke="#C7131F" stroke-width="1.8"/>
+    <path d="M 748.15 402.15 L 759.85 413.85 M 759.85 402.15 L 748.15 413.85" stroke="#C7131F" stroke-width="1.8" stroke-linecap="round"/>
+    <text x="550" y="458" fill="#C7131F" font-family="IBM Plex Mono,monospace" font-size="10.5" font-weight="600">never contacted — no public dependency</text>
+    <rect class="box" x="820" y="290" width="230" height="64" rx="11"/>
+    <rect x="834" y="309.0" width="26" height="26" rx="6" fill="#ED7100"/>
+    <text class="lbl" x="874" y="312">Deploy-time verify</text>
+    <text class="sub" x="874" y="329">cosign verify · KMS</text>
+    <text class="sub" x="874" y="343">public key → admit / reject</text>
+    <path class="conn" d="M 1040 214 L 1040 288" marker-end="url(#ah)"/>
+    <text class="clbl" x="1080" y="250" text-anchor="middle">verify</text>
+    <rect x="24" y="504" width="12" height="12" rx="3" fill="#C7131F"/>
+    <text class="leg" x="42" y="514">Security</text>
+    <rect x="114.8" y="504" width="12" height="12" rx="3" fill="#ED7100"/>
+    <text class="leg" x="132.8" y="514">Compute</text>
+    <rect x="198.0" y="504" width="12" height="12" rx="3" fill="#3F8C2E"/>
+    <text class="leg" x="216.0" y="514">Storage</text>
+    <text class="wm" x="1156" y="514" text-anchor="end">akanjilal.dev</text>
+</svg>

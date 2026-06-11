@@ -1,0 +1,112 @@
+<svg viewBox="0 0 1180 620" role="img" xmlns="http://www.w3.org/2000/svg" aria-label="Inside one private VPC with no internet gateway or NAT, GitHub Enterprise Server, the control-plane Lambdas and the Fargate runner reach AWS only through account-scoped VPC endpoints: execute-api, ecr.api and ecr.dkr, kms, and secretsmanager, sts, sqs, ecs and logs, plus an S3 gateway endpoint. The public internet has no route in or out.">
+
+  <style>
+    .bg{fill:#FFFFFF}
+    text{font-family:'IBM Plex Sans',system-ui,sans-serif}
+    .eyebrow{font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:13px;letter-spacing:2.5px;fill:#4B3FE4;font-weight:600}
+    .head{font-size:21px;font-weight:700;fill:#10131C}
+    .box{fill:#FFFFFF;stroke:#DCE1EE;stroke-width:1.5}
+    .lbl{fill:#10131C;font-size:13.5px;font-weight:600}
+    .sub{fill:#586079;font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:10.5px}
+    .conn{stroke:#AEB5C8;stroke-width:1.6;fill:none}
+    .clbl{fill:#737B92;font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:10px}
+    .leg{fill:#737B92;font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:11px}
+    .wm{fill:#AEB5C8;font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:11px}
+    .tagtext{fill:#FFFFFF;font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:11px;font-weight:600;letter-spacing:.4px}
+    .num{fill:#FFFFFF;font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:12px;font-weight:700}
+    @media (prefers-color-scheme:dark){
+      .bg{fill:#0C0F22}
+      .head{fill:#E9EBF6}
+      .eyebrow{fill:#8E80FF}
+      .box{fill:#12162E;stroke:#242A4A}
+      .lbl{fill:#E9EBF6}
+      .sub,.clbl,.leg{fill:#9AA0BC}
+      .conn{stroke:#3C4368}
+      .wm{fill:#444B70}
+    }
+  </style>
+
+    <defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#AEB5C8"/></marker><marker id="ah2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#AEB5C8"/></marker><marker id="ahs" viewBox="0 0 10 10" refX="1" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M10,0 L0,5 L10,10 z" fill="#AEB5C8"/></marker><marker id="ahG" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#3F8C2E"/></marker><marker id="ahR" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#C7131F"/></marker></defs>
+    <rect class="bg" x="0" y="0" width="1180" height="620"/>
+    <text class="eyebrow" x="26" y="34">MANAGED GHA RUNNERS · NETWORK</text>
+    <text class="head" x="26" y="62">Egress capped to the VPC, every AWS call over a private endpoint</text>
+    <rect x="20" y="92" width="1140" height="410" rx="16" fill="none" stroke="#7A4FE0" stroke-width="1.6" stroke-dasharray="7 6" opacity="0.85"/>
+    <rect x="38" y="79" width="308.0" height="26" rx="8" fill="#7A4FE0"/>
+    <text class="tagtext" x="192.0" y="96" text-anchor="middle">AWS ACCOUNT · PRIVATE VPC · NO IGW / NAT</text>
+    <rect class="box" x="44" y="130" width="250" height="58" rx="11"/>
+    <rect x="58" y="146.0" width="26" height="26" rx="6" fill="#64748B"/>
+    <text class="lbl" x="98" y="157.0">GitHub Enterprise Server</text>
+    <text class="sub" x="98" y="174.0">in-VPC · RFC1918</text>
+    <rect class="box" x="44" y="210" width="250" height="58" rx="11"/>
+    <rect x="58" y="226.0" width="26" height="26" rx="6" fill="#ED7100"/>
+    <text class="lbl" x="98" y="237.0">Control-plane Lambdas</text>
+    <text class="sub" x="98" y="254.0">webhook · scale-up · in-VPC</text>
+    <rect class="box" x="44" y="290" width="250" height="58" rx="11"/>
+    <rect x="58" y="306.0" width="26" height="26" rx="6" fill="#ED7100"/>
+    <text class="lbl" x="98" y="317.0">Fargate runner task</text>
+    <text class="sub" x="98" y="334.0">egress: VPC CIDR only</text>
+    <text class="sub" x="44" y="392">Security groups: no inbound,</text>
+    <text class="sub" x="44" y="406">egress only to the VPC CIDR.</text>
+    <rect x="360" y="124" width="360" height="300" rx="16" fill="none" stroke="#7A4FE0" stroke-width="1.6" stroke-dasharray="7 6" opacity="0.85"/>
+    <rect x="378" y="111" width="285.8" height="26" rx="8" fill="#7A4FE0"/>
+    <text class="tagtext" x="520.9" y="128" text-anchor="middle">VPC ENDPOINTS · ACCOUNT-SCOPED POLICY</text>
+    <rect class="box" x="378" y="146" width="324" height="44" rx="11"/>
+    <rect x="392" y="155.0" width="26" height="26" rx="6" fill="#7A4FE0"/>
+    <text class="lbl" x="432" y="166.0">execute-api</text>
+    <text class="sub" x="432" y="183.0">private webhook ingress</text>
+    <rect class="box" x="378" y="200" width="324" height="44" rx="11"/>
+    <rect x="392" y="209.0" width="26" height="26" rx="6" fill="#7A4FE0"/>
+    <text class="lbl" x="432" y="220.0">ecr.api · ecr.dkr</text>
+    <text class="sub" x="432" y="237.0">image pull + push</text>
+    <rect class="box" x="378" y="254" width="324" height="44" rx="11"/>
+    <rect x="392" y="263.0" width="26" height="26" rx="6" fill="#7A4FE0"/>
+    <text class="lbl" x="432" y="274.0">kms</text>
+    <text class="sub" x="432" y="291.0">in-account signing</text>
+    <rect class="box" x="378" y="308" width="324" height="44" rx="11"/>
+    <rect x="392" y="317.0" width="26" height="26" rx="6" fill="#7A4FE0"/>
+    <text class="lbl" x="432" y="328.0">secretsmanager · sts · sqs</text>
+    <text class="sub" x="432" y="345.0">ecs · logs</text>
+    <rect class="box" x="378" y="362" width="324" height="44" rx="11"/>
+    <rect x="392" y="371.0" width="26" height="26" rx="6" fill="#7A4FE0"/>
+    <text class="lbl" x="432" y="382.0">s3 (gateway)</text>
+    <text class="sub" x="432" y="399.0">ECR layer storage</text>
+    <rect class="box" x="760" y="150" width="250" height="58" rx="11"/>
+    <rect x="774" y="166.0" width="26" height="26" rx="6" fill="#3F8C2E"/>
+    <text class="lbl" x="814" y="177.0">Amazon ECR / S3</text>
+    <text class="sub" x="814" y="194.0">layers · images</text>
+    <rect class="box" x="760" y="230" width="250" height="58" rx="11"/>
+    <rect x="774" y="246.0" width="26" height="26" rx="6" fill="#C7131F"/>
+    <text class="lbl" x="814" y="257.0">AWS KMS</text>
+    <text class="sub" x="814" y="274.0">signing key</text>
+    <rect class="box" x="760" y="310" width="250" height="58" rx="11"/>
+    <rect x="774" y="326.0" width="26" height="26" rx="6" fill="#C0276B"/>
+    <text class="lbl" x="814" y="337.0">SQS · Secrets · Logs</text>
+    <text class="sub" x="814" y="354.0">control-plane state</text>
+    <path class="conn" d="M 294 239 L 358 239" marker-end="url(#ah)"/>
+    <path class="conn" d="M 294 319 L 358 300" marker-end="url(#ah)"/>
+    <path class="conn" d="M 294 159 L 378 168" marker-end="url(#ah)"/>
+    <path class="conn" d="M 722 200 L 758 179" marker-end="url(#ah)"/>
+    <path class="conn" d="M 722 250 L 758 259" marker-end="url(#ah)"/>
+    <path class="conn" d="M 722 300 L 758 339" marker-end="url(#ah)"/>
+    <rect class="box" x="440.0" y="540" width="300" height="52" rx="11"/>
+    <rect x="454.0" y="553.0" width="26" height="26" rx="6" fill="#64748B"/>
+    <text class="lbl" x="494.0" y="564.0">Public internet</text>
+    <text class="sub" x="494.0" y="581.0">no route in · no route out</text>
+    <path d="M 440.0 552 L 300 360" fill="none" stroke="#C7131F" stroke-width="1.8" marker-end="url(#ahR)" stroke-dasharray="6 5"/>
+    <circle cx="220" cy="470" r="11" fill="#FFFFFF" stroke="#C7131F" stroke-width="1.8"/>
+    <path d="M 215.05 465.05 L 224.95 474.95 M 224.95 465.05 L 215.05 474.95" stroke="#C7131F" stroke-width="1.8" stroke-linecap="round"/>
+    <path d="M 740.0 552 L 980 360" fill="none" stroke="#C7131F" stroke-width="1.8" marker-end="url(#ahR)" stroke-dasharray="6 5"/>
+    <circle cx="950" cy="470" r="11" fill="#FFFFFF" stroke="#C7131F" stroke-width="1.8"/>
+    <path d="M 945.05 465.05 L 954.95 474.95 M 954.95 465.05 L 945.05 474.95" stroke="#C7131F" stroke-width="1.8" stroke-linecap="round"/>
+    <rect x="24" y="584" width="12" height="12" rx="3" fill="#C7131F"/>
+    <text class="leg" x="42" y="594">Security</text>
+    <rect x="114.8" y="584" width="12" height="12" rx="3" fill="#7A4FE0"/>
+    <text class="leg" x="132.8" y="594">Networking</text>
+    <rect x="220.8" y="584" width="12" height="12" rx="3" fill="#ED7100"/>
+    <text class="leg" x="238.8" y="594">Compute</text>
+    <rect x="304.0" y="584" width="12" height="12" rx="3" fill="#3F8C2E"/>
+    <text class="leg" x="322.0" y="594">Storage</text>
+    <rect x="387.2" y="584" width="12" height="12" rx="3" fill="#C0276B"/>
+    <text class="leg" x="405.2" y="594">Governance</text>
+    <text class="wm" x="1156" y="594" text-anchor="end">akanjilal.dev</text>
+</svg>

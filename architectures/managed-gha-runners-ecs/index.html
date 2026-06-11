@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Managed GitHub Actions runners on ECS, Anirban Kanjilal</title>
+<meta name="description" content="A reference architecture for self-hosted GitHub Actions runners that run as ephemeral AWS Fargate tasks inside a private VPC, build container images daemonlessly with rootless BuildKit, sign them in the account with AWS KMS, and push to Amazon ECR, with the registry locked so the runner is the only identity allowed to push.">
+<meta property="og:title" content="Managed GitHub Actions runners on ECS">
+<meta property="og:description" content="Ephemeral Fargate runners, private builds, in-account signing, and an ECR registry gate, so the only path to production is built by our runner.">
+<meta property="og:type" content="article">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/site.css">
+</head>
+<body>
+
+<header class="bar">
+  <div class="wrap">
+    <a class="brand" href="/">akanjilal<span class="dot">.dev</span></a>
+    <nav class="nav" aria-label="Primary">
+      <a href="/#work">work</a>
+      <a href="/blog/">my blogs</a>
+      <a href="/architectures/">architectures</a>
+      <a href="/#background">background</a>
+      <a class="ext" href="https://github.com/akanjilal-work">github</a>
+      <a class="ext" href="https://www.linkedin.com/in/akanjilal/">linkedin</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <article class="article">
+    <div class="wrap">
+      <a class="back" href="/architectures/">Back to reference architectures</a>
+      <div class="article-head">
+        <div class="meta"><span>Reference architecture</span><span>Amazon Web Services</span><span>Self-hosted CI build plane</span></div>
+        <h1>Managed GitHub Actions runners on ECS</h1>
+        <p class="standfirst">Continuous integration is where the source, the build environment, and the produced artifact all meet, which makes it the part of delivery a regulated organization most wants under its own control. This reference architecture runs GitHub Actions jobs on ephemeral AWS Fargate tasks inside a private virtual private cloud, builds container images without a Docker daemon, signs them inside the account, and pushes them to Amazon Elastic Container Registry, with the registry locked so that the runner is the only identity permitted to push. One task is one job is one artifact, and then it disappears.</p>
+      </div>
+
+      <div class="prose">
+        <p>Most teams adopt self-hosted runners for capacity or for access to a private network, and they leave the runner long lived, shared, and broadly privileged. That is the opposite of what a regulated build plane needs. The design here treats the runner as disposable and the registry as a gate, because the control that actually matters is not where a build runs but what is allowed to land in the registry the platform deploys from. Everything else, the ephemerality, the private networking, the in-account signing, exists to make that one guarantee true and provable.</p>
+
+        <h2>Requirements</h2>
+
+        <p>The requirements the build plane has to satisfy, the qualities it is judged on, and the constraints it must respect. Every decision in the next section traces back to one or more of them.</p>
+
+        <h3>Functional requirements</h3>
+        <table>
+          <thead><tr><th>Number</th><th>Requirement</th></tr></thead>
+          <tbody>
+            <tr><td>1</td><td>Run GitHub Actions jobs on self-hosted runners that live on private, account-owned compute.</td></tr>
+            <tr><td>2</td><td>Build container images and push them to Amazon ECR.</td></tr>
+            <tr><td>3</td><td>Provision capacity on demand for each queued job and reclaim it automatically when the job ends.</td></tr>
+            <tr><td>4</td><td>Sign every image in the account and make only signed, runner-produced images deployable.</td></tr>
+          </tbody>
+        </table>
+
+        <h3>Quality attributes</h3>
+        <table>
+          <thead><tr><th>Number</th><th>Attribute</th><th>Intent</th></tr></thead>
+          <tbody>
+            <tr><td>1</td><td>Enforcement</td><td>It must be infeasible to land an artifact in the deployment registry without going through the runner.</td></tr>
+            <tr><td>2</td><td>No public exposure</td><td>Every hop, from ingress to build to registry to signing, stays inside one account over private links, with no dependency on a public service.</td></tr>
+            <tr><td>3</td><td>Isolation</td><td>One job cannot observe or tamper with another. No credential or filesystem is reused across jobs.</td></tr>
+            <tr><td>4</td><td>Least privilege</td><td>Every identity, the runner, the control plane, the registry, holds only the permissions it needs.</td></tr>
+            <tr><td>5</td><td>No long-lived secrets</td><td>No personal access tokens, no static registry credentials, no reusable runner registration tokens.</td></tr>
+            <tr><td>6</td><td>Observability and cost</td><td>Every job is traceable, and parallelism and spend are bounded by design.</td></tr>
+          </tbody>
+        </table>
+
+        <h3>Constraints and assumptions</h3>
+        <table>
+          <thead><tr><th>Number</th><th>Constraint or assumption</th></tr></thead>
+          <tbody>
+            <tr><td>1</td><td>An existing VPC with private subnets is available, with no route to an internet gateway or a network address translation gateway.</td></tr>
+            <tr><td>2</td><td>For a genuinely private deployment the event source is GitHub Enterprise Server running inside the VPC, or GitHub Enterprise Cloud reached over PrivateLink.</td></tr>
+            <tr><td>3</td><td>Fargate gives no Docker daemon and forbids privileged containers, so builds must be daemonless.</td></tr>
+            <tr><td>4</td><td>Deployment targets can be configured to pull only from this registry and to verify a signature before admitting an image.</td></tr>
+          </tbody>
+        </table>
+
+        <h2>Architecture decisions and rationale</h2>
+
+        <p>These are the decisions that shaped the build plane. Each records what was chosen, what was set aside, why, and what it costs.</p>
+
+        <h3>1. Ephemeral single-use runners rather than a long-lived pool</h3>
+        <p><strong>Decision.</strong> Each queued job starts one fresh Fargate task that registers with a single-use just-in-time configuration, takes exactly one job, and exits.</p>
+        <p><strong>Alternatives.</strong> A warm pool of persistent runners that pick up jobs over time.</p>
+        <p><strong>Rationale.</strong> A runner that is reused is a runner that can carry one job's secrets, files, or compromise into the next, and a persistent runner is a standing target. A single-use task removes cross-job leakage entirely and makes scale-in a side effect of the job ending rather than a controller to operate. This serves the isolation attribute and functional requirement 3.</p>
+        <p><strong>Consequences.</strong> Each job pays a task start latency of tens of seconds. A small warm pool can front the queue where that latency is unacceptable, trading a little isolation purity for speed.</p>
+
+        <h3>2. ECS Fargate with a daemonless builder rather than a managed Docker host</h3>
+        <p><strong>Decision.</strong> Run the runner on Fargate and build images with rootless BuildKit, with kaniko as a documented alternative.</p>
+        <p><strong>Alternatives.</strong> ECS on EC2 or self-managed instances with the Docker daemon, allowing classic Docker-in-Docker builds.</p>
+        <p><strong>Rationale.</strong> Fargate is managed in the truest sense: there is no host to patch, no daemon to secure, and each task is its own kernel-isolated micro virtual machine. The cost of that is no Docker daemon and no privileged mode, which a daemonless, rootless builder resolves by producing an image and pushing it straight to the registry without a socket. This serves the no-public and least-privilege attributes by removing the host as an attack surface.</p>
+        <p><strong>Consequences.</strong> A team that genuinely needs full Docker compatibility uses the same control plane against an ECS-on-EC2 capacity provider and accepts host patching and weaker isolation in exchange.</p>
+
+        <h3>3. A queue between the webhook and the build rather than a direct call</h3>
+        <p><strong>Decision.</strong> The webhook receiver verifies and enqueues to Amazon SQS, and a separate scale-up function drains the queue and launches tasks, with a dead-letter queue for poison messages.</p>
+        <p><strong>Alternatives.</strong> Launching a task directly from the webhook handler.</p>
+        <p><strong>Rationale.</strong> The queue decouples ingestion from provisioning, so bursts, GitHub's at-least-once webhook redeliveries, and transient AWS errors are absorbed and retried rather than dropped, and reserved concurrency on the scale-up function becomes a hard ceiling on simultaneous launches. This serves the observability and cost attribute and reliability.</p>
+        <p><strong>Consequences.</strong> A duplicate webhook can launch one extra runner, which is harmless because an idle ephemeral runner simply times out.</p>
+
+        <h3>4. A GitHub App with just-in-time registration rather than tokens</h3>
+        <p><strong>Decision.</strong> Authenticate to GitHub as a GitHub App, mint a short-lived installation token, and request a single-use just-in-time runner configuration per task.</p>
+        <p><strong>Alternatives.</strong> A personal access token, or a reusable runner registration token baked into the image.</p>
+        <p><strong>Rationale.</strong> App installation tokens are short lived and scoped, and a just-in-time configuration cannot be reused once its runner comes online, so there is no durable registration secret to steal. The app private key is the only long-lived credential, and it lives in Secrets Manager. This serves the no-long-lived-secrets attribute.</p>
+        <p><strong>Consequences.</strong> The control plane carries a small amount of GitHub App plumbing, which is the accepted cost of holding no reusable tokens.</p>
+
+        <h3>5. The registry policy as the enforcement point rather than process or trust</h3>
+        <p><strong>Decision.</strong> The ECR repository policy allows the push actions only to the runner task role and explicitly denies every other principal, and deploy targets pull only from this registry.</p>
+        <p><strong>Alternatives.</strong> Relying on workflow conventions, branch protection, or reviewer discipline to keep builds on the runner.</p>
+        <p><strong>Rationale.</strong> Enforcement is the requirement most designs hand-wave. Governance in GitHub makes building elsewhere hard to introduce, but only the registry policy makes it impossible to land elsewhere, because even an image built on a laptop cannot be pushed. This serves the enforcement attribute and functional requirement 2.</p>
+        <p><strong>Consequences.</strong> The runner task role becomes a sensitive identity whose scope must be kept narrow, which the design does by granting it push to named repositories only.</p>
+
+        <h3>6. In-account signing with a KMS key rather than keyless Sigstore</h3>
+        <p><strong>Decision.</strong> Sign every image with cosign backed by an asymmetric AWS KMS key, with the transparency log upload disabled.</p>
+        <p><strong>Alternatives.</strong> Keyless cosign signing against the public Sigstore certificate authority and transparency log.</p>
+        <p><strong>Rationale.</strong> A KMS-backed signature is not keyless, so there is no call to a public certificate authority, and disabling the transparency log upload means no write to a public log either. The only services touched are KMS and ECR, both of which have a private endpoint, so signing keeps the no-public guarantee. This serves the no-public-exposure attribute and functional requirement 4.</p>
+        <p><strong>Consequences.</strong> Verification distributes the KMS public key rather than relying on a public trust root, which is a deliberate trade for staying inside the account. AWS Signer with Notation is an equivalent managed alternative.</p>
+
+        <h3>7. Every dependency private rather than reached over the internet</h3>
+        <p><strong>Decision.</strong> Put the runner and the control-plane functions in private subnets with egress restricted to the VPC, reach every AWS service over an account-scoped VPC endpoint, ingest the webhook through a private REST API, and source base images through an ECR pull-through cache.</p>
+        <p><strong>Alternatives.</strong> A NAT gateway for outbound access and public service endpoints.</p>
+        <p><strong>Rationale.</strong> Each external dependency a naive design would reach over the internet has a private replacement here, which removes the exfiltration paths and the dependence on public services in one move, and the absence of a NAT gateway also removes its data-processing charge. This serves the no-public-exposure attribute.</p>
+        <p><strong>Consequences.</strong> The one unavoidable caveat is that GitHub.com cloud lives on the public internet, so a genuinely private deployment uses GitHub Enterprise Server inside the VPC.</p>
+
+        <h2>The build lifecycle</h2>
+
+        <p>Every build follows the same path, and the value of the design is that there is only one. A queued job becomes a single ephemeral runner that registers, takes exactly one job, builds, pushes, signs, verifies, and exits. None of these steps can be skipped, because the job has no other runner to land on.</p>
+
+        <figure class="diagram">
+          <img src="/assets/img/ghar-lifecycle.svg" alt="The eight steps of one build: verify and enqueue, mint a just-in-time config, RunTask on Fargate, register and long-poll for one job, build with rootless BuildKit, push to ECR, sign and attest with cosign and KMS, then verify and exit, producing a signed image that deploy targets admit." loading="lazy">
+          <figcaption>One build, eight steps. The runner registers with a single-use configuration, takes one job, and deregisters, so scale-in is simply the task exiting.</figcaption>
+        </figure>
+
+        <h2>The architecture</h2>
+
+        <p>A control plane decides when and how many runners to start, and a data plane does the build. The webhook receiver is a deliberately tiny, internet-facing function that verifies the signature, ignores anything that is not a queued job targeting the runner labels, and enqueues a compact message. The scale-up function drains the queue, mints the just-in-time configuration, and launches the task. Everything else, Secrets Manager, KMS, the VPC endpoints, and the alarms, supports those two paths.</p>
+
+        <figure class="diagram">
+          <img src="/assets/img/ghar-architecture.svg" alt="GitHub Enterprise Server in the VPC posts a workflow_job webhook to a private API Gateway, a webhook Lambda verifies and enqueues to SQS with a dead-letter queue, a scale-up Lambda mints a just-in-time config and runs one Fargate task that builds and pushes a signed image to ECR, which deploy targets pull and verify. Secrets Manager, KMS, account-scoped VPC endpoints, and CloudWatch support the flow." loading="lazy">
+          <figcaption>The control plane, from the private webhook to the scale-up function, and the data plane, the single Fargate task. They are decoupled by the queue so bursts and redeliveries are absorbed rather than dropped.</figcaption>
+        </figure>
+
+        <p>The runner image bundles the GitHub Actions runner, the Amazon ECR credential helper, rootless BuildKit, and the supply-chain tools. Its entrypoint configures the credential helper for the task's account and region, starts the build engine without a daemon and without privilege, and runs the runner with the just-in-time configuration. Registry authentication is implicit through the task role, so there are no registry credentials anywhere in the pipeline.</p>
+
+        <h2>Networking</h2>
+
+        <p>The runner and the control-plane functions sit in private subnets with no route to an internet gateway or a network address translation gateway. Their security groups permit no inbound traffic and egress only to the VPC, so they can reach the VPC endpoints and the in-VPC GitHub Enterprise Server and nothing on the internet. Every AWS service is consumed over an interface or gateway endpoint whose policy pins usage to this account, and the webhook ingress is a private REST API that resolves only through the execute-api endpoint.</p>
+
+        <figure class="diagram">
+          <img src="/assets/img/ghar-network.svg" alt="Inside one private VPC with no internet gateway or NAT, GitHub Enterprise Server, the control-plane Lambdas, and the Fargate runner reach AWS only through account-scoped VPC endpoints: execute-api, ecr.api and ecr.dkr, kms, secretsmanager, sts, sqs, ecs and logs, and an S3 gateway endpoint. The public internet has no route in or out." loading="lazy">
+          <figcaption>Every dependency private, scoped to one account. The KMS endpoint is what lets in-account signing happen without leaving the VPC, and the public internet has no route to the runner or the functions.</figcaption>
+        </figure>
+
+        <table>
+          <thead><tr><th>Would-be public dependency</th><th>Private replacement</th></tr></thead>
+          <tbody>
+            <tr><td>GitHub.com webhook and runner long-poll</td><td>GitHub Enterprise Server inside the VPC, on RFC1918 addresses</td></tr>
+            <tr><td>Public API Gateway ingress</td><td>A private REST API behind the execute-api endpoint</td></tr>
+            <tr><td>ECR, S3, Secrets, STS, KMS, SQS, ECS over the internet</td><td>Account-scoped VPC endpoints</td></tr>
+            <tr><td>Docker Hub or public registry base images</td><td>A private ECR pull-through cache</td></tr>
+            <tr><td>Keyless cosign against public Sigstore</td><td>cosign with an in-account KMS key, transparency log disabled</td></tr>
+            <tr><td>NAT gateway to the internet</td><td>Removed entirely</td></tr>
+          </tbody>
+        </table>
+
+        <h2>Enforcing private builds only</h2>
+
+        <p>Enforcement works as defence in depth across three layers, and the third is the one that makes it stick. Source governance in GitHub, code owners on the workflow files, an allowed-actions policy, and a pinned-commit ruleset, makes building elsewhere hard to introduce. Capacity gating means a job only receives a runner if it requests the exact labels, so a misconfigured job simply never gets capacity rather than falling back to a hosted runner. The registry gate is the real control.</p>
+
+        <figure class="diagram">
+          <img src="/assets/img/ghar-enforcement.svg" alt="The ECR app repository policy allows PutImage only from the runner task role and denies it for a laptop, a rogue CI pipeline, and any other principal. Deploy targets pull only from the repository and verify the cosign signature before admitting an image." loading="lazy">
+          <figcaption>The registry gate. Only the runner task role can push, so even an image built elsewhere cannot reach the repository the platform deploys from.</figcaption>
+        </figure>
+
+        <p>The repository policy grants the push actions to the runner task role and denies them to everyone else, which is what makes the claim that all artifacts are built privately actually true rather than aspirational.</p>
+
+        <pre><code>{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "OnlyRunnerCanPush",
+      "Effect": "Allow",
+      "Principal": { "AWS": "arn:aws:iam::&lt;account&gt;:role/gha-ecs-runner-task" },
+      "Action": [
+        "ecr:PutImage",
+        "ecr:InitiateLayerUpload",
+        "ecr:UploadLayerPart",
+        "ecr:CompleteLayerUpload",
+        "ecr:BatchCheckLayerAvailability"
+      ]
+    },
+    {
+      "Sid": "DenyPushFromAnyoneElse",
+      "Effect": "Deny",
+      "Principal": "*",
+      "Action": [
+        "ecr:PutImage",
+        "ecr:InitiateLayerUpload",
+        "ecr:UploadLayerPart",
+        "ecr:CompleteLayerUpload"
+      ],
+      "Condition": {
+        "ArnNotEquals": {
+          "aws:PrincipalArn": "arn:aws:iam::&lt;account&gt;:role/gha-ecs-runner-task"
+        }
+      }
+    }
+  ]
+}</code></pre>
+
+        <h2>In-account signing</h2>
+
+        <p>Signing is a first-class control here, and it is done entirely inside the account with no public dependency. The build pushes the image, cosign signs it with an in-account KMS key and the transparency log disabled, and the signature and a software bill of materials attestation are stored as artifacts in ECR alongside the image. The build verifies its own signature before treating the artifact as releasable, and deploy targets run the same verification with the key's public half before admitting an image.</p>
+
+        <figure class="diagram">
+          <img src="/assets/img/ghar-signing.svg" alt="After the build pushes to ECR, cosign signs with an in-account AWS KMS key and the transparency log disabled, so there is no call to public Sigstore Fulcio or Rekor. The signature and a syft SBOM attestation are stored in ECR, and deploy targets verify with the KMS public key before admitting the image." loading="lazy">
+          <figcaption>Signed inside the account. Because the key is in KMS and the transparency log is disabled, signing touches only KMS and ECR, both over private links, with no call to public Sigstore.</figcaption>
+        </figure>
+
+        <pre><code># Sign with the in-account KMS key. --tlog-upload=false means no call to the
+# public Sigstore transparency log: signing touches only KMS and ECR.
+cosign sign   --yes --tlog-upload=false --key "$SIGNING_KMS_URI" "$IMAGE"
+cosign attest --yes --tlog-upload=false --key "$SIGNING_KMS_URI" \
+  --predicate sbom.spdx.json --type spdxjson "$IMAGE"
+
+# Verify in-pipeline and again at deploy time, against the same in-account key.
+cosign verify --insecure-ignore-tlog=true --key "$SIGNING_KMS_URI" "$IMAGE"</code></pre>
+
+        <p>Combined with the registry gate, the deployable set is exactly the images built by the runner and signed by the in-account key. An admission controller or a deploy gate configured with the KMS public key is what turns that into a rule the platform enforces on every release.</p>
+
+        <p>The implementation, the Terraform, the control-plane functions, the runner image, and the sample workflow, is open source, and a guided walkthrough proves the three claims, that the build is private, that only the runner can push, and that every image is signed.</p>
+
+        <div class="article-foot">
+          <div class="cta-row">
+            <a class="btn primary" href="https://github.com/akanjilal-work/gha-ecs-runner">Read the code</a>
+            <a class="btn" href="/demo/gha-ecs-runner/">See the proof walkthrough</a>
+          </div>
+        </div>
+      </div>
+
+      <section class="prose refs">
+        <h2>References</h2>
+        <ol>
+          <li>GitHub, Autoscaling with self-hosted runners and just-in-time runners.<span class="src">https://docs.github.com/actions/hosting-your-own-runners/managing-self-hosted-runners/autoscaling-with-self-hosted-runners</span></li>
+          <li>GitHub, Authenticating as a GitHub App installation.<span class="src">https://docs.github.com/apps/creating-github-apps/authenticating-with-a-github-app/authenticating-as-a-github-app-installation</span></li>
+          <li>Amazon Web Services, Amazon ECS on AWS Fargate.<span class="src">https://docs.aws.amazon.com/AmazonECS/latest/developerguide/AWS_Fargate.html</span></li>
+          <li>Amazon Web Services, Amazon ECR private repository policies.<span class="src">https://docs.aws.amazon.com/AmazonECR/latest/userguide/repository-policies.html</span></li>
+          <li>Amazon Web Services, AWS PrivateLink and VPC endpoints.<span class="src">https://docs.aws.amazon.com/vpc/latest/privatelink/what-is-privatelink.html</span></li>
+          <li>The Moby Project, rootless BuildKit.<span class="src">https://github.com/moby/buildkit/blob/master/docs/rootless.md</span></li>
+          <li>Sigstore, cosign signing with an AWS KMS key.<span class="src">https://docs.sigstore.dev/cosign/key_management/signing_with_kms/</span></li>
+          <li>Amazon Web Services, Amazon Inspector enhanced scanning for Amazon ECR.<span class="src">https://docs.aws.amazon.com/inspector/latest/user/scanning-ecr.html</span></li>
+        </ol>
+      </section>
+
+      <div class="article-foot">
+        <div class="cta-row">
+          <a class="btn" href="/architectures/">More architectures</a>
+        </div>
+      </div>
+    </div>
+  </article>
+</main>
+
+<footer>
+  <div class="wrap foot">
+    <div class="links">
+      <a href="https://github.com/akanjilal-work">GitHub</a>
+      <a href="https://www.linkedin.com/in/akanjilal/">LinkedIn</a>
+      <a href="mailto:anirban.kanjilal@gmail.com">Email</a>
+    </div>
+    <div class="copy">© 2026 Anirban Kanjilal</div>
+  </div>
+</footer>
+
+</body>
+</html>
