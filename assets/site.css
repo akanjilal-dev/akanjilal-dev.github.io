@@ -69,7 +69,7 @@ section{padding:64px 0}
 .card:hover{transform:translateY(-3px);border-color:var(--accent);box-shadow:0 12px 30px -18px color-mix(in srgb,var(--accent) 50%,transparent)}
 .card-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
 .repo{font-family:"IBM Plex Mono",monospace;font-weight:600;font-size:15.5px}
-.chip{font-family:"IBM Plex Mono",monospace;font-size:10.5px;padding:3px 9px;border-radius:20px;background:var(--chip);color:var(--muted);letter-spacing:0.04em}
+.chip{font-family:"IBM Plex Mono",monospace;font-size:10.5px;padding:3px 9px;border-radius:20px;background:var(--chip);color:var(--muted);letter-spacing:0.04em;white-space:nowrap;flex:0 0 auto}
 .chip.live{background:color-mix(in srgb,var(--live) 16%,transparent);color:var(--live)}
 .card p{color:var(--muted);font-size:14.5px;flex:1}
 .tags{display:flex;gap:7px;flex-wrap:wrap;margin-top:16px}
