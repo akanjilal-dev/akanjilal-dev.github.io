@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-06-11T04:10:57Z",
-  "next_refresh_at": "2026-06-11T08:10:57Z",
+  "generated_at": "2026-06-11T04:18:09Z",
+  "next_refresh_at": "2026-06-11T08:18:09Z",
   "refresh_cadence_hours": 4,
   "mcp": {
     "providers": [
@@ -49,13 +49,56 @@
     "providers": [
       {
         "provider": "Amazon Braket",
-        "status": "token_required",
-        "source": "token_required",
-        "device_count": null,
-        "online_count": null,
-        "devices": [],
+        "status": "operational",
+        "source": "api",
+        "device_count": 7,
+        "online_count": 2,
+        "devices": [
+          {
+            "name": "Aria 1",
+            "provider": "IonQ",
+            "qubits": 25,
+            "status": "offline"
+          },
+          {
+            "name": "Aquila",
+            "provider": "QuEra",
+            "qubits": 256,
+            "status": "online"
+          },
+          {
+            "name": "Harmony",
+            "provider": "IonQ",
+            "qubits": 11,
+            "status": "offline"
+          },
+          {
+            "name": "Aria 2",
+            "provider": "IonQ",
+            "qubits": 25,
+            "status": "offline"
+          },
+          {
+            "name": "Borealis",
+            "provider": "Xanadu",
+            "qubits": null,
+            "status": "offline"
+          },
+          {
+            "name": "Forte 1",
+            "provider": "IonQ",
+            "qubits": 36,
+            "status": "offline"
+          },
+          {
+            "name": "Forte Enterprise 1",
+            "provider": "IonQ",
+            "qubits": 36,
+            "status": "online"
+          }
+        ],
         "url": "https://aws.amazon.com/braket/",
-        "note": "Add the AWS_* secrets as a repository secret to show live devices."
+        "region": "us-east-1"
       },
       {
         "provider": "IBM Quantum",
@@ -69,14 +112,14 @@
             "provider": "IBM",
             "qubits": 156,
             "status": "online",
-            "queue": 1
+            "queue": 3
           },
           {
             "name": "ibm_marrakesh",
             "provider": "IBM",
             "qubits": 156,
             "status": "online",
-            "queue": 1
+            "queue": 0
           },
           {
             "name": "ibm_kingston",
@@ -90,13 +133,13 @@
       },
       {
         "provider": "Microsoft Azure Quantum",
-        "status": "token_required",
-        "source": "token_required",
+        "status": "public",
+        "source": "public",
         "device_count": null,
         "online_count": null,
         "devices": [],
         "url": "https://azure.microsoft.com/products/quantum",
-        "note": "Add the AZURE_* secrets as a repository secret to show live devices."
+        "note": "Public platform status only. Device availability would need an Azure Quantum workspace and credentials."
       },
       {
         "provider": "Google Quantum AI",
