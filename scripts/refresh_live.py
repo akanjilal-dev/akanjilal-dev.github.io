@@ -176,8 +176,12 @@ def quantum_azure():
     need = ["AZURE_CLIENT_ID", "AZURE_TENANT_ID", "AZURE_CLIENT_SECRET", "AZURE_SUBSCRIPTION_ID",
             "AZURE_RESOURCE_GROUP", "AZURE_QUANTUM_WORKSPACE", "AZURE_QUANTUM_LOCATION"]
     if not all(os.environ.get(k) for k in need):
-        return token_required("Microsoft Azure Quantum", "https://azure.microsoft.com/products/quantum",
-                              "the AZURE_* secrets")
+        return {
+            "provider": "Microsoft Azure Quantum", "status": "public", "source": "public",
+            "device_count": None, "online_count": None, "devices": [],
+            "url": "https://azure.microsoft.com/products/quantum",
+            "note": "Public platform status only. Device availability would need an Azure Quantum workspace and credentials.",
+        }
     from azure.quantum import Workspace
     from azure.identity import ClientSecretCredential
     cred = ClientSecretCredential(os.environ["AZURE_TENANT_ID"], os.environ["AZURE_CLIENT_ID"],
