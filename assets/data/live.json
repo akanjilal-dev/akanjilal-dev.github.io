@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-06-11T05:35:12Z",
-  "next_refresh_at": "2026-06-11T09:35:12Z",
+  "generated_at": "2026-06-11T08:30:21Z",
+  "next_refresh_at": "2026-06-11T12:30:21Z",
   "refresh_cadence_hours": 4,
   "mcp": {
     "providers": [
@@ -89,21 +89,21 @@
             "provider": "IBM",
             "qubits": 156,
             "status": "online",
-            "queue": 1
+            "queue": 4
           },
           {
             "name": "ibm_marrakesh",
             "provider": "IBM",
             "qubits": 156,
             "status": "online",
-            "queue": 1
+            "queue": 0
           },
           {
             "name": "ibm_kingston",
             "provider": "IBM",
             "qubits": 156,
             "status": "online",
-            "queue": 1
+            "queue": 12
           }
         ],
         "url": "https://quantum.ibm.com"
