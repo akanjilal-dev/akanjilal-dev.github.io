@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Agentic loops, large context, and the discipline of optimization, Anirban Kanjilal</title>
+<meta name="description" content="A deep technical walkthrough of agentic loops as context growth machines, the token math behind runaway cost, and the optimization toolkit that keeps them fast and cheap.">
+<meta property="og:title" content="Agentic loops, large context, and the discipline of optimization">
+<meta property="og:description" content="How agentic loops grow context, why the cost curve bends upward, and the engineering levers that keep loops predictable.">
+<meta property="og:type" content="article">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/site.css">
+</head>
+<body>
+
+<header class="bar">
+  <div class="wrap">
+    <a class="brand" href="/">akanjilal<span class="dot">.dev</span></a>
+    <nav class="nav" aria-label="Primary">
+      <a href="/#work">work</a>
+      <a href="/blog/">my blogs</a>
+      <a href="/#background">background</a>
+      <a class="ext" href="https://github.com/akanjilal-work">github</a>
+      <a class="ext" href="https://www.linkedin.com/in/akanjilal/">linkedin</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <article class="article">
+    <div class="wrap">
+      <a class="back" href="/blog/">Back to writing</a>
+      <div class="article-head">
+        <div class="meta"><span>Agentic systems</span><span>May 7, 2026</span><span>20 minute read</span></div>
+        <h1>Agentic loops, large context, and the discipline of optimization</h1>
+        <p class="standfirst">An agentic loop is a context growth machine. Every iteration appends a tool call and the result of that call back into the window, and because the Messages endpoint is stateless you resend the entire history on the next turn. Left alone, this growth becomes the largest line in your bill and the most common source of degraded answers. Optimization, in this setting, is mostly the discipline of deciding what stays in the window and what gets thrown away.</p>
+      </div>
+
+      <div class="prose">
+<p>This post builds that argument from first principles using one running example, a codebase refactor agent that migrates a project from an old client library to a new one. The example is hypothetical but realistic, and it is a good teacher because it makes context growth visible. Every time the agent reads a file, several thousand tokens land in the window. By the time it has read a dozen files, run the tests twice, and started editing, the window is heavy, and you are paying to reprocess all of it on every single step.</p>
+
+<p>I will move from the shape of the loop, to the arithmetic of why it grows, to the three taxes that growth imposes, and then to the five levers that bring it back under control. The code uses the Anthropic Python software development kit and Claude Sonnet 4.6, which is the practical default for a coding agent at the time of writing. Here is the whole system on one page. The rest of the article explains each box.</p>
+
+<figure class="diagram">
+  <img src="/assets/img/agentic-loop-architecture.png" loading="lazy" alt="A layered architecture diagram of the optimized agentic loop, showing the stable cached prefix, the five stages of one iteration, the tools, the context governor with its token budget gauge, the three optimization modules, and the growing transcript kept bounded.">
+  <figcaption>Figure 1. The optimized loop. A stable cached prefix sits on top, the controller runs five stages per iteration, a context governor rewrites the transcript after every turn, and the transcript stays small relative to the one million token ceiling.</figcaption>
+</figure>
+
+<h2>The loop, stated precisely</h2>
+
+<p>A single tool call is not an agent. A fixed chain of three prompts is not an agent either. What makes a loop agentic is that the model itself decides, at each step, whether to act again and what to do next, and the loop continues without further human input until a stopping condition holds. The Anthropic documentation calls the repetition of request and tool result the agent loop, and notes that the canonical shape is a short loop keyed on the stop reason returned by the model.</p>
+
+<p>The contract is simple. You hand the model a set of tools, each with a name, a description, and an input schema. The model decides when to call one. It does not run anything itself. It emits a structured request, your code executes the operation, and you feed the result back as a tool result block. The model then decides whether it needs another tool or whether the task is done. Here is a complete loop, with the four tools our refactor agent uses.</p>
+
+<pre><code>import anthropic
+
+client = anthropic.Anthropic()
+
+TOOLS = [
+    {
+        "name": "read_file",
+        "description": "Return the full contents of a file at the given path.",
+        "input_schema": {
+            "type": "object",
+            "properties": {"path": {"type": "string"}},
+            "required": ["path"],
+        },
+    },
+    {
+        "name": "write_file",
+        "description": "Overwrite a file at the given path with new contents.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "path": {"type": "string"},
+                "contents": {"type": "string"},
+            },
+            "required": ["path", "contents"],
+        },
+    },
+    {
+        "name": "run_tests",
+        "description": "Run the test suite and return pass or fail output.",
+        "input_schema": {"type": "object", "properties": {}},
+    },
+    {
+        "name": "grep",
+        "description": "Find a symbol across the repository without loading whole files.",
+        "input_schema": {
+            "type": "object",
+            "properties": {"pattern": {"type": "string"}},
+            "required": ["pattern"],
+        },
+    },
+]
+
+SYSTEM = "You are a careful refactoring agent. Migrate the project from the old client to the new one. Change one module at a time, run the tests after each change, and never edit a file you have not read."
+
+def run_tool(name, args):
+    # Dispatch to the real implementation and return a string result.
+    ...
+
+def agent(goal, max_steps=40):
+    messages = [{"role": "user", "content": goal}]
+    for step in range(max_steps):
+        response = client.messages.create(
+            model="claude-sonnet-4-6",
+            max_tokens=4096,
+            system=SYSTEM,
+            tools=TOOLS,
+            messages=messages,
+        )
+        messages.append({"role": "assistant", "content": response.content})
+
+        if response.stop_reason != "tool_use":
+            return response  # the model is finished
+
+        results = []
+        for block in response.content:
+            if block.type == "tool_use":
+                output = run_tool(block.name, block.input)
+                results.append({
+                    "type": "tool_result",
+                    "tool_use_id": block.id,
+                    "content": output,
+                })
+        messages.append({"role": "user", "content": results})
+
+    raise RuntimeError("step limit reached before the task finished")
+</code></pre>
+
+<p>Read the loop carefully, because the cost story is hiding in plain sight. On each pass we append the assistant message, then append a user message carrying the tool results, then call the model again with the full <code>messages</code> list. The list only ever grows. Nothing is removed. The model never remembers anything between calls, so the only way it can see what happened three steps ago is for you to send those three steps again. That is the whole mechanism, and it is also the whole problem.</p>
+
+<div class="callout">
+  <p>The single most important fact about the Messages endpoint for cost planning is that it is stateless. You always send the full conversational history. There is no server side memory of the previous turn, so every token you ever added to the transcript is paid for again on every subsequent step.</p>
+</div>
+
+<h2>Why context explodes</h2>
+
+<p>Let us put numbers on it. Call the stable prefix P, which is the system prompt, the tool schemas, and the repository file map that the agent needs in order to navigate. For our agent that is roughly 8,000 tokens, and it is identical on every turn. Each iteration then adds new material to the transcript: the assistant turn that contains a tool call, plus the tool result. A single <code>read_file</code> on a source file can easily return 2,000 tokens, and a <code>run_tests</code> result might be 1,500. Average the growth across a task and call it g, around 2,200 tokens added per step including the assistant tool call.</p>
+
+<p>Now count what you are billed. On step k, the input you send is the prefix plus everything accumulated before this step, which is P plus (k minus 1) times g. Sum that across N steps and you get the total input processed across the whole task.</p>
+
+<div class="eq">total input tokens  =  N &times; P  +  g &times; N &times; (N &minus; 1) / 2</div>
+
+<p>The first term is linear in N. The second term is the one that hurts, because it grows in proportion to N². This is the precise reason a naive agent gets expensive faster than people expect. You are not paying for the length of the final transcript. You are paying for the running sum of every intermediate transcript, and that running sum is quadratic in the number of steps.</p>
+
+<p>Plug in the numbers for an eight step task with P equal to 8,000 and g equal to 2,200. The linear term contributes 64,000 tokens. The quadratic term contributes 2,200 times 28, which is 61,600 tokens. So the bill is for roughly 125,600 input tokens even though the final transcript is only about 25,000 tokens long. At the Claude Sonnet 4.6 input rate of three dollars per million tokens, that is about forty cents for one short task. Forty cents sounds trivial until you remember that a production agent runs this loop thousands of times a day, and that real tasks run far longer than eight steps. Figure 2 traces the cumulative cost as the task gets longer, and it shows the quadratic curve pulling away from a controlled one.</p>
+
+<figure class="diagram">
+  <img src="/assets/img/agentic-loop-cost-curve.png" loading="lazy" alt="A line chart of cumulative cost in US dollars against the number of tool steps, from one to twenty. The naive loop curve bends upward to 1.79 dollars at twenty steps, while the optimized loop curve stays nearly straight and reaches only 0.32 dollars.">
+  <figcaption>Figure 2. Cumulative cost for one refactor task at Claude Sonnet 4.6 pricing. The naive curve is quadratic. At twenty steps it costs about 5.6 times as much as the optimized loop, and the gap keeps widening with task length.</figcaption>
+</figure>
+
+<p>Two honest caveats keep this model from overstating the case. First, much of the prefix and even the transcript can be cached, which changes the price of those tokens without changing their count, and we will get to that shortly. Second, the average g is a simplification, since some steps add a tiny tool result and some add a large file. The shape of the conclusion does not change. Without intervention, a long agentic task pays a quadratic cost in steps, and the dominant driver is the transcript you keep resending.</p>
+
+<h2>The three taxes of a heavy window</h2>
+
+<p>Large context is often discussed as a feature, and the one million token window on Claude Sonnet 4.6 is a real capability. The trouble is that filling it is not free along any axis. A heavy window levies three separate taxes, and a good agent pays attention to all three rather than only the first.</p>
+
+<h3>The money tax</h3>
+
+<p>This is the quadratic effect above. Every token in the window is reprocessed on every step, so a window that drifts upward turns each step into a slightly more expensive version of the last one. The money tax is the easiest to measure and the easiest to forget, because a single step always looks cheap. It is the accumulation that bites.</p>
+
+<h3>The latency tax</h3>
+
+<p>Before the model can produce its first output token, it has to read and process the entire input. That prefill work grows with the size of the window, so the time to first token climbs as the transcript grows. A loop that felt responsive in its first three steps can feel sluggish by its fifteenth, not because the model got slower but because you are asking it to reread a much larger transcript before it can say anything. For an interactive agent this is the tax users actually feel.</p>
+
+<h3>The quality tax</h3>
+
+<p>This is the subtle one, and the one that surprises people. More context is not uniformly better. Research on long context retrieval found that models attend most reliably to information at the very start and the very end of the input, and that material buried in the middle is recalled far less reliably. The effect is strong enough that adding more documents can lower accuracy if the useful one ends up in the dead zone. Practitioners describe a related drift sometimes called context rot, where a long transcript accumulates stale instructions, abandoned approaches, and dead tool output that quietly compete with the part of the context that still matters. A focused window of the right 8,000 tokens often beats a bloated window of the wrong 200,000.</p>
+
+<div class="callout amber">
+  <p>The trap is treating the window as free storage. Every token you leave in carries a small cost in money, a small cost in latency, and a small cost in attention. The job of an optimized loop is to keep only the tokens that earn their place.</p>
+</div>
+
+<h2>The optimization toolkit</h2>
+
+<p>There are five levers worth knowing well. None of them is universally correct. Each trades something away, and the skill is matching the lever to the situation. The architecture in Figure 1 uses all five together, but it is clearer to take them one at a time.</p>
+
+<h3>Lever one, prompt caching</h3>
+
+<p>Caching attacks the cost of the stable prefix directly. You mark the parts of the request that do not change between turns, and Anthropic stores the processed result. On a later request that begins with the same content, you pay a small fraction of the input price for the cached portion instead of the full price. The pricing structure is explicit. A write costs 1.25 times the base input price for a five minute lifetime, or 2.0 times for a one hour lifetime, and a subsequent read of cached content costs only 0.10 times the base input price, which is a ninety percent discount. Caching references the request in a fixed order, tools first, then system, then messages, up to and including the block you mark.</p>
+
+<pre><code>response = client.messages.create(
+    model="claude-sonnet-4-6",
+    max_tokens=4096,
+    system=[
+        {
+            "type": "text",
+            "text": SYSTEM,
+            "cache_control": {"type": "ephemeral"},
+        }
+    ],
+    tools=TOOLS,           # tool schemas sit in the cached prefix
+    messages=messages,
+)
+</code></pre>
+
+<p>That single marker turns the 8,000 token prefix from a full price item into a near free one after the first warm up call. You can push it further by marking the last block of the transcript on each turn as well, which lets the cache cover the growing history incrementally so that prior turns are read back cheaply rather than reprocessed at full price. Two operational details matter. The default cache lifetime is five minutes, and a step that takes longer than that to come back can let the cache expire, so long running agents either accept the occasional rewrite or choose the one hour lifetime. And matching is exact, which means a single changed byte early in the prefix invalidates everything after it, so a stable ordering of tools and system content is not a nicety, it is the thing that makes caching work at all.</p>
+
+<h3>Lever two, compaction</h3>
+
+<p>Caching lowers the price of tokens. It does not lower their count, and it does nothing for the quality tax. Compaction attacks the count. The idea is to replace bulky, finished context with a short summary of its outcome. In our refactor agent, once a module has been migrated and its tests pass, the full original contents of that file no longer need to sit in the window. What the agent needs going forward is one line: this module was migrated, its public exports are unchanged, its tests pass. Anthropic now exposes compaction and context editing as first class features for exactly this reason, and the pattern is easy to write by hand as well.</p>
+
+<pre><code>def compact(messages, keep_recent=6):
+    """Replace older tool_result file dumps with one line summaries."""
+    if len(messages) &lt;= keep_recent:
+        return messages
+    head, tail = messages[:-keep_recent], messages[-keep_recent:]
+    compacted = []
+    for msg in head:
+        if msg["role"] == "user" and isinstance(msg["content"], list):
+            new_content = []
+            for block in msg["content"]:
+                if block.get("type") == "tool_result":
+                    new_content.append({
+                        "type": "tool_result",
+                        "tool_use_id": block["tool_use_id"],
+                        "content": summarize(block["content"]),
+                    })
+                else:
+                    new_content.append(block)
+            compacted.append({"role": "user", "content": new_content})
+        else:
+            compacted.append(msg)
+    return compacted + tail
+</code></pre>
+
+<p>Compaction is lossy by design, and that is the tradeoff. If the summary drops a detail the agent later needs, it has to read the file again, which costs a round trip. The art is in the summary policy. Summaries should record decisions and outcomes, the things the agent will reason about later, and should discard raw material that can be fetched again on demand. A good rule is to summarize what is settled and keep verbatim what is still in play.</p>
+
+<h3>Lever three, pruning and truncation</h3>
+
+<p>Pruning is the blunt cousin of compaction. Rather than summarizing old content, you simply drop it or cap it. A sliding window keeps the last several turns in full and discards everything older. Truncation caps any single tool result at a fixed size, so one accidental ten thousand line log dump cannot flood the window. Pruning is cheap because it requires no extra model call, and it is the right choice when older context is genuinely irrelevant, for example when each step of a task is independent of the steps before it. It is the wrong choice when the agent needs long range memory, because a sliding window will silently forget a constraint stated at the very beginning. The honest move is to combine the two. Cap every tool result on the way in with truncation, and use compaction rather than pruning for anything that might still matter.</p>
+
+<h3>Lever four, subagent isolation</h3>
+
+<p>Sometimes the cleanest way to keep a window small is to not let it grow in the first place. A subagent is a fresh loop with its own empty transcript, handed one well scoped piece of work. It does its work in its own window, then returns only a short structured result to the parent. In the refactor agent, migrating a single module is a natural subagent. The parent does not need to see the forty messages it took to migrate that module. It needs one sentence about the outcome. The Anthropic guidance on building effective agents treats this orchestration of focused subagents as a core pattern rather than an exotic one.</p>
+
+<pre><code>def migrate_module(path):
+    # A fresh window, isolated from the parent transcript.
+    result = agent(
+        goal=f"Migrate only the module at {path}. Return a one paragraph summary.",
+        max_steps=20,
+    )
+    return summarize(result)   # only the summary returns to the parent loop
+</code></pre>
+
+<p>The tradeoff is coordination. The parent now has to decompose the task, dispatch subagents, and stitch results together, and a subagent that lacks a piece of shared context can make a locally sensible choice that is globally wrong. Isolation buys clean windows at the price of a harder orchestration problem. It pays off most when the subtasks are genuinely separable, which a module by module migration usually is.</p>
+
+<h3>Lever five, retrieval versus long context</h3>
+
+<p>The final lever is a decision rather than a mechanism. When the agent needs information from a large body of material, it has two options. It can load everything into the window and let the model find what it needs, or it can retrieve only the relevant slice and load just that. In our agent this is the difference between reading an entire file to find one function and using <code>grep</code> to locate the symbol, then reading only the span around it. The two approaches trade off cleanly, and the right answer depends on how much of the material the task actually touches.</p>
+
+<table>
+  <thead>
+    <tr><th>Dimension</th><th>Load the full context</th><th>Retrieve the relevant slice</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>Cost</td><td>High and grows with corpus size on every step</td><td>Low, bounded by what you fetch</td></tr>
+    <tr><td>Recall of obscure detail</td><td>Strong, everything is present</td><td>Only as good as the retrieval step</td></tr>
+    <tr><td>Quality risk</td><td>Lost in the middle on very large inputs</td><td>A miss returns the wrong slice</td></tr>
+    <tr><td>Engineering effort</td><td>Minimal, just send more</td><td>You build and tune the retrieval step</td></tr>
+    <tr><td>Best when</td><td>The task touches most of the material</td><td>The task touches a small, findable part</td></tr>
+  </tbody>
+</table>
+
+<p>A large window does not make retrieval obsolete, and retrieval does not make a large window pointless. They solve the problem at different scales. For a refactor that touches a handful of call sites scattered across a big repository, grep and a narrow read are both cheaper and more accurate than loading the repository. For a task that genuinely reasons over an entire document, loading it whole is the honest choice.</p>
+
+<h2>Assembling the optimized loop</h2>
+
+<p>Put the levers together and the loop gains a new component, a context governor that runs after each turn. The governor reads a token budget, decides whether the window has grown past a threshold, and applies compaction and truncation to bring it back down before the next call. Caching is configured once on the request, and subagents are invoked by the tool layer for separable work. The result is the architecture in Figure 1, expressed in code.</p>
+
+<pre><code>TOKEN_BUDGET = 30_000   # target working size, far below the 1M ceiling
+
+def optimized_agent(goal, max_steps=40):
+    messages = [{"role": "user", "content": goal}]
+    for step in range(max_steps):
+        response = client.messages.create(
+            model="claude-sonnet-4-6",
+            max_tokens=4096,
+            system=[{"type": "text", "text": SYSTEM,
+                     "cache_control": {"type": "ephemeral"}}],
+            tools=TOOLS,
+            messages=messages,
+        )
+        messages.append({"role": "assistant", "content": response.content})
+
+        if response.stop_reason != "tool_use":
+            return response
+
+        results = []
+        for block in response.content:
+            if block.type == "tool_use":
+                output = truncate(run_tool(block.name, block.input), cap=2_000)
+                results.append({
+                    "type": "tool_result",
+                    "tool_use_id": block.id,
+                    "content": output,
+                })
+        messages.append({"role": "user", "content": results})
+
+        # The context governor runs after every turn.
+        if estimate_tokens(messages) &gt; TOKEN_BUDGET:
+            messages = compact(messages)
+
+    raise RuntimeError("step limit reached before the task finished")
+</code></pre>
+
+<p>The difference between this loop and the first one is small in lines of code and large in behavior. Truncation caps each tool result on the way in. Caching makes the stable prefix nearly free after warm up. The governor keeps the transcript near its budget instead of letting it climb without limit. This is the optimized curve in Figure 2. The window stays small, so the per step cost stays roughly flat, and the quadratic blowup never gets started.</p>
+
+<h2>Failure modes and how the loop recovers</h2>
+
+<p>An optimized loop that never fails gracefully is not production ready. Three failure modes show up again and again, and each has a direct remedy that belongs in the loop itself.</p>
+
+<h3>The infinite loop</h3>
+
+<p>The model keeps acting but stops making progress, calling tools forever without converging on a result. The step limit in the loop is the backstop, but a better guard watches for the absence of progress, for example the same file being read repeatedly or the same edit being proposed and reverted. When progress stalls, the loop should stop and report rather than burn budget. The cheapest version of this is a simple counter on repeated identical tool calls.</p>
+
+<h3>The error spiral</h3>
+
+<p>A tool fails, the model tries the same failing call again, it fails again, and the transcript fills with identical error messages that teach the model nothing. The remedy is an error budget. Count consecutive failures of the same kind, and once the count crosses a threshold, change the situation rather than repeating it, by handing the model a different instruction or by stopping and surfacing the error to a human. Feeding the same failure back into the window is both expensive and useless.</p>
+
+<pre><code>def guarded_dispatch(block, recent_calls, error_counts):
+    key = (block.name, json.dumps(block.input, sort_keys=True))
+    if recent_calls.count(key) &gt;= 3:
+        return "Halted: this exact call was already attempted three times."
+    try:
+        return truncate(run_tool(block.name, block.input), cap=2_000)
+    except Exception as exc:
+        error_counts[block.name] += 1
+        if error_counts[block.name] &gt;= 3:
+            return f"Tool {block.name} has failed repeatedly. Try a different approach."
+        return f"Error from {block.name}: {exc}"
+</code></pre>
+
+<h3>The mid task overflow</h3>
+
+<p>Despite every guard, a single task can outgrow even a generous budget, for instance a migration that turns out to span far more files than expected. The graceful path is not a crash. It is a deliberate handoff. The loop compacts aggressively, writes a structured summary of what has been done and what remains, and either continues in a fresh window seeded with that summary or returns it so a later run can resume. A task that can checkpoint its own state and resume is far more robust than one that holds everything in a single window and hopes it fits.</p>
+
+<h2>A decision checklist</h2>
+
+<p>The levers are most useful when you can reach for the right one quickly. The table below is the short version of everything above, organized by the symptom you are seeing rather than by the technique.</p>
+
+<table>
+  <thead>
+    <tr><th>What you observe</th><th>Reach for</th><th>Because</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>A large prompt or tool set repeated every turn</td><td>Prompt caching</td><td>Cached reads cost a tenth of fresh input</td></tr>
+    <tr><td>The transcript climbs as the task runs long</td><td>Compaction</td><td>Settled context becomes a one line summary</td></tr>
+    <tr><td>One tool occasionally returns an enormous dump</td><td>Truncation</td><td>A single result cannot flood the window</td></tr>
+    <tr><td>The task splits into separable pieces</td><td>Subagents</td><td>Each piece runs in its own clean window</td></tr>
+    <tr><td>The agent needs a small part of a big corpus</td><td>Retrieval</td><td>Fetch the slice rather than the whole</td></tr>
+    <tr><td>Answers degrade as the window grows</td><td>Compaction and retrieval</td><td>A focused window beats a bloated one</td></tr>
+    <tr><td>Latency rises through a long session</td><td>Caching and a token budget</td><td>Smaller prefill means a faster first token</td></tr>
+  </tbody>
+</table>
+
+<p>The thread running through all of it is the thesis we started with. An agentic loop grows its own context as a side effect of doing its work, and on a stateless endpoint that growth is paid for again on every step. The model gets the attention. The loop deserves the engineering. Treat the window as a scarce resource that has to be actively governed, decide on purpose what stays and what goes, and the same loop that ran away from you becomes predictable in cost, steady in latency, and sharper in its answers.</p>
+      </div>
+
+      <section class="prose refs">
+        <h2>References</h2>
+        <ol>
+          <li>Anthropic. How tool use works, the agent loop and the stop reason contract.<span class="src">https://platform.claude.com/docs/en/agents-and-tools/tool-use/how-tool-use-works</span></li>
+          <li>Anthropic. Tool use with Claude, the overview of client and server tools.<span class="src">https://platform.claude.com/docs/en/agents-and-tools/tool-use/overview</span></li>
+          <li>Anthropic. Using the Messages endpoint, stateless requests and full history.<span class="src">https://platform.claude.com/docs/en/build-with-claude/working-with-messages</span></li>
+          <li>Anthropic. Prompt caching, lifetime options and the pricing multipliers.<span class="src">https://platform.claude.com/docs/en/build-with-claude/prompt-caching</span></li>
+          <li>Anthropic. Pricing for Claude models per million tokens.<span class="src">https://www.anthropic.com/pricing</span></li>
+          <li>Anthropic. Building effective agents, orchestration and subagent patterns.<span class="src">https://www.anthropic.com/engineering/building-effective-agents</span></li>
+          <li>Yao and colleagues. ReAct, synergizing reasoning and acting in language models.<span class="src">https://arxiv.org/abs/2210.03629</span></li>
+          <li>Liu and colleagues. Lost in the Middle, how language models use long contexts.<span class="src">https://arxiv.org/abs/2307.03172</span></li>
+        </ol>
+      </section>
+
+      <div class="article-foot">
+        <div class="cta-row">
+          <a class="btn primary" href="https://github.com/akanjilal-work">See the work</a>
+          <a class="btn" href="/blog/">More writing</a>
+        </div>
+      </div>
+    </div>
+  </article>
+</main>
+
+<footer>
+  <div class="wrap foot">
+    <div class="links">
+      <a href="https://github.com/akanjilal-work">GitHub</a>
+      <a href="https://www.linkedin.com/in/akanjilal/">LinkedIn</a>
+      <a href="mailto:anirban.kanjilal@gmail.com">Email</a>
+    </div>
+    <div class="copy">© 2026 Anirban Kanjilal</div>
+  </div>
+</footer>
+
+</body>
+</html>
