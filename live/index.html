@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Live, connectors, quantum feed, and vendor health, Anirban Kanjilal</title>
+<meta name="description" content="A self refreshing view of the Model Context Protocol servers published by the major clouds, the latest quantum activity, and the current status of the main quantum vendors. Refreshed every four hours from official public sources.">
+<meta property="og:title" content="Live, connectors, quantum feed, and vendor health">
+<meta property="og:description" content="Model Context Protocol servers, the latest quantum activity, and vendor status. Refreshed every four hours from official public sources.">
+<meta property="og:type" content="website">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/site.css">
+</head>
+<body>
+
+<header class="bar">
+  <div class="wrap">
+    <a class="brand" href="/">akanjilal<span class="dot">.dev</span></a>
+    <nav class="nav" aria-label="Primary">
+      <a href="/#work">work</a>
+      <a href="/blog/">my blogs</a>
+      <a href="/architectures/">architectures</a>
+      <a href="/live/" aria-current="page">live</a>
+      <a href="/#background">background</a>
+      <a class="ext" href="https://github.com/akanjilal-work">github</a>
+      <a class="ext" href="https://www.linkedin.com/in/akanjilal/">linkedin</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <article class="article">
+    <div class="wrap">
+      <div class="article-head">
+        <div class="meta"><span>Live</span><span id="refreshed">Loading the latest data</span><span>Updates every four hours</span></div>
+        <h1>Connectors, quantum feed, and vendor health</h1>
+        <p class="standfirst">A self refreshing view of the Model Context Protocol servers published by the major clouds, the latest quantum activity, and the current status of the main quantum vendors. The data is collected from official public sources by a scheduled job and baked into the site, so nothing is fetched from a third party in your browser.</p>
+      </div>
+
+      <section class="prose">
+        <h2>Connectors</h2>
+        <p>Model Context Protocol servers, read directly from the Amazon, Google, and Microsoft repositories.</p>
+        <div id="connectors" class="grid"></div>
+      </section>
+
+      <section class="prose">
+        <h2>Quantum feed</h2>
+        <p>The latest releases and announcements from Amazon Braket, IBM Quantum, Google Quantum AI, and Microsoft Azure Quantum.</p>
+        <div id="feed" class="feed"></div>
+      </section>
+
+      <section class="prose">
+        <h2>Vendor health</h2>
+        <p>Public service status for the main quantum vendors. Where a vendor publishes a machine readable status feed it shows a live badge, otherwise it links the human status page. Device level availability needs credentials and is intentionally out of scope for a public site.</p>
+        <div id="health" class="status-grid"></div>
+      </section>
+    </div>
+  </article>
+</main>
+
+<footer>
+  <div class="wrap foot">
+    <div class="links">
+      <a href="https://github.com/akanjilal-work">GitHub</a>
+      <a href="https://www.linkedin.com/in/akanjilal/">LinkedIn</a>
+      <a href="mailto:anirban.kanjilal@gmail.com">Email</a>
+    </div>
+    <div class="copy">© 2026 Anirban Kanjilal · refreshed every four hours from official public sources</div>
+  </div>
+</footer>
+
+<script>
+const VENDOR = { aws: "Amazon", google: "Google", microsoft: "Microsoft", ibm: "IBM",
+                 ionq: "IonQ", dwave: "D-Wave", rigetti: "Rigetti", quantinuum: "Quantinuum" };
+const esc = (s) => { const d = document.createElement("div"); d.textContent = s == null ? "" : String(s); return d.innerHTML; };
+const fmt = (d) => d ? new Date(d).toLocaleDateString("en-CA", { year: "numeric", month: "short", day: "numeric" }) : "";
+
+async function load(path) {
+  try { const r = await fetch(path, { cache: "no-store" }); return r.ok ? r.json() : null; }
+  catch { return null; }
+}
+
+function connectorCard(c) {
+  return `<a class="card connector v-${esc(c.vendor)}" href="${esc(c.repo_url)}">
+    <div class="card-top"><span class="vendor-chip">${esc(VENDOR[c.vendor] || c.vendor)}</span>${c.version ? `<span class="ver">${esc(c.version)}</span>` : ""}</div>
+    <h3>${esc(c.name)}</h3>
+    ${c.description ? `<p>${esc(c.description)}</p>` : ""}
+    ${c.install ? `<code class="install">${esc(c.install)}</code>` : ""}
+    <div class="card-foot">${c.stars != null ? esc(c.stars) + " stars" : ""}${c.updated_at ? " · " + fmt(c.updated_at) : ""}</div>
+  </a>`;
+}
+
+function feedRow(i) {
+  return `<a class="feed-row" href="${esc(i.url)}">
+    <span class="vendor-chip">${esc(VENDOR[i.vendor] || i.vendor)}</span>
+    <span class="tag ${esc(i.type)}">${esc(i.type)}</span>
+    <span class="feed-title">${esc(i.title)}</span>
+    <span class="feed-date">${fmt(i.published_at)}</span>
+  </a>`;
+}
+
+function healthCell(h) {
+  return `<a class="status ${esc(h.indicator)}" href="${esc(h.url)}">
+    <span class="status-dot"></span>
+    <span class="status-name">${esc(VENDOR[h.vendor] || h.vendor)}<small>${esc(h.scope || "")}</small></span>
+    <span class="status-label">${esc(h.label)}</span>
+  </a>`;
+}
+
+(async () => {
+  const [conn, feed, health, meta] = await Promise.all([
+    load("/assets/data/connectors.json"), load("/assets/data/quantum-feed.json"),
+    load("/assets/data/quantum-health.json"), load("/assets/data/_meta.json")
+  ]);
+
+  const refreshed = document.getElementById("refreshed");
+  refreshed.textContent = meta && meta.updated_at
+    ? "Last refreshed " + new Date(meta.updated_at).toUTCString()
+    : "Live data unavailable";
+
+  const connEl = document.getElementById("connectors");
+  connEl.innerHTML = conn && conn.items && conn.items.length
+    ? conn.items.map(connectorCard).join("")
+    : `<p class="feed-empty">Connector data could not be loaded right now.</p>`;
+
+  const feedEl = document.getElementById("feed");
+  feedEl.innerHTML = feed && feed.items && feed.items.length
+    ? feed.items.slice(0, 20).map(feedRow).join("")
+    : `<p class="feed-empty">Feed data could not be loaded right now.</p>`;
+
+  const healthEl = document.getElementById("health");
+  healthEl.innerHTML = health && health.items && health.items.length
+    ? health.items.map(healthCell).join("")
+    : `<p class="feed-empty">Health data could not be loaded right now.</p>`;
+})();
+</script>
+
+</body>
+</html>
