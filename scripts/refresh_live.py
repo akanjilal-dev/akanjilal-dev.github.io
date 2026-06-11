@@ -115,7 +115,8 @@ def quantum_braket():
     resp = client.search_devices(filters=[])
     devices = []
     for d in resp.get("devices", []):
-        if d.get("deviceType") != "QPU":
+        # only real, current quantum processors: drop simulators and retired hardware
+        if d.get("deviceType") != "QPU" or d.get("deviceStatus") == "RETIRED":
             continue
         online = d.get("deviceStatus") == "ONLINE"
         qubits = None
@@ -125,15 +126,20 @@ def quantum_braket():
         except Exception:
             pass
         devices.append({
-            "name": d.get("deviceName"), "provider": d.get("providerName"),
+            "name": ((d.get("providerName") or "") + " " + (d.get("deviceName") or "")).strip(),
+            "provider": d.get("providerName"),
             "qubits": qubits, "status": "online" if online else "offline",
         })
+    devices.sort(key=lambda d: (d["status"] != "online", d["name"]))
     online_count = sum(1 for d in devices if d["status"] == "online")
     status = "operational" if online_count else ("degraded" if devices else "down")
+    note = ", ".join(d["name"] + (" " + str(d["qubits"]) + "q" if d["qubits"] else "") + " (" + d["status"] + ")"
+                     for d in devices) or None
     return {
         "provider": "Amazon Braket", "status": status, "source": "api",
         "device_count": len(devices), "online_count": online_count, "devices": devices,
-        "url": "https://aws.amazon.com/braket/", "region": region,
+        "url": "https://%s.console.aws.amazon.com/braket/home?region=%s#/devices" % (region, region),
+        "region": region, "note": note,
     }
 
 
