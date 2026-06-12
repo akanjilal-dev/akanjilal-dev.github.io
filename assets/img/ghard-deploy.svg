@@ -1,0 +1,72 @@
+<svg viewBox="0 0 1180 470" role="img" xmlns="http://www.w3.org/2000/svg" aria-label="A second single use runner runs the deploy. It verifies the signature again with the in account key, and only a verified image is allowed to update the service. The application runs behind a public load balancer, where the visitor opens it and reads the image fingerprint and the verified state it reports about itself.">
+
+  <style>
+    .bg{fill:#FFFFFF}
+    text{font-family:'IBM Plex Sans',system-ui,sans-serif}
+    .eyebrow{font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:13px;letter-spacing:2.5px;fill:#4B3FE4;font-weight:600}
+    .head{font-size:21px;font-weight:700;fill:#10131C}
+    .box{fill:#FFFFFF;stroke:#DCE1EE;stroke-width:1.5}
+    .lbl{fill:#10131C;font-size:13.5px;font-weight:600}
+    .sub{fill:#586079;font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:10.5px}
+    .conn{stroke:#AEB5C8;stroke-width:1.6;fill:none}
+    .clbl{fill:#737B92;font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:10px}
+    .leg{fill:#737B92;font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:11px}
+    .wm{fill:#AEB5C8;font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:11px}
+    .tagtext{fill:#FFFFFF;font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:11px;font-weight:600;letter-spacing:.4px}
+    .num{fill:#FFFFFF;font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:12px;font-weight:700}
+    @media (prefers-color-scheme:dark){
+      .bg{fill:#0C0F22}
+      .head{fill:#E9EBF6}
+      .eyebrow{fill:#8E80FF}
+      .box{fill:#12162E;stroke:#242A4A}
+      .lbl{fill:#E9EBF6}
+      .sub,.clbl,.leg{fill:#9AA0BC}
+      .conn{stroke:#3C4368}
+      .wm{fill:#444B70}
+    }
+  </style>
+
+    <defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#AEB5C8"/></marker><marker id="ah2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#AEB5C8"/></marker><marker id="ahs" viewBox="0 0 10 10" refX="1" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M10,0 L0,5 L10,10 z" fill="#AEB5C8"/></marker><marker id="ahG" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#3F8C2E"/></marker><marker id="ahR" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#C7131F"/></marker></defs>
+    <rect class="bg" x="0" y="0" width="1180" height="470"/>
+    <text class="eyebrow" x="26" y="34">LIVE DEMO · DEPLOY AND SERVE</text>
+    <text class="head" x="26" y="62">Only a verified image reaches the running application</text>
+    <rect class="box" x="40" y="170" width="220" height="64" rx="11"/>
+    <rect x="54" y="189.0" width="26" height="26" rx="6" fill="#ED7100"/>
+    <text class="lbl" x="94" y="192">Deploy gate</text>
+    <text class="sub" x="94" y="209">verify the signature</text>
+    <text class="sub" x="94" y="223">before admitting</text>
+    <rect class="box" x="330" y="120" width="250" height="60" rx="11"/>
+    <rect x="344" y="137.0" width="26" height="26" rx="6" fill="#3F8C2E"/>
+    <text class="lbl" x="384" y="148.0">Signed image</text>
+    <text class="sub" x="384" y="165.0">from the registry</text>
+    <rect class="box" x="330" y="250" width="250" height="60" rx="11"/>
+    <rect x="344" y="267.0" width="26" height="26" rx="6" fill="#C7131F"/>
+    <text class="lbl" x="384" y="278.0">In account key</text>
+    <text class="sub" x="384" y="295.0">public half verifies</text>
+    <path d="M 330 150 L 262 190" fill="none" stroke="#3F8C2E" stroke-width="1.8" marker-end="url(#ahG)"/>
+    <text x="300" y="140" text-anchor="middle" fill="#3F8C2E" font-family="IBM Plex Mono,monospace" font-size="10.5" font-weight="600">the image</text>
+    <path d="M 330 280 L 262 215" fill="none" stroke="#3F8C2E" stroke-width="1.8" marker-end="url(#ahG)" stroke-dasharray="6 5"/>
+    <text x="300" y="270" text-anchor="middle" fill="#3F8C2E" font-family="IBM Plex Mono,monospace" font-size="10.5" font-weight="600">the signature</text>
+    <circle cx="285" cy="202" r="11" fill="#FFFFFF" stroke="#3F8C2E" stroke-width="1.8"/>
+    <path d="M 280 202 L 283.5 206 L 290.5 197.5" fill="none" stroke="#3F8C2E" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>
+    <rect class="box" x="660" y="170" width="280" height="64" rx="11"/>
+    <rect x="674" y="189.0" width="26" height="26" rx="6" fill="#ED7100"/>
+    <text class="lbl" x="714" y="192">Application service</text>
+    <text class="sub" x="714" y="209">load balanced</text>
+    <text class="sub" x="714" y="223">runs the verified image</text>
+    <path class="conn" d="M 260 202 L 658 202" marker-end="url(#ah)"/>
+    <text class="clbl" x="460" y="188" text-anchor="middle">verified, roll out</text>
+    <rect class="box" x="660" y="320" width="280" height="56" rx="11"/>
+    <rect x="674" y="335.0" width="26" height="26" rx="6" fill="#64748B"/>
+    <text class="lbl" x="714" y="346.0">Visitor</text>
+    <text class="sub" x="714" y="363.0">opens the public address</text>
+    <path class="conn" d="M 800 234 L 800 318" marker-end="url(#ah)"/>
+    <text class="clbl" x="862" y="280" text-anchor="middle">reads provenance</text>
+    <rect x="24" y="434" width="12" height="12" rx="3" fill="#C7131F"/>
+    <text class="leg" x="42" y="444">Security</text>
+    <rect x="114.8" y="434" width="12" height="12" rx="3" fill="#ED7100"/>
+    <text class="leg" x="132.8" y="444">Compute</text>
+    <rect x="198.0" y="434" width="12" height="12" rx="3" fill="#3F8C2E"/>
+    <text class="leg" x="216.0" y="444">Storage</text>
+    <text class="wm" x="1156" y="444" text-anchor="end">akanjilal.dev</text>
+</svg>

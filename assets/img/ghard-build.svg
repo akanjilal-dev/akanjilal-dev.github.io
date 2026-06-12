@@ -1,0 +1,87 @@
+<svg viewBox="0 0 1180 520" role="img" xmlns="http://www.w3.org/2000/svg" aria-label="The single use runner starts on an account owned instance in a private subnet. It builds the image with a rootless engine, pushes it to the registry that only the runner identity may write to, signs it with the in account key, and attaches a software bill of materials. Then the task exits.">
+
+  <style>
+    .bg{fill:#FFFFFF}
+    text{font-family:'IBM Plex Sans',system-ui,sans-serif}
+    .eyebrow{font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:13px;letter-spacing:2.5px;fill:#4B3FE4;font-weight:600}
+    .head{font-size:21px;font-weight:700;fill:#10131C}
+    .box{fill:#FFFFFF;stroke:#DCE1EE;stroke-width:1.5}
+    .lbl{fill:#10131C;font-size:13.5px;font-weight:600}
+    .sub{fill:#586079;font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:10.5px}
+    .conn{stroke:#AEB5C8;stroke-width:1.6;fill:none}
+    .clbl{fill:#737B92;font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:10px}
+    .leg{fill:#737B92;font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:11px}
+    .wm{fill:#AEB5C8;font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:11px}
+    .tagtext{fill:#FFFFFF;font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:11px;font-weight:600;letter-spacing:.4px}
+    .num{fill:#FFFFFF;font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:12px;font-weight:700}
+    @media (prefers-color-scheme:dark){
+      .bg{fill:#0C0F22}
+      .head{fill:#E9EBF6}
+      .eyebrow{fill:#8E80FF}
+      .box{fill:#12162E;stroke:#242A4A}
+      .lbl{fill:#E9EBF6}
+      .sub,.clbl,.leg{fill:#9AA0BC}
+      .conn{stroke:#3C4368}
+      .wm{fill:#444B70}
+    }
+  </style>
+
+    <defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#AEB5C8"/></marker><marker id="ah2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#AEB5C8"/></marker><marker id="ahs" viewBox="0 0 10 10" refX="1" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M10,0 L0,5 L10,10 z" fill="#AEB5C8"/></marker><marker id="ahG" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#3F8C2E"/></marker><marker id="ahR" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#C7131F"/></marker></defs>
+    <rect class="bg" x="0" y="0" width="1180" height="520"/>
+    <text class="eyebrow" x="26" y="34">LIVE DEMO · BUILD AND SIGN</text>
+    <text class="head" x="26" y="62">The runner builds without root and signs in the account</text>
+    <rect x="20" y="96" width="1140" height="320" rx="16" fill="none" stroke="#ED7100" stroke-width="1.6" stroke-dasharray="7 6" opacity="0.85"/>
+    <rect x="38" y="83" width="293.2" height="26" rx="8" fill="#ED7100"/>
+    <text class="tagtext" x="184.6" y="100" text-anchor="middle">ONE SINGLE USE RUNNER · PRIVATE SUBNET</text>
+    <rect class="box" x="50" y="120" width="560" height="44" rx="11"/>
+    <rect x="64" y="127.0" width="30" height="30" rx="8" fill="#64748B"/>
+    <text class="num" x="80" y="146.0" text-anchor="middle">01</text>
+    <text class="lbl" x="110" y="140.0">Start</text>
+    <text class="sub" x="110" y="157.0">single use task on an account owned instance</text>
+    <rect class="box" x="50" y="169" width="560" height="44" rx="11"/>
+    <rect x="64" y="176.0" width="30" height="30" rx="8" fill="#ED7100"/>
+    <text class="num" x="80" y="195.0" text-anchor="middle">02</text>
+    <text class="lbl" x="110" y="189.0">Build</text>
+    <text class="sub" x="110" y="206.0">rootless engine, no shared daemon</text>
+    <rect class="box" x="50" y="218" width="560" height="44" rx="11"/>
+    <rect x="64" y="225.0" width="30" height="30" rx="8" fill="#3F8C2E"/>
+    <text class="num" x="80" y="244.0" text-anchor="middle">03</text>
+    <text class="lbl" x="110" y="238.0">Push</text>
+    <text class="sub" x="110" y="255.0">to the registry only the runner can write to</text>
+    <rect class="box" x="50" y="267" width="560" height="44" rx="11"/>
+    <rect x="64" y="274.0" width="30" height="30" rx="8" fill="#C7131F"/>
+    <text class="num" x="80" y="293.0" text-anchor="middle">04</text>
+    <text class="lbl" x="110" y="287.0">Sign</text>
+    <text class="sub" x="110" y="304.0">cosign with the in account key, no public log</text>
+    <rect class="box" x="50" y="316" width="560" height="44" rx="11"/>
+    <rect x="64" y="323.0" width="30" height="30" rx="8" fill="#C7131F"/>
+    <text class="num" x="80" y="342.0" text-anchor="middle">05</text>
+    <text class="lbl" x="110" y="336.0">Attest</text>
+    <text class="sub" x="110" y="353.0">attach the software bill of materials</text>
+    <rect class="box" x="50" y="365" width="560" height="44" rx="11"/>
+    <rect x="64" y="372.0" width="30" height="30" rx="8" fill="#64748B"/>
+    <text class="num" x="80" y="391.0" text-anchor="middle">06</text>
+    <text class="lbl" x="110" y="385.0">Exit</text>
+    <text class="sub" x="110" y="402.0">the task stops, capacity is reclaimed</text>
+    <rect class="box" x="700" y="150" width="250" height="60" rx="11"/>
+    <rect x="714" y="167.0" width="26" height="26" rx="6" fill="#3F8C2E"/>
+    <text class="lbl" x="754" y="178.0">Signed image</text>
+    <text class="sub" x="754" y="195.0">in the registry</text>
+    <rect class="box" x="700" y="250" width="250" height="60" rx="11"/>
+    <rect x="714" y="267.0" width="26" height="26" rx="6" fill="#C7131F"/>
+    <text class="lbl" x="754" y="278.0">Signature + bill of materials</text>
+    <text class="sub" x="754" y="295.0">stored beside the image</text>
+    <rect class="box" x="700" y="350" width="250" height="56" rx="11"/>
+    <rect x="714" y="365.0" width="26" height="26" rx="6" fill="#C7131F"/>
+    <text class="lbl" x="754" y="376.0">In account signing key</text>
+    <text class="sub" x="754" y="393.0">Key Management Service</text>
+    <path class="conn" d="M 612 218 L 698 180" marker-end="url(#ah)"/>
+    <path class="conn" d="M 612 218 L 698 280" marker-end="url(#ah)"/>
+    <rect x="24" y="484" width="12" height="12" rx="3" fill="#C7131F"/>
+    <text class="leg" x="42" y="494">Security</text>
+    <rect x="114.8" y="484" width="12" height="12" rx="3" fill="#ED7100"/>
+    <text class="leg" x="132.8" y="494">Compute</text>
+    <rect x="198.0" y="484" width="12" height="12" rx="3" fill="#3F8C2E"/>
+    <text class="leg" x="216.0" y="494">Storage</text>
+    <text class="wm" x="1156" y="494" text-anchor="end">akanjilal.dev</text>
+</svg>

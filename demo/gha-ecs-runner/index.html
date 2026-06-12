@@ -3,36 +3,58 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>gha-ecs-runner, watch one build prove it is private, gated, and signed, Anirban Kanjilal</title>
-<meta name="description" content="A guided walkthrough of one real build on the gha-ecs-runner plane: a queued job becomes an ephemeral Fargate task, builds daemonlessly, pushes to ECR, and is signed in the account, then we prove that no other principal can push, that the image is signed, and that no public path exists.">
-<meta property="og:title" content="gha-ecs-runner, one build proven private, gated, and signed">
-<meta property="og:description" content="A queued job becomes an ephemeral Fargate runner that builds, pushes, and signs, then vanishes, with the registry locked so only the runner can push.">
+<title>gha-ecs-runner, a live build you can trigger, Anirban Kanjilal</title>
+<meta name="description" content="Press a button and watch a real build run on a private, single use runner in an Amazon Web Services account. The runner builds a container image without root, pushes it to a registry only it can write to, signs it in the account, and a deploy gate verifies the signature before the application is rolled out behind a load balancer.">
+<meta property="og:title" content="gha-ecs-runner, a live build you can trigger">
+<meta property="og:description" content="A real build on a private, single use runner, with a registry gate, in account signing, and a live application at the end.">
 <meta property="og:type" content="website">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/assets/site.css">
 <style>
-  .demo{padding:48px 0 24px;max-width:840px;margin:0 auto}
+  .demo{padding:48px 0 24px;max-width:860px;margin:0 auto}
   .demo .lead{color:var(--muted);font-size:16.5px;margin:14px 0 0}
   .note{margin:18px 0 0;font-family:"IBM Plex Mono",monospace;font-size:12.5px;color:var(--muted);
     background:var(--accent-soft);border:1px solid var(--hairline);border-radius:11px;padding:13px 15px;line-height:1.55}
-  .claims{display:flex;gap:10px;flex-wrap:wrap;margin:22px 0 6px}
-  .claim{font-family:"IBM Plex Mono",monospace;font-size:12px;color:var(--ink);background:var(--surface);
-    border:1px solid var(--hairline);border-radius:9px;padding:8px 12px}
-  .claim b{color:var(--accent)}
-  .step{margin:34px 0 0;border-top:1px solid var(--hairline);padding-top:24px}
-  .step .sn{font-family:"IBM Plex Mono",monospace;font-size:12px;color:var(--accent);font-weight:600;letter-spacing:.05em}
-  .step h2{font-size:19px;margin:6px 0 8px;letter-spacing:-0.01em}
-  .step p{color:var(--muted);font-size:15px;line-height:1.55;margin:0 0 14px}
-  .term{background:var(--code-bg);color:var(--code-ink);border:1px solid var(--hairline);border-radius:12px;
-    padding:16px 18px;font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:12.5px;line-height:1.62;
-    white-space:pre-wrap;word-break:break-word;overflow:auto}
-  .term .c{color:var(--code-faint)}
-  .term .p{color:var(--code-kw)}
-  .term .ok{color:var(--code-str);font-weight:600}
-  .term .bad{color:#ff8d85;font-weight:600}
-  .term .hi{color:#E7E9F6;font-weight:600}
+  .demo h2{font-size:20px;margin:40px 0 6px;letter-spacing:-0.01em}
+  .demo p{color:var(--muted);font-size:15.5px;line-height:1.6;margin:10px 0}
+  figure.diagram{margin:22px 0}
+  figure.diagram img{width:100%;height:auto;display:block}
+  figure.diagram figcaption{font-size:13px;color:var(--faint);margin-top:8px;font-family:"IBM Plex Sans",sans-serif}
+  /* live panel */
+  .run{margin:18px 0 0;border:1px solid var(--hairline);border-radius:16px;background:var(--surface);padding:20px}
+  .run-top{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+  .runbtn{font-family:"IBM Plex Mono",monospace;font-size:14.5px;font-weight:600;padding:12px 22px;border-radius:10px;
+    border:1px solid var(--accent);background:var(--accent);color:#fff;cursor:pointer;transition:background .15s,transform .12s}
+  .runbtn:hover:not(:disabled){background:var(--accent-ink);transform:translateY(-1px)}
+  .runbtn:disabled{opacity:.55;cursor:not-allowed}
+  .runstat{font-family:"IBM Plex Mono",monospace;font-size:12.5px;color:var(--muted)}
+  .ms-list{list-style:none;padding:0;margin:20px 0 0;display:flex;flex-direction:column;gap:2px}
+  .ms{display:flex;align-items:center;gap:12px;padding:9px 10px;border-radius:9px;font-size:14px}
+  .ms .dot{width:16px;height:16px;border-radius:50%;flex:none;border:2px solid var(--hairline);background:var(--paper)}
+  .ms.done .dot{background:#1F9D7A;border-color:#1F9D7A;position:relative}
+  .ms.done .dot::after{content:"";position:absolute;left:4px;top:1.5px;width:4px;height:8px;border:solid #fff;border-width:0 2px 2px 0;transform:rotate(45deg)}
+  .ms.active .dot{border-color:var(--accent);background:var(--accent);animation:pulse 1s infinite}
+  .ms.failed .dot{background:#C7131F;border-color:#C7131F}
+  @keyframes pulse{0%,100%{box-shadow:0 0 0 0 color-mix(in srgb,var(--accent) 45%,transparent)}50%{box-shadow:0 0 0 6px transparent}}
+  .ms.pending{color:var(--faint)}
+  .ms.done,.ms.active{color:var(--ink)}
+  .ms.failed{color:#C7131F}
+  .ms.active{font-weight:600}
+  .logs{margin-top:18px;display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  @media(max-width:680px){.logs{grid-template-columns:1fr}}
+  .logbox h3{font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--faint);margin:0 0 6px}
+  .term{background:var(--code-bg);color:var(--code-ink);border:1px solid var(--hairline);border-radius:11px;padding:13px 14px;
+    font-family:"IBM Plex Mono",monospace;font-size:11.5px;line-height:1.6;white-space:pre-wrap;word-break:break-word;
+    min-height:70px;max-height:240px;overflow:auto}
+  .term .ok{color:var(--code-str)}.term .mut{color:var(--code-faint)}
+  .appcard{margin-top:18px;border:1px solid var(--hairline);border-radius:12px;overflow:hidden}
+  .appcard h3{margin:0;font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:.08em;text-transform:uppercase;
+    padding:10px 14px;background:var(--paper);color:var(--faint)}
+  .appbody{padding:14px;font-family:"IBM Plex Mono",monospace;font-size:12.5px;white-space:pre-wrap}
+  .appbody a{color:var(--accent)}
+  .verified{color:#1F9D7A;font-weight:600}
   .demo-foot{margin-top:34px;display:flex;gap:12px;flex-wrap:wrap}
 </style>
 </head>
@@ -56,126 +78,53 @@
   <div class="wrap">
     <div class="demo">
       <div class="page-head" style="padding:0">
-        <div class="kicker">Reference walkthrough</div>
-        <h1>One build, proven private, gated, and signed</h1>
-        <p class="lead">This is one real build on the <a href="https://github.com/akanjilal-work/gha-ecs-runner">gha-ecs-runner</a> plane, start to finish. A queued job becomes a single ephemeral Fargate task that builds an image without a Docker daemon, pushes it to Amazon ECR, signs it in the account, and disappears. Then we prove the three things that make it trustworthy.</p>
-        <div class="claims">
-          <span class="claim"><b>1</b> &nbsp;the build is private</span>
-          <span class="claim"><b>2</b> &nbsp;only the runner can push</span>
-          <span class="claim"><b>3</b> &nbsp;every image is signed in-account</span>
+        <div class="kicker">Live demo</div>
+        <h1>Press a button and watch a real build run</h1>
+        <p class="lead">This page runs a real build in a real Amazon Web Services account. When you press the button below, a single use runner starts on private, account owned compute, builds a container image without root, pushes it to a registry that only the runner identity may write to, signs it inside the account, and a deploy gate verifies that signature before the application is rolled out behind a load balancer. At the end you get a working web address that reports its own provenance.</p>
+        <p class="note">This is the build plane described in the <a href="/architectures/managed-gha-runners-ecs/">reference architecture</a>, running for real. The runner, the registry, the signing key, the deploy gate, and the application are all live in the region Canada Central. The page below talks to a small control interface that holds the credentials, so your browser only ever asks for a build and reads its state. Builds are limited per day to keep cost bounded.</p>
+      </div>
+
+      <!-- LIVE PANEL -->
+      <div class="run" id="run">
+        <div class="run-top">
+          <button class="runbtn" id="runbtn">Run a build</button>
+          <span class="runstat" id="runstat">Press the button to start a real build.</span>
         </div>
-        <p class="note">Unlike the other demos on this site, this one runs on live AWS infrastructure, so it cannot execute in your browser. The commands and outputs below are what the pipeline produces on a real run; the full Terraform, runner image, and control plane are linked so you can stand it up in your own account and reproduce every step. Identifiers are illustrative.</p>
+        <ul class="ms-list" id="mslist" hidden></ul>
+        <div class="logs" id="logs" hidden>
+          <div class="logbox"><h3>Pipeline steps</h3><div class="term" id="steps"></div></div>
+          <div class="logbox"><h3>Runner output</h3><div class="term" id="filtered"></div></div>
+        </div>
+        <div class="appcard" id="appcard" hidden>
+          <h3>The running application</h3>
+          <div class="appbody" id="appbody"></div>
+        </div>
       </div>
 
-      <div class="step">
-        <div class="sn">STEP 01</div>
-        <h2>The job queues, a runner appears</h2>
-        <p>A workflow targets the self-hosted labels. The webhook fires over the private API, the scale-up function mints a single-use registration, and exactly one Fargate task starts in a private subnet, tagged with the job it serves.</p>
-        <div class="term"><span class="c"># a job with runs-on: [self-hosted, ecs, linux, x64] was just queued</span>
-<span class="p">$</span> aws ecs list-tasks --cluster gha-ecs-runner --desired-status RUNNING
-{
-    "taskArns": [
-        "arn:aws:ecs:ca-central-1:&lt;account&gt;:task/gha-ecs-runner/<span class="hi">7b9c1f0a4e2d</span>"
-    ]
-}
-<span class="p">$</span> aws ecs describe-tasks --cluster gha-ecs-runner --tasks 7b9c1f0a4e2d \
-      --query 'tasks[0].{status:lastStatus,ip:attachments[0].details[?name==`privateIPv4Address`].value|[0],tags:tags}'
-{
-    "status": "<span class="ok">RUNNING</span>",
-    "ip": "<span class="hi">10.20.7.143</span>",            <span class="c"># private subnet, no public IP</span>
-    "tags": { "github:repo": "demo-app", "github:job_id": "41827733120" }
-}
-<span class="c"># the runner registered with its single-use JIT config and picked up one job</span></div>
-      </div>
+      <h2>How it works, end to end</h2>
+      <p>The whole path is one straight line, from the button you press to the running application you open. A control interface starts a build on GitHub. The private control plane provisions one single use runner. The runner builds the image, pushes it to the registry only it can write to, and signs it in the account. A deploy gate verifies the signature and rolls the application out behind a load balancer.</p>
+      <figure class="diagram">
+        <img src="/assets/img/ghard-overview.svg" alt="A visitor presses the build button on the page, a control interface starts a build on GitHub, the private control plane provisions a single use runner on an account owned instance, the runner builds and pushes to the registry and signs with the in account key, a deploy gate verifies the signature, and the application is served behind a load balancer where the visitor opens it." loading="lazy">
+        <figcaption>The complete path, from the button to the running application.</figcaption>
+      </figure>
 
-      <div class="step">
-        <div class="sn">STEP 02</div>
-        <h2>The build runs without a daemon, and pushes</h2>
-        <p>Rootless BuildKit builds the image with no Docker socket and no privilege, and pushes straight to ECR using the task role through the credential helper, so there are no registry credentials anywhere in the pipeline.</p>
-        <div class="term"><span class="p">$</span> buildctl --addr $BUILDKIT_HOST build --frontend dockerfile.v0 \
-      --local context=. --local dockerfile=. \
-      --output type=image,name=$ECR_HOST/demo/app:$GIT_SHA,push=true
-<span class="c">#1 [internal] booting buildkit (rootless, no daemon)</span>
-<span class="c">#7 exporting to image</span>
-<span class="c">#7 pushing layers 2.3s done</span>
-<span class="c">#7 pushing manifest for ...dkr.ecr.ca-central-1.../demo/app:9f3c2a1</span>
-<span class="ok">#7 DONE 4.1s</span>
+      <h2>The runner builds without root and signs in the account</h2>
+      <p>The runner is a single use task on account owned compute, in a private subnet with no inbound access. It builds the image with a rootless engine rather than a shared daemon, so a build step has no root and no host. It pushes the result to the registry that only the runner identity is allowed to write to, signs the image with a key that never leaves the account, and attaches a software bill of materials. Then the task exits, and the next build gets a clean one.</p>
+      <figure class="diagram">
+        <img src="/assets/img/ghard-build.svg" alt="The single use runner starts on an account owned instance in a private subnet, builds with a rootless engine, pushes to the registry only the runner can write to, signs with the in account key, attaches the software bill of materials, and exits. The outputs are a signed image, a signature and bill of materials stored beside it, and the in account signing key." loading="lazy">
+        <figcaption>What the runner does, start to finish, on one single use task.</figcaption>
+      </figure>
 
-<span class="p">$</span> aws ecr describe-images --repository-name demo/app \
-      --image-ids imageTag=9f3c2a1 --query 'imageDetails[0].{tag:imageTags[0],pushedBy:imageManifestMediaType}'
-{ "tag": "<span class="hi">9f3c2a1</span>", "pushedBy": "application/vnd.oci.image.manifest.v1+json" }</div>
-      </div>
-
-      <div class="step">
-        <div class="sn">STEP 03</div>
-        <h2>Only the runner can push — everyone else is denied</h2>
-        <p>This is the control that makes &ldquo;all artifacts are built on our runners&rdquo; true rather than aspirational. The ECR repository policy allows the push actions only for the runner task role and denies them for every other principal. We try to push the same image as a developer role.</p>
-        <div class="term"><span class="p">$</span> aws sts get-caller-identity --query Arn --output text
-arn:aws:sts::&lt;account&gt;:assumed-role/<span class="hi">developer-poweruser</span>/anirban
-
-<span class="p">$</span> docker push &lt;account&gt;.dkr.ecr.ca-central-1.amazonaws.com/demo/app:rogue
-The push refers to repository [...demo/app]
-<span class="bad">denied: User: arn:aws:sts::&lt;account&gt;:assumed-role/developer-poweruser/anirban is not</span>
-<span class="bad">authorized to perform: ecr:InitiateLayerUpload on resource: ...demo/app because</span>
-<span class="bad">an explicit deny is in the resource-based policy</span>
-<span class="c"># even with PowerUser/AdministratorAccess on the identity, the repo policy Deny wins.</span>
-<span class="c"># the ONLY principal that can push is the runner task role:</span>
-<span class="ok">arn:aws:iam::&lt;account&gt;:role/gha-ecs-runner-task</span></div>
-      </div>
-
-      <div class="step">
-        <div class="sn">STEP 04</div>
-        <h2>Every image is signed, inside the account</h2>
-        <p>The runner signs the image with an in-account AWS KMS key and the transparency log disabled, so signing touches only KMS and ECR. There is no call to public Sigstore. Deploy targets run exactly this verification before admitting an image.</p>
-        <div class="term"><span class="p">$</span> cosign verify --insecure-ignore-tlog=true \
-      --key awskms:///alias/gha-ecs-runner-signing \
-      &lt;account&gt;.dkr.ecr.ca-central-1.amazonaws.com/demo/app:9f3c2a1
-
-<span class="ok">Verification for ...demo/app:9f3c2a1 --</span>
-The following checks were performed on each of these signatures:
-  - The cosign claims were validated
-  - <span class="ok">The signatures were verified against the specified public key</span>
-<span class="c"># no transparency-log lookup, because none was ever written.</span>
-
-<span class="p">$</span> cosign tree &lt;account&gt;.dkr.ecr.ca-central-1.amazonaws.com/demo/app:9f3c2a1
-📦 Supply Chain Security Related artifacts
-├── 🔐 Signatures for an image tag: ...demo/app:sha256-...sig
-└── 💾 Attestations for an image tag: ...demo/app:sha256-...att   <span class="c"># the SBOM</span></div>
-      </div>
-
-      <div class="step">
-        <div class="sn">STEP 05</div>
-        <h2>No public path exists</h2>
-        <p>The runner subnets have no route to an internet gateway or a NAT gateway, the security group egress is capped to the VPC, and every AWS call resolves to a private endpoint. The webhook is a private REST API that does not answer from outside the VPC.</p>
-        <div class="term"><span class="p">$</span> aws ec2 describe-route-tables --route-table-ids rtb-runner \
-      --query 'RouteTables[0].Routes[].DestinationCidrBlock'
-[ "10.20.0.0/16", "local" ]          <span class="c"># no 0.0.0.0/0 — no IGW, no NAT</span>
-
-<span class="p">$</span> aws ec2 describe-security-groups --group-ids sg-runner \
-      --query 'SecurityGroups[0].IpPermissionsEgress[0].IpRanges[0].CidrIp'
-"10.20.0.0/16"                       <span class="c"># egress only to the VPC CIDR</span>
-
-<span class="p">$</span> nslookup api.ecr.ca-central-1.amazonaws.com   <span class="c"># from inside the VPC</span>
-Address: <span class="hi">10.20.5.61</span>                  <span class="c"># the interface endpoint, a private IP</span>
-
-<span class="p">$</span> curl --max-time 8 https://&lt;api-id&gt;.execute-api.ca-central-1.amazonaws.com/hook   <span class="c"># from the internet</span>
-<span class="bad">curl: (28) Connection timed out</span>     <span class="c"># the private REST API does not resolve outside the VPC</span></div>
-      </div>
-
-      <div class="step">
-        <div class="sn">STEP 06</div>
-        <h2>The runner vanishes</h2>
-        <p>The job is done, the process exits, and the task stops. There is no scale-down controller, no idle runner left registered, and nothing to compromise between builds. The next job gets its own clean task.</p>
-        <div class="term"><span class="p">$</span> aws ecs describe-tasks --cluster gha-ecs-runner --tasks 7b9c1f0a4e2d \
-      --query 'tasks[0].{status:lastStatus,exit:containers[0].exitCode}'
-{ "status": "<span class="ok">STOPPED</span>", "exit": 0 }
-<span class="c"># runner deregistered from GitHub automatically — the JIT config was single-use.</span>
-<span class="c"># one task = one job = one signed artifact. capacity reclaimed.</span></div>
-      </div>
+      <h2>Only a verified image reaches the application</h2>
+      <p>The deploy runs on its own single use runner. It verifies the signature again with the in account key, and only a verified image is allowed to update the service. The application runs behind a public load balancer, where you can open it and read the image fingerprint it is running and the verified state it reports about itself. The registry gate and this deploy gate together mean the deployable set is exactly the images built by the runner and signed in the account.</p>
+      <figure class="diagram">
+        <img src="/assets/img/ghard-deploy.svg" alt="The deploy gate verifies the signature of the image against the in account key, and only the verified image is allowed to update the load balanced application service, which the visitor opens at a public address to read the provenance the application reports." loading="lazy">
+        <figcaption>The deploy gate, and the running application the visitor reaches.</figcaption>
+      </figure>
 
       <div class="demo-foot">
         <a class="btn primary" href="https://github.com/akanjilal-work/gha-ecs-runner">Read the code</a>
-        <a class="btn" href="/architectures/managed-gha-runners-ecs/">The architecture</a>
+        <a class="btn" href="/architectures/managed-gha-runners-ecs/">The reference architecture</a>
       </div>
     </div>
   </div>
@@ -188,9 +137,99 @@ Address: <span class="hi">10.20.5.61</span>                  <span class="c"># t
       <a href="https://www.linkedin.com/in/akanjilal/">LinkedIn</a>
       <a href="mailto:anirban.kanjilal@gmail.com">Email</a>
     </div>
-    <div class="copy">© 2026 Anirban Kanjilal · a guided walkthrough of a real run</div>
+    <div class="copy">© 2026 Anirban Kanjilal · this build runs on real infrastructure</div>
   </div>
 </footer>
+
+<script>
+const CTRL = "https://k76a7ec8qi.execute-api.ca-central-1.amazonaws.com";
+const btn = document.getElementById("runbtn");
+const stat = document.getElementById("runstat");
+const msList = document.getElementById("mslist");
+const logs = document.getElementById("logs");
+const stepsEl = document.getElementById("steps");
+const filteredEl = document.getElementById("filtered");
+const appcard = document.getElementById("appcard");
+const appbody = document.getElementById("appbody");
+let timer = null;
+
+function esc(s){ const d=document.createElement("div"); d.textContent=s==null?"":String(s); return d.innerHTML; }
+
+function renderMilestones(ms){
+  msList.hidden = false;
+  msList.innerHTML = ms.map(m =>
+    `<li class="ms ${m.state}"><span class="dot"></span><span>${esc(m.label)}</span></li>`).join("");
+}
+function renderSteps(steps){
+  logs.hidden = false;
+  const lines = steps.filter(s => s.status !== "queued" || s.conclusion).map(s => {
+    const mark = s.conclusion === "success" ? "ok" : (s.conclusion === "failure" ? "" : "mut");
+    const tag = s.conclusion ? s.conclusion : s.status;
+    return `<span class="${mark}">${esc(s.name)}  ·  ${esc(tag)}</span>`;
+  });
+  stepsEl.innerHTML = lines.length ? lines.join("\n") : '<span class="mut">waiting for the runner</span>';
+}
+function renderFiltered(lines){
+  filteredEl.innerHTML = (lines && lines.length)
+    ? lines.map(l => esc(l)).join("\n")
+    : '<span class="mut">the runner has not produced output yet</span>';
+}
+function renderApp(app, ms){
+  const live = ms.find(m => m.key === "live");
+  if (app && app.reachable){
+    appcard.hidden = false;
+    const v = app.signature_verified ? '<span class="verified">verified</span>' : 'not verified';
+    appbody.innerHTML =
+      `address: <a href="${esc(app.url)}" target="_blank">${esc(app.url)}</a>\n` +
+      `image:   ${esc(app.digest || "")}\n` +
+      `commit:  ${esc(app.git_sha || "")}\n` +
+      `built:   ${esc(app.built_at || "")}\n` +
+      `signature: ${v}` +
+      (live && live.state === "done" ? "\n\nthis is the build you just ran." : "");
+  }
+}
+
+async function poll(runId){
+  try{
+    const r = await fetch(`${CTRL}/status?run_id=${runId}`, {cache:"no-store"});
+    const d = await r.json();
+    renderMilestones(d.milestones || []);
+    renderSteps(d.steps || []);
+    renderFiltered(d.filtered || []);
+    renderApp(d.app || {}, d.milestones || []);
+    const liveDone = (d.milestones || []).some(m => m.key === "live" && m.state === "done");
+    if (d.failed){
+      stat.textContent = "the build failed. see the run on GitHub: " + (d.run && d.run.url || "");
+      stop(); return;
+    }
+    if (d.run && d.run.status === "completed" && liveDone){
+      stat.textContent = "done. the application above is running the image you just built and signed.";
+      stop(); return;
+    }
+    stat.textContent = "building... this takes a few minutes. leave the page open.";
+  }catch(e){
+    stat.textContent = "could not read the build state, retrying.";
+  }
+}
+function stop(){ if(timer){clearInterval(timer); timer=null;} btn.disabled=false; btn.textContent="Run another build"; }
+
+btn.addEventListener("click", async () => {
+  btn.disabled = true; btn.textContent = "starting...";
+  stat.textContent = "starting a build...";
+  appcard.hidden = true;
+  try{
+    const r = await fetch(`${CTRL}/trigger`, {method:"POST"});
+    const d = await r.json();
+    if (!d.run_id){ stat.textContent = d.error || "could not start the build."; btn.disabled=false; btn.textContent="Run a build"; return; }
+    stat.textContent = "build started. following it live...";
+    btn.textContent = "build running";
+    poll(d.run_id);
+    timer = setInterval(() => poll(d.run_id), 6000);
+  }catch(e){
+    stat.textContent = "could not reach the control interface."; btn.disabled=false; btn.textContent="Run a build";
+  }
+});
+</script>
 
 </body>
 </html>
