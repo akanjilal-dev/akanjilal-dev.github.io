@@ -30,6 +30,15 @@
   .runbtn:hover:not(:disabled){background:var(--accent-ink);transform:translateY(-1px)}
   .runbtn:disabled{opacity:.55;cursor:not-allowed}
   .runstat{font-family:"IBM Plex Mono",monospace;font-size:12.5px;color:var(--muted)}
+  .env-row{display:flex;align-items:center;gap:12px;margin-top:14px;flex-wrap:wrap;padding-top:14px;border-top:1px solid var(--hairline)}
+  .env-pill{font-family:"IBM Plex Mono",monospace;font-size:12px;padding:5px 11px;border-radius:999px;background:var(--chip);color:var(--muted)}
+  .env-pill.up{background:color-mix(in srgb,#1F9D7A 16%,transparent);color:#1F9D7A}
+  .env-pill.down{background:var(--chip);color:var(--faint)}
+  .env-pill.creating,.env-pill.destroying{background:var(--accent-soft);color:var(--accent)}
+  .envbtn{font-family:"IBM Plex Mono",monospace;font-size:12.5px;padding:8px 14px;border-radius:9px;border:1px solid var(--hairline);background:var(--surface);color:var(--ink);cursor:pointer}
+  .envbtn:hover:not(:disabled){border-color:var(--accent)}
+  .envbtn.danger{color:#C7131F;border-color:color-mix(in srgb,#C7131F 35%,transparent)}
+  .envbtn:disabled{opacity:.5;cursor:not-allowed}
   .ms-list{list-style:none;padding:0;margin:20px 0 0;display:flex;flex-direction:column;gap:2px}
   .ms{display:flex;align-items:center;gap:12px;padding:9px 10px;border-radius:9px;font-size:14px}
   .ms .dot{width:16px;height:16px;border-radius:50%;flex:none;border:2px solid var(--hairline);background:var(--paper)}
@@ -89,6 +98,12 @@
         <div class="run-top">
           <button class="runbtn" id="runbtn">Run a build</button>
           <span class="runstat" id="runstat">Press the button to start a real build.</span>
+        </div>
+        <div class="env-row">
+          <span class="env-pill" id="envpill">checking environment</span>
+          <button class="envbtn" id="recreatebtn" hidden>Recreate environment</button>
+          <button class="envbtn danger" id="destroybtn" hidden>Destroy environment</button>
+          <span class="runstat" id="envnote"></span>
         </div>
         <ul class="ms-list" id="mslist" hidden></ul>
         <div class="logs" id="logs" hidden>
@@ -151,7 +166,40 @@ const stepsEl = document.getElementById("steps");
 const filteredEl = document.getElementById("filtered");
 const appcard = document.getElementById("appcard");
 const appbody = document.getElementById("appbody");
-let timer = null;
+const envpill = document.getElementById("envpill");
+const recreatebtn = document.getElementById("recreatebtn");
+const destroybtn = document.getElementById("destroybtn");
+const envnote = document.getElementById("envnote");
+let timer = null, envTimer = null, running = false;
+
+async function checkEnv(){
+  try{
+    const d = await (await fetch(`${CTRL}/env-status`, {cache:"no-store"})).json();
+    const st = d.state || "unknown";
+    envpill.textContent = "environment: " + st;
+    envpill.className = "env-pill " + st;
+    const transitioning = (st === "creating" || st === "destroying");
+    btn.disabled = (st !== "up") || running;
+    destroybtn.hidden = (st !== "up");
+    recreatebtn.hidden = (st !== "down");
+    destroybtn.disabled = false; recreatebtn.disabled = false;
+    if (st === "down"){ envnote.textContent = "the environment is off, recreate it to run a build."; btn.textContent = "Run a build"; }
+    else if (st === "up"){ envnote.textContent = ""; }
+    else if (transitioning){ envnote.textContent = st === "creating" ? "bringing the environment up, this takes a few minutes." : "tearing the environment down."; }
+    if (transitioning){ clearTimeout(envTimer); envTimer = setTimeout(checkEnv, 8000); }
+  }catch(e){ envpill.textContent = "environment: unknown"; }
+}
+destroybtn.addEventListener("click", async () => {
+  if (!confirm("Destroy the environment? This stops all standing cost. You can recreate it later.")) return;
+  destroybtn.disabled = true; envnote.textContent = "starting teardown...";
+  try{ await fetch(`${CTRL}/destroy`, {method:"POST"}); checkEnv(); }
+  catch(e){ envnote.textContent = "could not start the teardown."; destroybtn.disabled = false; }
+});
+recreatebtn.addEventListener("click", async () => {
+  recreatebtn.disabled = true; envnote.textContent = "starting the environment...";
+  try{ await fetch(`${CTRL}/apply`, {method:"POST"}); checkEnv(); }
+  catch(e){ envnote.textContent = "could not start the environment."; recreatebtn.disabled = false; }
+});
 
 function esc(s){ const d=document.createElement("div"); d.textContent=s==null?"":String(s); return d.innerHTML; }
 
@@ -211,7 +259,7 @@ async function poll(runId){
     stat.textContent = "could not read the build state, retrying.";
   }
 }
-function stop(){ if(timer){clearInterval(timer); timer=null;} btn.disabled=false; btn.textContent="Run another build"; }
+function stop(){ if(timer){clearInterval(timer); timer=null;} running=false; btn.disabled=false; btn.textContent="Run another build"; checkEnv(); }
 
 btn.addEventListener("click", async () => {
   btn.disabled = true; btn.textContent = "starting...";
@@ -221,7 +269,7 @@ btn.addEventListener("click", async () => {
     const r = await fetch(`${CTRL}/trigger`, {method:"POST"});
     const d = await r.json();
     if (!d.run_id){ stat.textContent = d.error || "could not start the build."; btn.disabled=false; btn.textContent="Run a build"; return; }
-    stat.textContent = "build started. following it live...";
+    running = true; stat.textContent = "build started. following it live...";
     btn.textContent = "build running";
     poll(d.run_id);
     timer = setInterval(() => poll(d.run_id), 6000);
@@ -229,6 +277,8 @@ btn.addEventListener("click", async () => {
     stat.textContent = "could not reach the control interface."; btn.disabled=false; btn.textContent="Run a build";
   }
 });
+
+checkEnv();
 </script>
 
 </body>
