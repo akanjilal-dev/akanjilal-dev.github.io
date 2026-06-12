@@ -1,4 +1,4 @@
-<svg viewBox="0 0 1180 700" role="img" xmlns="http://www.w3.org/2000/svg" aria-label="A visitor presses a button on the page. A control interface starts a build on GitHub. The private control plane provisions one single use runner on an account owned instance, which builds the image, pushes it to the registry only it can write to, and signs it in the account. A deploy gate verifies the signature and rolls the application behind a load balancer, where the visitor can open it.">
+<svg viewBox="0 0 1180 740" role="img" xmlns="http://www.w3.org/2000/svg" aria-label="A visitor presses a button on the page. A control interface starts a build on GitHub. The private control plane provisions one single use runner on an account owned instance, which builds the image, pushes it to the registry only it can write to, and signs it in the account. A deploy gate verifies the signature and rolls the application behind a load balancer, where the visitor can open it.">
 
   <style>
     .bg{fill:#FFFFFF}
@@ -27,95 +27,87 @@
   </style>
 
     <defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#AEB5C8"/></marker><marker id="ah2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#AEB5C8"/></marker><marker id="ahs" viewBox="0 0 10 10" refX="1" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M10,0 L0,5 L10,10 z" fill="#AEB5C8"/></marker><marker id="ahG" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#3F8C2E"/></marker><marker id="ahR" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#C7131F"/></marker></defs>
-    <rect class="bg" x="0" y="0" width="1180" height="700"/>
+    <rect class="bg" x="0" y="0" width="1180" height="740"/>
     <text class="eyebrow" x="26" y="34">MANAGED GITHUB ACTIONS RUNNERS · LIVE DEMO</text>
     <text class="head" x="26" y="62">What happens when you press the build button</text>
-    <rect class="box" x="36" y="150" width="200" height="64" rx="11"/>
-    <rect x="50" y="169.0" width="26" height="26" rx="6" fill="#64748B"/>
-    <text class="lbl" x="90" y="172">Visitor</text>
-    <text class="sub" x="90" y="189">the demo page</text>
-    <text class="sub" x="90" y="203">in a browser</text>
-    <rect class="box" x="36" y="300" width="200" height="64" rx="11"/>
-    <rect x="50" y="319.0" width="26" height="26" rx="6" fill="#ED7100"/>
-    <text class="lbl" x="90" y="322">Control interface</text>
-    <text class="sub" x="90" y="339">public address</text>
-    <text class="sub" x="90" y="353">holds the credential</text>
-    <path class="conn" d="M 136 214 L 136 298" marker-end="url(#ah)"/>
-    <text class="clbl" x="196" y="262" text-anchor="middle">press build</text>
-    <rect x="270" y="96" width="880" height="540" rx="16" fill="none" stroke="#7A4FE0" stroke-width="1.6" stroke-dasharray="7 6" opacity="0.85"/>
-    <rect x="288" y="83" width="226.60000000000002" height="26" rx="8" fill="#7A4FE0"/>
-    <text class="tagtext" x="401.3" y="100" text-anchor="middle">AWS ACCOUNT · PRIVATE NETWORK</text>
-    <rect class="box" x="300" y="120" width="210" height="56" rx="11"/>
-    <rect x="314" y="135.0" width="26" height="26" rx="6" fill="#64748B"/>
-    <text class="lbl" x="354" y="146.0">GitHub.com</text>
-    <text class="sub" x="354" y="163.0">workflow + webhook</text>
-    <path class="conn" d="M 236 320 L 405 178" marker-end="url(#ah)"/>
-    <text class="clbl" x="320" y="250" text-anchor="middle">start a build</text>
-    <rect class="box" x="300" y="250" width="190" height="58" rx="11"/>
-    <rect x="314" y="266.0" width="26" height="26" rx="6" fill="#7A4FE0"/>
-    <text class="lbl" x="354" y="277.0">API Gateway</text>
-    <text class="sub" x="354" y="294.0">public webhook</text>
-    <rect class="box" x="520" y="250" width="190" height="58" rx="11"/>
-    <rect x="534" y="266.0" width="26" height="26" rx="6" fill="#ED7100"/>
-    <text class="lbl" x="574" y="277.0">Webhook + queue</text>
-    <text class="sub" x="574" y="294.0">verify, enqueue</text>
-    <rect class="box" x="740" y="250" width="190" height="58" rx="11"/>
-    <rect x="754" y="266.0" width="26" height="26" rx="6" fill="#ED7100"/>
-    <text class="lbl" x="794" y="277.0">Scale up</text>
-    <text class="sub" x="794" y="294.0">single use runner</text>
-    <path class="conn" d="M 405 176 L 395 248" marker-end="url(#ah)"/>
-    <text class="clbl" x="470" y="220" text-anchor="middle">workflow_job</text>
-    <path class="conn" d="M 490 279 L 518 279" marker-end="url(#ah)"/>
-    <path class="conn" d="M 710 279 L 738 279" marker-end="url(#ah)"/>
-    <rect class="box" x="300" y="380" width="200" height="60" rx="11"/>
-    <rect x="314" y="397.0" width="26" height="26" rx="6" fill="#ED7100"/>
-    <text class="lbl" x="354" y="402">Runner on EC2</text>
-    <text class="sub" x="354" y="419">rootless build</text>
-    <text class="sub" x="354" y="433">single use task</text>
-    <rect class="box" x="540" y="380" width="190" height="60" rx="11"/>
-    <rect x="554" y="397.0" width="26" height="26" rx="6" fill="#3F8C2E"/>
-    <text class="lbl" x="594" y="402">Registry</text>
-    <text class="sub" x="594" y="419">runner role only</text>
-    <text class="sub" x="594" y="433">push gate</text>
-    <rect class="box" x="770" y="380" width="200" height="60" rx="11"/>
-    <rect x="784" y="397.0" width="26" height="26" rx="6" fill="#C7131F"/>
-    <text class="lbl" x="824" y="402">Signing key</text>
-    <text class="sub" x="824" y="419">in account</text>
-    <text class="sub" x="824" y="433">no public log</text>
-    <path class="conn" d="M 835 308 L 835 360" marker-end="url(#ah)"/>
-    <text class="clbl" x="880" y="345" text-anchor="middle">run task</text>
-    <path class="conn" d="M 835 308 L 835 360 L 400 360 L 400 378" fill="none" marker-end="url(#ah)"/>
-    <path class="conn" d="M 500 410 L 538 410" marker-end="url(#ah)"/>
-    <text class="clbl" x="519" y="402" text-anchor="middle">push</text>
-    <path class="conn" d="M 635 440 L 810 450" marker-end="url(#ah)"/>
-    <path class="conn" d="M 635 440 L 635 458 L 870 458 L 870 440" fill="none" marker-end="url(#ah)"/>
-    <text x="648" y="474" fill="#C7131F" font-family="IBM Plex Mono,monospace" font-size="10.5" font-weight="600">sign</text>
-    <rect class="box" x="300" y="510" width="210" height="60" rx="11"/>
-    <rect x="314" y="527.0" width="26" height="26" rx="6" fill="#ED7100"/>
-    <text class="lbl" x="354" y="532">Deploy gate</text>
-    <text class="sub" x="354" y="549">verify signature</text>
-    <text class="sub" x="354" y="563">then roll out</text>
-    <rect class="box" x="560" y="510" width="180" height="58" rx="11"/>
-    <rect x="574" y="526.0" width="26" height="26" rx="6" fill="#7A4FE0"/>
-    <text class="lbl" x="614" y="537.0">Load balancer</text>
-    <text class="sub" x="614" y="554.0">public</text>
-    <rect class="box" x="770" y="510" width="200" height="58" rx="11"/>
-    <rect x="784" y="526.0" width="26" height="26" rx="6" fill="#ED7100"/>
-    <text class="lbl" x="824" y="537.0">Application</text>
-    <text class="sub" x="824" y="554.0">the running image</text>
-    <path class="conn" d="M 400 440 L 400 508" marker-end="url(#ah)"/>
-    <text class="clbl" x="470" y="492" text-anchor="middle">verified image</text>
-    <path class="conn" d="M 510 540 L 558 539" marker-end="url(#ah)"/>
-    <path class="conn" d="M 740 539 L 768 539" marker-end="url(#ah)"/>
-    <path class="conn" d="M 870 568 L 870 660 L 136 660 L 136 216" fill="none" stroke-dasharray="5 5" marker-end="url(#ah)"/>
-    <text x="420" y="656" fill="#64748B" font-family="IBM Plex Mono,monospace" font-size="10.5" font-weight="600">the visitor opens the running application</text>
-    <rect x="24" y="664" width="12" height="12" rx="3" fill="#C7131F"/>
-    <text class="leg" x="42" y="674">Security</text>
-    <rect x="114.8" y="664" width="12" height="12" rx="3" fill="#7A4FE0"/>
-    <text class="leg" x="132.8" y="674">Networking</text>
-    <rect x="220.8" y="664" width="12" height="12" rx="3" fill="#ED7100"/>
-    <text class="leg" x="238.8" y="674">Compute</text>
-    <rect x="304.0" y="664" width="12" height="12" rx="3" fill="#3F8C2E"/>
-    <text class="leg" x="322.0" y="674">Storage</text>
-    <text class="wm" x="1156" y="674" text-anchor="end">akanjilal.dev</text>
+    <rect class="box" x="40" y="120" width="210" height="58" rx="11"/>
+    <rect x="54" y="136.0" width="26" height="26" rx="6" fill="#64748B"/>
+    <text class="lbl" x="94" y="147.0">Visitor</text>
+    <text class="sub" x="94" y="164.0">the demo page</text>
+    <rect class="box" x="330" y="120" width="210" height="58" rx="11"/>
+    <rect x="344" y="136.0" width="26" height="26" rx="6" fill="#ED7100"/>
+    <text class="lbl" x="384" y="147.0">Control interface</text>
+    <text class="sub" x="384" y="164.0">holds the credential</text>
+    <rect class="box" x="620" y="120" width="210" height="58" rx="11"/>
+    <rect x="634" y="136.0" width="26" height="26" rx="6" fill="#64748B"/>
+    <text class="lbl" x="674" y="147.0">GitHub.com</text>
+    <text class="sub" x="674" y="164.0">workflow + webhook</text>
+    <path class="conn" d="M 250 149 L 328 149" marker-end="url(#ah)"/>
+    <text class="clbl" x="289" y="140" text-anchor="middle">press build</text>
+    <path class="conn" d="M 540 149 L 618 149" marker-end="url(#ah)"/>
+    <text class="clbl" x="579" y="140" text-anchor="middle">start a build</text>
+    <rect x="280" y="212" width="876" height="432" rx="16" fill="none" stroke="#7A4FE0" stroke-width="1.6" stroke-dasharray="7 6" opacity="0.85"/>
+    <rect x="298" y="199" width="226.60000000000002" height="26" rx="8" fill="#7A4FE0"/>
+    <text class="tagtext" x="411.3" y="216" text-anchor="middle">AWS ACCOUNT · PRIVATE NETWORK</text>
+    <rect class="box" x="310" y="256" width="210" height="58" rx="11"/>
+    <rect x="324" y="272.0" width="26" height="26" rx="6" fill="#7A4FE0"/>
+    <text class="lbl" x="364" y="283.0">API Gateway</text>
+    <text class="sub" x="364" y="300.0">public webhook</text>
+    <rect class="box" x="560" y="256" width="210" height="58" rx="11"/>
+    <rect x="574" y="272.0" width="26" height="26" rx="6" fill="#ED7100"/>
+    <text class="lbl" x="614" y="283.0">Webhook + queue</text>
+    <text class="sub" x="614" y="300.0">verify, enqueue</text>
+    <rect class="box" x="810" y="256" width="210" height="58" rx="11"/>
+    <rect x="824" y="272.0" width="26" height="26" rx="6" fill="#ED7100"/>
+    <text class="lbl" x="864" y="283.0">Scale up</text>
+    <text class="sub" x="864" y="300.0">single use runner</text>
+    <path class="conn" d="M 725 178 L 725 230 L 415 230 L 415 256" fill="none" marker-end="url(#ah)"/>
+    <text class="clbl" x="565" y="222">workflow_job</text>
+    <path class="conn" d="M 520 285.0 L 558 285.0" marker-end="url(#ah)"/>
+    <path class="conn" d="M 770 285.0 L 808 285.0" marker-end="url(#ah)"/>
+    <rect class="box" x="310" y="386" width="210" height="58" rx="11"/>
+    <rect x="324" y="402.0" width="26" height="26" rx="6" fill="#C7131F"/>
+    <text class="lbl" x="364" y="413.0">Signing key</text>
+    <text class="sub" x="364" y="430.0">in account</text>
+    <rect class="box" x="560" y="386" width="210" height="58" rx="11"/>
+    <rect x="574" y="402.0" width="26" height="26" rx="6" fill="#ED7100"/>
+    <text class="lbl" x="614" y="413.0">Runner on EC2</text>
+    <text class="sub" x="614" y="430.0">rootless build</text>
+    <rect class="box" x="810" y="386" width="210" height="58" rx="11"/>
+    <rect x="824" y="402.0" width="26" height="26" rx="6" fill="#3F8C2E"/>
+    <text class="lbl" x="864" y="413.0">Registry</text>
+    <text class="sub" x="864" y="430.0">runner role only</text>
+    <path class="conn" d="M 915 314 L 915 350.0 L 665 350.0 L 665 386" fill="none" marker-end="url(#ah)"/>
+    <text class="clbl" x="800" y="352">run task</text>
+    <path class="conn" d="M 560 415.0 L 522 415.0" marker-end="url(#ah)"/>
+    <text class="clbl" x="541" y="407.0" text-anchor="middle">sign</text>
+    <path class="conn" d="M 770 415.0 L 808 415.0" marker-end="url(#ah)"/>
+    <text class="clbl" x="789" y="407.0" text-anchor="middle">push</text>
+    <rect class="box" x="310" y="516" width="210" height="58" rx="11"/>
+    <rect x="324" y="532.0" width="26" height="26" rx="6" fill="#ED7100"/>
+    <text class="lbl" x="364" y="543.0">Deploy gate</text>
+    <text class="sub" x="364" y="560.0">verify, then roll out</text>
+    <rect class="box" x="560" y="516" width="210" height="58" rx="11"/>
+    <rect x="574" y="532.0" width="26" height="26" rx="6" fill="#7A4FE0"/>
+    <text class="lbl" x="614" y="543.0">Load balancer</text>
+    <text class="sub" x="614" y="560.0">public</text>
+    <rect class="box" x="810" y="516" width="210" height="58" rx="11"/>
+    <rect x="824" y="532.0" width="26" height="26" rx="6" fill="#ED7100"/>
+    <text class="lbl" x="864" y="543.0">Application</text>
+    <text class="sub" x="864" y="560.0">the running image</text>
+    <path class="conn" d="M 915 444 L 915 480.0 L 415 480.0 L 415 516" fill="none" marker-end="url(#ah)"/>
+    <text class="clbl" x="660" y="478">verified image</text>
+    <path class="conn" d="M 520 545.0 L 558 545.0" marker-end="url(#ah)"/>
+    <path class="conn" d="M 770 545.0 L 808 545.0" marker-end="url(#ah)"/>
+    <path class="conn" d="M 915 574 L 915 668 L 145 668 L 145 178" fill="none" stroke-dasharray="5 5" marker-end="url(#ah)"/>
+    <text class="clbl" x="530" y="662">the visitor opens the running application</text>
+    <rect x="24" y="704" width="12" height="12" rx="3" fill="#C7131F"/>
+    <text class="leg" x="42" y="714">Security</text>
+    <rect x="114.8" y="704" width="12" height="12" rx="3" fill="#7A4FE0"/>
+    <text class="leg" x="132.8" y="714">Networking</text>
+    <rect x="220.8" y="704" width="12" height="12" rx="3" fill="#ED7100"/>
+    <text class="leg" x="238.8" y="714">Compute</text>
+    <rect x="304.0" y="704" width="12" height="12" rx="3" fill="#3F8C2E"/>
+    <text class="leg" x="322.0" y="714">Storage</text>
+    <text class="wm" x="1156" y="714" text-anchor="end">akanjilal.dev</text>
 </svg>
