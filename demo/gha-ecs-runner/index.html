@@ -24,6 +24,8 @@
   figure.diagram figcaption{font-size:13px;color:var(--faint);margin-top:8px;font-family:"IBM Plex Sans",sans-serif}
   /* live panel */
   .run{margin:18px 0 0;border:1px solid var(--hairline);border-radius:16px;background:var(--surface);padding:20px}
+  .run-note{margin:0 0 16px;font-size:13.5px;color:var(--muted);line-height:1.55}
+  .run-note b{color:var(--ink);font-weight:600}
   .run-top{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
   .runbtn{font-family:"IBM Plex Mono",monospace;font-size:14.5px;font-weight:600;padding:12px 22px;border-radius:10px;
     border:1px solid var(--accent);background:var(--accent);color:#fff;cursor:pointer;transition:background .15s,transform .12s}
@@ -113,6 +115,7 @@
 
       <!-- LIVE PANEL -->
       <div class="run" id="run">
+        <p class="run-note"><b>Two steps.</b> If the environment is off, press Recreate to bring it up, which takes a few minutes. Then press Run a build to build, sign, and deploy a real image. The endpoint below stays inactive until a build finishes, and then you can open the running application.</p>
         <div class="run-top">
           <button class="runbtn" id="runbtn">Run a build</button>
           <span class="runstat" id="runstat">Press the button to start a real build.</span>
@@ -231,11 +234,12 @@ async function checkEnv(){
       const m = Math.floor(el / 60), s = el % 60;
       const verb = st === "destroying" ? "tearing the environment down" : "bringing the environment up";
       ptext.textContent = `${verb}, ${m}m ${s < 10 ? "0" + s : s}s elapsed, this usually takes about ${Math.round(est / 60)} minutes`;
-      clearTimeout(envTimer); envTimer = setTimeout(checkEnv, 6000);
     } else {
       progress.classList.remove("show"); pfill.style.width = "0%";
     }
-  }catch(e){ envpill.textContent = "environment: unknown"; }
+    // keep polling so the endpoint reflects the build state, faster while changing
+    clearTimeout(envTimer); envTimer = setTimeout(checkEnv, transitioning ? 6000 : 9000);
+  }catch(e){ envpill.textContent = "environment: unknown"; clearTimeout(envTimer); envTimer = setTimeout(checkEnv, 12000); }
 }
 destroybtn.addEventListener("click", async () => {
   if (!confirm("Destroy the environment? This stops all standing cost. You can recreate it later.")) return;
