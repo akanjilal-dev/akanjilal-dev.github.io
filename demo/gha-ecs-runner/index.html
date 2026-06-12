@@ -39,6 +39,16 @@
   .envbtn:hover:not(:disabled){border-color:var(--accent)}
   .envbtn.danger{color:#C7131F;border-color:color-mix(in srgb,#C7131F 35%,transparent)}
   .envbtn:disabled{opacity:.5;cursor:not-allowed}
+  .endpoint{font-family:"IBM Plex Mono",monospace;font-size:12.5px;padding:8px 14px;border-radius:9px;
+    border:1px solid var(--accent);background:var(--accent-soft);color:var(--accent);text-decoration:none}
+  .endpoint.disabled{opacity:.5;pointer-events:none;border-color:var(--hairline);background:var(--chip);color:var(--faint)}
+  .reslist{margin-top:14px;border:1px solid var(--hairline);border-radius:11px;overflow:hidden}
+  .reslist h4{margin:0;padding:9px 14px;background:var(--paper);font-family:"IBM Plex Mono",monospace;font-size:11px;
+    text-transform:uppercase;letter-spacing:.06em;color:var(--faint);font-weight:600}
+  .reslist .row{display:grid;grid-template-columns:170px 1fr;gap:10px;padding:8px 14px;border-top:1px solid var(--hairline);
+    font-family:"IBM Plex Mono",monospace;font-size:12px}
+  .reslist .k{color:var(--faint)}
+  .reslist .v{color:var(--ink);word-break:break-all}
   .ms-list{list-style:none;padding:0;margin:20px 0 0;display:flex;flex-direction:column;gap:2px}
   .ms{display:flex;align-items:center;gap:12px;padding:9px 10px;border-radius:9px;font-size:14px}
   .ms .dot{width:16px;height:16px;border-radius:50%;flex:none;border:2px solid var(--hairline);background:var(--paper)}
@@ -103,8 +113,10 @@
           <span class="env-pill" id="envpill">checking environment</span>
           <button class="envbtn" id="recreatebtn" hidden>Recreate environment</button>
           <button class="envbtn danger" id="destroybtn" hidden>Destroy environment</button>
+          <a class="endpoint disabled" id="endpoint" target="_blank" rel="noopener">Open the endpoint</a>
           <span class="runstat" id="envnote"></span>
         </div>
+        <div class="reslist" id="reslist" hidden></div>
         <ul class="ms-list" id="mslist" hidden></ul>
         <div class="logs" id="logs" hidden>
           <div class="logbox"><h3>Pipeline steps</h3><div class="term" id="steps"></div></div>
@@ -170,6 +182,8 @@ const envpill = document.getElementById("envpill");
 const recreatebtn = document.getElementById("recreatebtn");
 const destroybtn = document.getElementById("destroybtn");
 const envnote = document.getElementById("envnote");
+const endpoint = document.getElementById("endpoint");
+const reslist = document.getElementById("reslist");
 let timer = null, envTimer = null, running = false;
 
 async function checkEnv(){
@@ -183,6 +197,16 @@ async function checkEnv(){
     destroybtn.hidden = (st !== "up");
     recreatebtn.hidden = (st !== "down");
     destroybtn.disabled = false; recreatebtn.disabled = false;
+    // endpoint: a working link only when the environment is up
+    if (st === "up" && d.endpoint){ endpoint.href = d.endpoint; endpoint.classList.remove("disabled"); }
+    else { endpoint.removeAttribute("href"); endpoint.classList.add("disabled"); }
+    // resource list: shown only when the environment is up
+    const res = d.resources || {};
+    if (st === "up" && Object.keys(res).length){
+      reslist.hidden = false;
+      reslist.innerHTML = "<h4>Live resources in the account</h4>" +
+        Object.entries(res).map(([k,v]) => `<div class="row"><span class="k">${esc(k)}</span><span class="v">${esc(v)}</span></div>`).join("");
+    } else { reslist.hidden = true; reslist.innerHTML = ""; }
     if (st === "down"){ envnote.textContent = "the environment is off, recreate it to run a build."; btn.textContent = "Run a build"; }
     else if (st === "up"){ envnote.textContent = ""; }
     else if (transitioning){ envnote.textContent = st === "creating" ? "bringing the environment up, this takes a few minutes." : "tearing the environment down."; }
