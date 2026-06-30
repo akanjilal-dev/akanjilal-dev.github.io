@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Enterprise AI architecture, from an LLM demo to a production system, Anirban Kanjilal</title>
+<meta name="description" content="A capstone walk through the nine layers that separate an impressive language model demo from a governed production system on AWS, organised around the failure modes that force each layer into existence.">
+<meta property="og:title" content="Enterprise AI architecture, from an LLM demo to a production system">
+<meta property="og:description" content="An impressive demo is one box on a diagram. A production system is the other eight. A walk through all nine, organised around the failures that force each one into being and mapped to the AWS services that deliver them.">
+<meta property="og:type" content="article">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/site.css">
+</head>
+<body>
+
+<header class="bar">
+  <div class="wrap">
+    <a class="brand" href="/">akanjilal<span class="dot">.dev</span></a>
+    <nav class="nav" aria-label="Primary">
+      <a href="/#work">work</a>
+      <a href="/blog/">my blogs</a>
+      <a href="/#background">background</a>
+      <a class="ext" href="https://github.com/akanjilal-work">github</a>
+      <a class="ext" href="https://www.linkedin.com/in/akanjilal/">linkedin</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <article class="article">
+    <div class="wrap">
+      <a class="back" href="/blog/">Back to writing</a>
+      <div class="article-head">
+        <div class="meta"><span>AI architecture</span><span>June 30, 2026</span><span>22 minute read</span></div>
+        <h1>Enterprise AI architecture, from an LLM demo to a production system</h1>
+        <p class="standfirst">An impressive demo is one box on a diagram. A production system is the other eight. This is a walk through all nine, organised around the failures that force each one into being, mapped to the services that deliver them on AWS.</p>
+      </div>
+
+      <div class="prose">
+
+<p>The demo always works. You open a notebook, you call a foundation model with a few lines of code, you ask it something hard, and it answers well enough that a room full of people leans in. The distance from that moment to a system you can put in front of customers, auditors, and a finance team is the entire subject of this article. That distance is not a better prompt and it is not a bigger model. It is roughly eight categories of engineering that the demo quietly assumed away.</p>
+
+<p>The diagram below is the whole argument in one frame. A request enters on the left, moves through orchestration, retrieval, reasoning, and tool action, and leaves on the right as a governed response. The large language model (LLM), the part everyone talks about, is a single box in the middle. Everything around it exists for a reason, and the fastest way to understand each piece is to look at the specific way a demo breaks when that piece is missing.</p>
+
+<figure class="diagram">
+  <svg viewBox="0 0 960 532" role="img" aria-label="The nine-layer enterprise AI architecture. A top row of primary-flow layers runs left to right: user experience, API gateway and security, AI orchestrator, the LLM, the tool and API calling layer with a validation checkpoint, and the response and action layer. Below sit the retrieval and memory layers feeding the orchestrator, and an audit log. A full-width governance, guardrails and observability band spans everything as a cross-cutting layer.">
+    <!-- stage labels -->
+    <text x="87"  y="44" class="sub" font-size="10" text-anchor="middle">user request</text>
+    <text x="401" y="44" class="sub" font-size="10" text-anchor="middle">orchestration</text>
+    <text x="558" y="44" class="sub" font-size="10" text-anchor="middle">reasoning</text>
+    <text x="872" y="44" class="sub" font-size="10" text-anchor="middle">governed response</text>
+
+    <!-- top primary-flow row -->
+    <rect class="box"  x="20"  y="64" width="135" height="80" rx="11"/>
+    <text x="34" y="90" class="num" font-size="15">1</text>
+    <text x="52" y="86" class="lbl" font-size="11.5">User</text>
+    <text x="52" y="101" class="lbl" font-size="11.5">Experience</text>
+    <text x="34" y="132" class="sub" font-size="9">CloudFront · Amplify · S3</text>
+
+    <rect class="box"  x="177" y="64" width="135" height="80" rx="11"/>
+    <text x="191" y="90" class="num" font-size="15">2</text>
+    <text x="209" y="86" class="lbl" font-size="11.5">API Gateway</text>
+    <text x="209" y="101" class="lbl" font-size="11.5">&amp; Security</text>
+    <text x="191" y="132" class="sub" font-size="9">API GW · Cognito · WAF · IAM</text>
+
+    <rect class="box"  x="334" y="64" width="135" height="80" rx="11"/>
+    <text x="348" y="90" class="num" font-size="15">3</text>
+    <text x="366" y="86" class="lbl" font-size="11.5">AI</text>
+    <text x="366" y="101" class="lbl" font-size="11.5">Orchestrator</text>
+    <text x="348" y="132" class="sub" font-size="9">AgentCore · Step Functions</text>
+
+    <rect class="boxa" x="491" y="64" width="135" height="80" rx="11"/>
+    <text x="505" y="90" class="num" font-size="15">4</text>
+    <text x="523" y="86" class="lbl" font-size="11.5">LLM Layer</text>
+    <text x="523" y="101" class="sub" font-size="9.5">the model</text>
+    <text x="505" y="132" class="sub" font-size="9">Bedrock — Nova, Claude</text>
+
+    <rect class="box"  x="648" y="64" width="135" height="80" rx="11"/>
+    <text x="662" y="90" class="num" font-size="15">7</text>
+    <text x="680" y="86" class="lbl" font-size="11.5">Tool / API</text>
+    <text x="680" y="101" class="lbl" font-size="11.5">Calling</text>
+    <text x="662" y="132" class="sub" font-size="9">AgentCore Gateway · Lambda</text>
+
+    <rect class="box"  x="805" y="64" width="135" height="80" rx="11"/>
+    <text x="819" y="90" class="num" font-size="15">8</text>
+    <text x="837" y="86" class="lbl" font-size="11.5">Response</text>
+    <text x="837" y="101" class="lbl" font-size="11.5">&amp; Action</text>
+    <text x="819" y="132" class="sub" font-size="9">Lambda · EventBridge · SNS</text>
+
+    <!-- primary flow arrows -->
+    <line class="conna" x1="158" y1="104" x2="172" y2="104"/>
+    <path  class="dot"  d="M172 104 l-6 -3 l0 6 z"/>
+    <line class="conna" x1="315" y1="104" x2="329" y2="104"/>
+    <path  class="dot"  d="M329 104 l-6 -3 l0 6 z"/>
+    <line class="conna" x1="472" y1="104" x2="486" y2="104"/>
+    <path  class="dot"  d="M486 104 l-6 -3 l0 6 z"/>
+    <line class="conna" x1="629" y1="104" x2="643" y2="104"/>
+    <path  class="dot"  d="M643 104 l-6 -3 l0 6 z"/>
+    <line class="conna" x1="786" y1="104" x2="800" y2="104"/>
+    <path  class="dot"  d="M800 104 l-6 -3 l0 6 z"/>
+
+    <!-- validation checkpoint between tool and response -->
+    <circle cx="793" cy="170" r="12" class="bar"/>
+    <text x="793" y="174" font-size="11" text-anchor="middle" font-weight="600" fill="#ffffff">V</text>
+    <text x="793" y="196" class="sub" font-size="8.5" text-anchor="middle">policy + safety</text>
+    <line class="conna" x1="793" y1="144" x2="793" y2="158" stroke-dasharray="3 3"/>
+
+    <!-- supporting row: retrieval + memory -->
+    <rect class="box" x="190" y="220" width="245" height="72" rx="11"/>
+    <text x="204" y="246" class="num" font-size="15">5</text>
+    <text x="224" y="244" class="lbl" font-size="11.5">RAG &amp; Knowledge Layer</text>
+    <text x="204" y="266" class="sub" font-size="9.5">documents · embeddings · vectors · re-ranking</text>
+    <text x="204" y="282" class="sub" font-size="9">Bedrock Knowledge Bases · OpenSearch Serverless</text>
+
+    <rect class="box" x="465" y="220" width="245" height="72" rx="11"/>
+    <text x="479" y="246" class="num" font-size="15">6</text>
+    <text x="499" y="244" class="lbl" font-size="11.5">Memory Layer</text>
+    <text x="479" y="266" class="sub" font-size="9.5">session · user · workflow state · long-term</text>
+    <text x="479" y="282" class="sub" font-size="9">AgentCore Memory · DynamoDB · ElastiCache</text>
+
+    <!-- context / support flow into orchestrator -->
+    <line class="conna" x1="312" y1="220" x2="392" y2="146" stroke-dasharray="4 4"/>
+    <line class="conna" x1="560" y1="220" x2="420" y2="146" stroke-dasharray="4 4"/>
+
+    <!-- audit log -->
+    <rect class="box" x="805" y="220" width="135" height="72" rx="11"/>
+    <text x="819" y="244" class="lbl" font-size="11.5">Audit Log</text>
+    <text x="819" y="264" class="sub" font-size="9">immutable record of every</text>
+    <text x="819" y="276" class="sub" font-size="9">request, action, response</text>
+    <text x="819" y="290" class="sub" font-size="8.5">CloudTrail · Object Lock</text>
+    <line class="conna" x1="872" y1="144" x2="872" y2="220" stroke-dasharray="3 3"/>
+
+    <!-- governance band, cross-cutting -->
+    <rect class="band" x="20" y="320" width="920" height="150" rx="14"/>
+    <text x="38" y="352" class="num" font-size="15">9</text>
+    <text x="58" y="350" class="lbl" font-size="13">Governance, Guardrails &amp; Observability</text>
+    <text x="368" y="350" class="sub" font-size="10" font-style="italic">cross-cutting — it touches every layer</text>
+
+    <g font-size="10">
+      <circle cx="40"  cy="392" r="3" class="dot"/>
+      <text x="52"  y="396" class="lbl" font-size="10">Guardrails</text>
+      <text x="40"  y="412" class="sub" font-size="8.5">Bedrock Guardrails</text>
+
+      <circle cx="152" cy="392" r="3" class="dot"/>
+      <text x="164" y="396" class="lbl" font-size="10">PII detection</text>
+      <text x="152" y="412" class="sub" font-size="8.5">Macie · Guardrails</text>
+
+      <circle cx="264" cy="392" r="3" class="dot"/>
+      <text x="276" y="396" class="lbl" font-size="10">Audit logs</text>
+      <text x="264" y="412" class="sub" font-size="8.5">CloudTrail</text>
+
+      <circle cx="376" cy="392" r="3" class="dot"/>
+      <text x="388" y="396" class="lbl" font-size="10">Human approval</text>
+      <text x="376" y="412" class="sub" font-size="8.5">Step Functions</text>
+
+      <circle cx="488" cy="392" r="3" class="dot"/>
+      <text x="500" y="396" class="lbl" font-size="10">Tracing</text>
+      <text x="488" y="412" class="sub" font-size="8.5">X-Ray · ADOT</text>
+
+      <circle cx="600" cy="392" r="3" class="dot"/>
+      <text x="612" y="396" class="lbl" font-size="10">Metrics</text>
+      <text x="600" y="412" class="sub" font-size="8.5">CloudWatch</text>
+
+      <circle cx="712" cy="392" r="3" class="dot"/>
+      <text x="724" y="396" class="lbl" font-size="10">Cost monitoring</text>
+      <text x="712" y="412" class="sub" font-size="8.5">Cost Explorer</text>
+
+      <circle cx="824" cy="392" r="3" class="dot"/>
+      <text x="836" y="396" class="lbl" font-size="10">Model evaluation</text>
+      <text x="824" y="412" class="sub" font-size="8.5">AgentCore Evals</text>
+    </g>
+
+    <!-- legend -->
+    <line class="conna" x1="20" y1="505" x2="46" y2="505"/>
+    <path class="dot" d="M46 505 l-6 -3 l0 6 z"/>
+    <text x="54" y="509" class="sub" font-size="10">primary flow</text>
+    <line class="conna" x1="160" y1="505" x2="186" y2="505" stroke-dasharray="4 4"/>
+    <text x="194" y="509" class="sub" font-size="10">context / support flow</text>
+    <text x="940" y="509" class="num" font-size="11" text-anchor="end">the model is one box of nine</text>
+  </svg>
+  <figcaption>The nine layers of a production AI system. The model is layer four. The other eight are why the thing can be trusted, paid for, and explained.</figcaption>
+</figure>
+
+<p>This piece is a capstone. Each layer here has a fuller treatment elsewhere in this portfolio, and I link out to those deep dives as we pass through. The job of this article is the map, not the territory. We will spend it walking one failure at a time.</p>
+
+<h2>The method, follow the failures</h2>
+
+<p>It is tempting to explain an architecture by listing its parts in order. That produces a glossary, not understanding. A more honest way in is to ask what goes wrong the moment a demonstration meets reality, because every production layer in the diagram was added by someone who watched a particular thing break and refused to ship it that way again. The map below pairs each failure with the layer it forces into existence. The rest of the article is that map, expanded.</p>
+
+<figure class="diagram">
+  <svg viewBox="0 0 960 690" role="img" aria-label="A two-column map. The left column lists nine demo-stage failure modes. The right column lists the production layer each one forces into existence, with the AWS services named, and an arrow connects each failure to its layer.">
+    <text x="20"  y="26" class="sub" font-size="11" letter-spacing="0.08em">THE DEMO'S FAILURE MODE</text>
+    <text x="520" y="26" class="sub" font-size="11" letter-spacing="0.08em">THE PRODUCTION LAYER IT FORCES INTO EXISTENCE</text>
+
+    <!-- row 1 -->
+    <rect class="box" x="20" y="44" width="380" height="56" rx="10"/>
+    <text x="36" y="68"  class="lbl" font-size="11.5">Anyone can call the model, and it can be</text>
+    <text x="36" y="84"  class="lbl" font-size="11.5">talked into anything.</text>
+    <line class="conna" x1="400" y1="72" x2="518" y2="72"/>
+    <path class="dot" d="M518 72 l-7 -3.5 l0 7 z"/>
+    <rect class="box" x="520" y="44" width="420" height="56" rx="10"/>
+    <text x="536" y="66" class="num" font-size="14">2</text>
+    <text x="558" y="66" class="lbl" font-size="12">API Gateway &amp; Security Layer</text>
+    <text x="536" y="88" class="sub" font-size="9.5">AWS · API Gateway · Cognito · WAF · IAM</text>
+
+    <!-- row 2 -->
+    <rect class="box" x="20" y="114" width="380" height="56" rx="10"/>
+    <text x="36" y="138" class="lbl" font-size="11.5">It answers confidently about things it</text>
+    <text x="36" y="154" class="lbl" font-size="11.5">was never given.</text>
+    <line class="conna" x1="400" y1="142" x2="518" y2="142"/>
+    <path class="dot" d="M518 142 l-7 -3.5 l0 7 z"/>
+    <rect class="box" x="520" y="114" width="420" height="56" rx="10"/>
+    <text x="536" y="136" class="num" font-size="14">5</text>
+    <text x="558" y="136" class="lbl" font-size="12">RAG &amp; Knowledge Layer</text>
+    <text x="536" y="158" class="sub" font-size="9.5">AWS · Bedrock Knowledge Bases · OpenSearch</text>
+
+    <!-- row 3 -->
+    <rect class="box" x="20" y="184" width="380" height="56" rx="10"/>
+    <text x="36" y="208" class="lbl" font-size="11.5">A retrieved document hides an</text>
+    <text x="36" y="224" class="lbl" font-size="11.5">instruction the model then obeys.</text>
+    <line class="conna" x1="400" y1="212" x2="518" y2="212"/>
+    <path class="dot" d="M518 212 l-7 -3.5 l0 7 z"/>
+    <rect class="box" x="520" y="184" width="420" height="56" rx="10"/>
+    <text x="536" y="206" class="num" font-size="14">9</text>
+    <text x="558" y="206" class="lbl" font-size="12">Guardrails, prompt-attack detection</text>
+    <text x="536" y="228" class="sub" font-size="9.5">AWS · Amazon Bedrock Guardrails</text>
+
+    <!-- row 4 -->
+    <rect class="box" x="20" y="254" width="380" height="56" rx="10"/>
+    <text x="36" y="278" class="lbl" font-size="11.5">It forgets who it is talking to from one</text>
+    <text x="36" y="294" class="lbl" font-size="11.5">turn to the next.</text>
+    <line class="conna" x1="400" y1="282" x2="518" y2="282"/>
+    <path class="dot" d="M518 282 l-7 -3.5 l0 7 z"/>
+    <rect class="box" x="520" y="254" width="420" height="56" rx="10"/>
+    <text x="536" y="276" class="num" font-size="14">6</text>
+    <text x="558" y="276" class="lbl" font-size="12">Memory Layer</text>
+    <text x="536" y="298" class="sub" font-size="9.5">AWS · AgentCore Memory · DynamoDB</text>
+
+    <!-- row 5 -->
+    <rect class="box" x="20" y="324" width="380" height="56" rx="10"/>
+    <text x="36" y="348" class="lbl" font-size="11.5">A single prompt cannot carry a reliable</text>
+    <text x="36" y="364" class="lbl" font-size="11.5">multi-step task.</text>
+    <line class="conna" x1="400" y1="352" x2="518" y2="352"/>
+    <path class="dot" d="M518 352 l-7 -3.5 l0 7 z"/>
+    <rect class="box" x="520" y="324" width="420" height="56" rx="10"/>
+    <text x="536" y="346" class="num" font-size="14">3</text>
+    <text x="558" y="346" class="lbl" font-size="12">AI Orchestrator</text>
+    <text x="536" y="368" class="sub" font-size="9.5">AWS · AgentCore Runtime · Step Functions</text>
+
+    <!-- row 6 -->
+    <rect class="box" x="20" y="394" width="380" height="56" rx="10"/>
+    <text x="36" y="418" class="lbl" font-size="11.5">It invents a tool call, or calls a real tool</text>
+    <text x="36" y="434" class="lbl" font-size="11.5">with bad inputs.</text>
+    <line class="conna" x1="400" y1="422" x2="518" y2="422"/>
+    <path class="dot" d="M518 422 l-7 -3.5 l0 7 z"/>
+    <rect class="box" x="520" y="394" width="420" height="56" rx="10"/>
+    <text x="536" y="416" class="num" font-size="14">7</text>
+    <text x="558" y="416" class="lbl" font-size="12">Tool / API Calling Layer</text>
+    <text x="536" y="438" class="sub" font-size="9.5">AWS · AgentCore Gateway (MCP) · Lambda</text>
+
+    <!-- row 7 -->
+    <rect class="box" x="20" y="464" width="380" height="56" rx="10"/>
+    <text x="36" y="488" class="lbl" font-size="11.5">It takes an irreversible action that no</text>
+    <text x="36" y="504" class="lbl" font-size="11.5">one approved.</text>
+    <line class="conna" x1="400" y1="492" x2="518" y2="492"/>
+    <path class="dot" d="M518 492 l-7 -3.5 l0 7 z"/>
+    <rect class="box" x="520" y="464" width="420" height="56" rx="10"/>
+    <text x="536" y="486" class="num" font-size="14">V</text>
+    <text x="558" y="486" class="lbl" font-size="12">Validation Checkpoint &amp; Human Approval</text>
+    <text x="536" y="508" class="sub" font-size="9.5">AWS · AgentCore Policy (Cedar) · Step Functions</text>
+
+    <!-- row 8 -->
+    <rect class="box" x="20" y="534" width="380" height="56" rx="10"/>
+    <text x="36" y="558" class="lbl" font-size="11.5">The answer is ungrounded, or it quietly</text>
+    <text x="36" y="574" class="lbl" font-size="11.5">leaks personal data.</text>
+    <line class="conna" x1="400" y1="562" x2="518" y2="562"/>
+    <path class="dot" d="M518 562 l-7 -3.5 l0 7 z"/>
+    <rect class="box" x="520" y="534" width="420" height="56" rx="10"/>
+    <text x="536" y="556" class="num" font-size="14">8</text>
+    <text x="558" y="556" class="lbl" font-size="12">Response &amp; Action Layer</text>
+    <text x="536" y="578" class="sub" font-size="9.5">AWS · Bedrock Guardrails (grounding, PII)</text>
+
+    <!-- row 9 -->
+    <rect class="box" x="20" y="604" width="380" height="56" rx="10"/>
+    <text x="36" y="628" class="lbl" font-size="11.5">Cost spirals, and no one can explain a</text>
+    <text x="36" y="644" class="lbl" font-size="11.5">past decision.</text>
+    <line class="conna" x1="400" y1="632" x2="518" y2="632"/>
+    <path class="dot" d="M518 632 l-7 -3.5 l0 7 z"/>
+    <rect class="box" x="520" y="604" width="420" height="56" rx="10"/>
+    <text x="536" y="626" class="num" font-size="14">9</text>
+    <text x="558" y="626" class="lbl" font-size="12">Governance, Observability &amp; Audit</text>
+    <text x="536" y="648" class="sub" font-size="9.5">AWS · CloudWatch · CloudTrail · S3 Object Lock</text>
+  </svg>
+  <figcaption>Read this from the left. Each line is a failure that a naive deployment hits, and the box it lands in is the layer that answers it. The model never changes across these rows; every other box is the production system answering a way the demo failed.</figcaption>
+</figure>
+
+<p>One framing note before we start. Public facing content in this portfolio about AWS infrastructure assumes a multi region posture across <code>ca-central-1</code> and <code>ca-west-1</code>, and everything here is described in vendor terms with named examples rather than as a single product pitch. With that settled, here is the first failure.</p>
+
+<h2>Layer 2 · Anyone can call it, and it can be talked into anything</h2>
+
+<blockquote>The demo had no front door. In production, the front door is the product.</blockquote>
+
+<p>The notebook called the model directly with a key on the developer's machine. There was no notion of who was asking, what they were allowed to ask for, or how often they could ask. The first thing reality does to that arrangement is send it ten thousand requests, a few of them hostile, and watch the bill and the blast radius climb together. The fix is not one control but a layer of them, and it sits in front of everything else.</p>
+
+<p>The user experience layer is where a real person actually meets the system, through a web application, a mobile application, a chat surface, or an upload for a document or an image. Behind it, the application programming interface (API) gateway and security layer is the part that turns an open endpoint into a governed one. Authentication establishes who is calling. Authorisation and role based access control (RBAC) establish what that caller may do, which matters enormously the moment an agent can act on a user's behalf. Rate limiting keeps a single caller, friendly or not, from consuming the whole system. Request validation rejects malformed or oversized input before it ever reaches a model you are paying for by the token.</p>
+
+<div class="callout"><p><strong>AWS</strong> &nbsp;Amazon CloudFront and AWS Amplify front the experience. Amazon API Gateway terminates the request. Amazon Cognito issues and validates the JSON Web Token (JWT) that carries identity. AWS WAF and usage plans handle rate limiting and abuse. AWS Identity and Access Management (IAM) grants the least privilege each downstream call needs.</p></div>
+
+<p>This is the layer where a zero trust posture either exists or does not. If you want the full treatment of private networking, signed identity, and the gateway as a policy enforcement point, that is its own reference architecture in this portfolio, <a href="/architectures/zero-trust-ai-gateway/">the zero trust AI gateway</a>. For our purposes the point is narrow. Without this layer, nothing downstream can assume the caller is who they claim to be, and an agent that acts on behalf of an unauthenticated user is a liability rather than a feature.</p>
+
+<h2>Layer 5 · It answers confidently about things it was never given</h2>
+
+<blockquote>A model with no access to your data will still answer questions about your data. It will just be wrong.</blockquote>
+
+<p>Ask a foundation model about last quarter's contract terms or a specific customer's open tickets and it will produce a fluent, plausible, and entirely invented answer. The model does not know what it does not know, and confidence is not correlated with correctness. The production answer is to stop asking the model to recall and start giving it the relevant material to read. That is retrieval augmented generation (RAG), and it is the fifth layer.</p>
+
+<p>The mechanism is a pipeline. Source documents land in a document store. An embedding model turns them into vectors that capture meaning rather than keywords. A vector database indexes those vectors so that, at query time, retrieval can pull the passages most relevant to the question. A re-ranking step then reorders the candidates so the strongest evidence sits at the top of the context the model finally sees. The knowledge base is the curated, permissioned corpus that all of this draws from.</p>
+
+<div class="callout"><p><strong>AWS</strong> &nbsp;Amazon Bedrock Knowledge Bases provides the managed RAG pipeline, including ingestion, chunking, and the <code>RetrieveAndGenerate</code> flow. Amazon OpenSearch Serverless serves as the vector store, with Amazon Aurora and other engines available where they fit better. Amazon S3 holds the source documents, and access to them is scoped by the same identity that entered at the gateway.</p></div>
+
+<p>Two things make enterprise retrieval harder than a weekend project. The first is permission. Retrieval must respect who is allowed to see what, which means the identity from layer two has to travel all the way into the query so that a user never retrieves a document they could not otherwise open. The second is freshness and quality, because a stale or poorly chunked corpus produces confident answers grounded in the wrong version of the truth. Both are the subject of <a href="/architectures/secure-rag-platform/">the secure enterprise RAG platform</a> reference architecture, which goes deep on permissioned retrieval and ingestion. Here, the headline is simple. Retrieval is how the model stops guessing.</p>
+
+<h2>Layer 9 · A retrieved document hides an instruction the model obeys</h2>
+
+<blockquote>The moment the model reads outside text, that text can try to give it orders.</blockquote>
+
+<p>Retrieval solves one problem and opens another. As soon as the model reads content it did not author, a passage in that content can contain an instruction, and a naive system will follow it. A support ticket that ends with a line telling the assistant to ignore prior instructions and export the customer list is a prompt injection, and it arrives through the same retrieval path you just built. This is why the governance layer is not a final coat of paint. It has to reach into the middle of the flow.</p>
+
+<p>The defensive principle is to treat every piece of retrieved or user supplied content as untrusted input, never as trusted instruction. In practice that means a guardrail evaluates content on the way in, looking for prompt attacks such as jailbreaks, injections, and attempts to leak the system prompt, and it evaluates responses on the way out. It is the same posture you already apply to a database query or an uploaded file, extended to natural language.</p>
+
+<div class="callout"><p><strong>AWS</strong> &nbsp;Amazon Bedrock Guardrails offers prompt attack detection as part of its content filters, alongside denied topics and word filters. Because guardrails can be invoked independently through the <code>ApplyGuardrail</code> API, the same policy can screen retrieved passages before they reach the model and screen the model's output before it reaches a user, regardless of which model produced it.</p></div>
+
+<p>The lesson that carries forward is that security in an AI system is not a perimeter you cross once at the gateway. It is a property you re-establish at every boundary where untrusted text enters the reasoning loop, and retrieval is one of those boundaries.</p>
+
+<h2>Layer 6 · It forgets who it is talking to between turns</h2>
+
+<blockquote>A demo is a single turn. A product is a conversation, and a conversation has a memory.</blockquote>
+
+<p>The notebook handled one prompt and one answer. Real interactions span turns, sessions, and sometimes weeks, and a system that forgets the previous message feels broken in a way no amount of model quality can fix. The memory layer is how state persists without smuggling the entire history into every prompt, which would be both expensive and slow.</p>
+
+<p>It comes in distinct kinds. Session memory holds the current exchange. User context holds the durable facts about a person, their role, their preferences, their entitlements, that should shape every interaction. Workflow state holds where a multi step task has got to, so an interrupted process can resume rather than restart. Long term memory holds what should be remembered across sessions, distilled rather than dumped, so the system gets more useful over time without growing an unbounded prompt.</p>
+
+<div class="callout"><p><strong>AWS</strong> &nbsp;Amazon Bedrock AgentCore Memory provides both short term, per session memory and long term memory with extraction and consolidation strategies, so raw events become durable, retrievable records. Amazon DynamoDB and Amazon ElastiCache back custom session and workflow state where you want direct control over the store.</p></div>
+
+<p>The discipline here is knowing what not to remember. Long term memory that accumulates everything becomes both a cost problem and a privacy problem, since it is now a store of personal data that has to be governed like any other. The art of large context windows, and of deciding what earns a place in memory against what should be retrieved fresh each time, is the subject of <a href="/blog/agentic-loops-large-context-optimization/">the deep dive on agentic loops and large context windows</a>. For the architecture, the point is that memory is a first class layer, not a variable you keep in a notebook cell.</p>
+
+<h2>Layer 3 · A single prompt cannot carry a multi-step task</h2>
+
+<blockquote>One model call is a sentence. A real task is a paragraph with branches, retries, and a plan.</blockquote>
+
+<p>The demo did its work in one call. Ask the system to summarise three tickets and open a case only if one is unresolved, and a single prompt has to route the request, decide what information it needs, gather it, reason, and act, all at once and with no recovery if any part fails. The orchestrator is the layer that breaks that into a managed sequence and supervises it.</p>
+
+<p>A request router classifies the incoming request and decides how to handle it. A task planner decomposes a goal into steps. A context manager assembles exactly the right material from memory and retrieval for each step, rather than dumping everything into one oversized prompt. A prompt builder constructs the model call. A confidence check inspects the result before the system acts on it, so a low confidence answer can trigger a clarifying question or a fallback rather than a wrong action. An error handler catches the failures that will happen and decides whether to retry, degrade, or stop.</p>
+
+<p>That confidence check is worth making concrete, because it is the difference between an agent that asks when unsure and one that acts when it should not.</p>
+
+<pre><code>import json
+import boto3
+
+bedrock = boto3.client("bedrock-runtime", region_name="ca-central-1")
+
+def classify_intent(user_text, model_id="amazon.nova-pro-v1:0"):
+    """Return an intent label and a confidence the orchestrator can gate on."""
+    instruction = (
+        "Classify the request into one of: read_only, action_required, "
+        "ambiguous. Respond as JSON with keys intent and confidence "
+        "(0.0 to 1.0). Return JSON only, no prose."
+    )
+    response = bedrock.converse(
+        modelId=model_id,
+        system=[{"text": instruction}],
+        messages=[{"role": "user", "content": [{"text": user_text}]}],
+        inferenceConfig={"temperature": 0.0, "maxTokens": 200},
+    )
+    text = response["output"]["message"]["content"][0]["text"]
+    return json.loads(text)
+
+def route(user_text, threshold=0.75):
+    result = classify_intent(user_text)
+    if result["confidence"] &lt; threshold or result["intent"] == "ambiguous":
+        return {"next": "clarify_with_user", "reason": "low_confidence"}
+    if result["intent"] == "action_required":
+        return {"next": "plan_and_validate", "reason": "action_path"}
+    return {"next": "retrieve_and_answer", "reason": "read_path"}
+</code></pre>
+
+<p>The orchestrator is also where the choice between a framework driven agent and a deterministic state machine gets made. Some flows want the flexibility of an agent loop, and some want the auditability of an explicit graph of steps. The patterns and the trade offs are covered in <a href="/blog/production-architectures-for-ai-agents/">the production architectures for AI agents series</a>.</p>
+
+<div class="callout"><p><strong>AWS</strong> &nbsp;Amazon Bedrock AgentCore Runtime hosts the agent with session isolation and long running execution, and works with frameworks such as Strands Agents and LangGraph. AWS Step Functions expresses the deterministic multi step flows, including the points where a human has to approve before the machine proceeds.</p></div>
+
+<h2>Layer 7 · It invents a tool call, or calls a real tool with bad inputs</h2>
+
+<blockquote>An agent that can act is only as safe as the catalogue of actions it is allowed to take.</blockquote>
+
+<p>The demo could talk. A production agent has to do, which means calling real application programming interfaces, querying databases, and driving software as a service (SaaS) tools. Two failures arrive immediately. The model invents a tool that does not exist, or it calls a real tool with arguments that are malformed or out of policy. Handing a model an unbounded ability to call anything is how a plausible sentence becomes a real and damaging action. The tool and API calling layer is the controlled catalogue that prevents this.</p>
+
+<p>At its centre is a tool registry, the explicit and versioned set of actions the agent may take, each with a typed schema for its inputs. The model never calls a raw endpoint. It selects from the registry, and the agent gateway mediates the call, handling authorisation outward to the target system and shaping the request. The Model Context Protocol (MCP) has become the common language for exposing tools to agents in a uniform way, so a database, an approved internal API, and a SaaS connector can all be presented to the model through one consistent interface.</p>
+
+<p>Describing a tool well is most of the safety. The schema below is what the model is actually allowed to ask for, and a strict schema is what stops a vague intention from becoming a malformed call.</p>
+
+<pre><code>tool_config = {
+    "tools": [
+        {
+            "toolSpec": {
+                "name": "open_support_case",
+                "description": (
+                    "Open a follow-up support case for a client. Only call "
+                    "when an existing ticket is confirmed unresolved."
+                ),
+                "inputSchema": {
+                    "json": {
+                        "type": "object",
+                        "properties": {
+                            "client_id": {"type": "string"},
+                            "summary":   {"type": "string", "maxLength": 500},
+                            "priority":  {
+                                "type": "string",
+                                "enum": ["low", "medium", "high"]
+                            }
+                        },
+                        "required": ["client_id", "summary", "priority"]
+                    }
+                }
+            }
+        }
+    ]
+}
+</code></pre>
+
+<div class="callout"><p><strong>AWS</strong> &nbsp;Amazon Bedrock AgentCore Gateway turns AWS Lambda functions, OpenAPI definitions, and existing MCP servers into governed, discoverable tools behind a single secure endpoint. It applies dual sided security, validating inbound calls and authorising outbound ones with IAM or OAuth, and its semantic tool selection helps an agent find the right tool from a large catalogue without being overwhelmed by the full list.</p></div>
+
+<h2>The validation checkpoint · It takes an irreversible action that no one approved</h2>
+
+<blockquote>Reading the wrong document is recoverable. Wiring the wrong payment is not.</blockquote>
+
+<p>The most dangerous moment in the whole flow is the instant between deciding to act and acting. A read can be retracted. A refund, a deletion, or an outbound message cannot. The validation checkpoint is the deliberate gate that sits on the path from the tool layer to the action layer, and it asks two different questions. Is this caller authorised to take this specific action on this specific resource, and is this action itself safe to take right now.</p>
+
+<p>Authorisation here is not the coarse role check from the gateway. It is a fine grained policy decision about a concrete action on a concrete resource, and it is best expressed as policy rather than buried in code, so it can be reviewed, versioned, and audited on its own.</p>
+
+<pre><code>// Cedar policy: a relationship manager may open a case
+// only for the client they are assigned to.
+permit (
+    principal in Role::"RelationshipManager",
+    action == Action::"open_support_case",
+    resource is SupportCase
+)
+when {
+    resource.client_id == principal.assigned_client
+};
+</code></pre>
+
+<p>The second question, safety, is where the same guardrail engine returns, now checking the proposed output and action rather than the input. The <code>ApplyGuardrail</code> call below is the explicit safety gate, and because it is a standalone call it sits cleanly in the orchestrator between the decision and the execution.</p>
+
+<pre><code>guard = boto3.client("bedrock-runtime", region_name="ca-central-1")
+
+def safety_gate(proposed_output, guardrail_id, version="DRAFT"):
+    result = guard.apply_guardrail(
+        guardrailIdentifier=guardrail_id,
+        guardrailVersion=version,
+        source="OUTPUT",
+        content=[{"text": {"text": proposed_output}}],
+    )
+    if result["action"] == "GUARDRAIL_INTERVENED":
+        return {"allow": False, "assessments": result["assessments"]}
+    return {"allow": True}
+</code></pre>
+
+<p>For genuinely consequential actions, the right answer is sometimes to stop and ask a person. Human approval is a first class step, not an admission of failure, and it belongs in the orchestrated flow so that the wait is auditable and the approver's decision is recorded.</p>
+
+<div class="callout"><p><strong>AWS</strong> &nbsp;Amazon Bedrock AgentCore Policy uses Cedar to express fine grained authorisation over agent actions. Amazon Bedrock Guardrails, through <code>ApplyGuardrail</code>, performs the safety validation. AWS Step Functions holds the human approval task, pausing the workflow until a person decides.</p></div>
+
+<h2>Layer 8 · The answer is ungrounded, or it quietly leaks personal data</h2>
+
+<blockquote>Even a correct system can produce a response you must not send.</blockquote>
+
+<p>Suppose every prior layer did its job. The caller was authorised, the right documents were retrieved, the plan was sound, the tool was valid, and the action was approved. The response can still be wrong in two specific and costly ways. It can drift from the retrieved evidence into something the source never said, which is a hallucination dressed as a citation, and it can include personally identifiable information (PII) that should never leave the system. The response and action layer is the last line before output becomes a final answer, an application programming interface action, a ticket update, a notification, or a generated report.</p>
+
+<p>Two checks matter most here. A contextual grounding check compares the response against the source material and scores how well it is supported and how relevant it is, so an answer that wandered off the evidence can be blocked or flagged before it is sent. A sensitive information filter detects and redacts PII in the output, by standard entity type and by custom pattern. Both can be configured as policy and deployed through infrastructure as code, which is how they stay consistent across regions and environments.</p>
+
+<pre><code>Type: AWS::Bedrock::Guardrail
+Properties:
+  Name: production-response-guard
+  BlockedInputMessaging: "This request cannot be processed."
+  BlockedOutputsMessaging: "This response was withheld for review."
+  ContextualGroundingPolicyConfig:
+    FiltersConfig:
+      - Type: GROUNDING
+        Threshold: 0.75
+      - Type: RELEVANCE
+        Threshold: 0.75
+  SensitiveInformationPolicyConfig:
+    PiiEntitiesConfig:
+      - Type: EMAIL
+        Action: ANONYMIZE
+      - Type: PHONE
+        Action: ANONYMIZE
+      - Type: CREDIT_DEBIT_CARD_NUMBER
+        Action: BLOCK
+</code></pre>
+
+<p>For regulated decisions, there is a further control. Automated Reasoning checks in Amazon Bedrock Guardrails use formal logic to test whether a response is consistent with a policy you define, and they return structured feedback about why a statement holds or fails rather than a simple block. That is the difference between filtering on patterns and verifying against rules, and it is the kind of control that lets an AI answer carry weight in a compliance setting.</p>
+
+<div class="callout"><p><strong>AWS</strong> &nbsp;Amazon Bedrock Guardrails delivers the contextual grounding check, the sensitive information filter, and Automated Reasoning checks. Amazon Macie discovers and classifies sensitive data at rest in Amazon S3, the complement to the runtime redaction guardrails perform on the response.</p></div>
+
+<h2>Layer 9 · Cost spirals, and no one can explain a past decision</h2>
+
+<blockquote>A system you cannot see, cannot bill, and cannot explain is not in production. It is just running.</blockquote>
+
+<p>The final failure is the quiet one. The demo had no meter and no memory of its own behaviour. In production, token spend climbs without anyone noticing, latency varies without anyone measuring, and three months later a customer asks why the system did what it did and no one can answer. Governance, guardrails, and observability are drawn as a band beneath everything else in the diagram because they are cross cutting. They touch every layer rather than sitting at one point in the flow.</p>
+
+<p>The band carries eight concerns. Guardrails and PII detection we have already met at the points where they act. Audit logs, human approval, tracing, metrics, cost monitoring, and model evaluation are the operational backbone. Tracing follows a single request across every hop so a slow or wrong result can be diagnosed. Metrics turn behaviour into numbers you can alarm on. Cost monitoring makes token spend visible per feature and per tenant before it becomes a surprise. Model evaluation watches quality over time so a regression is caught by a graph rather than by a complaint.</p>
+
+<p>Beside the band sits the audit log, drawn separately because it has a property the rest do not. It is immutable. Every request, every retrieved source, every action, and every response is written to a store that cannot be altered after the fact, which is what lets you reconstruct exactly what happened and prove it. A write once read many (WORM) store is not optional in a regulated setting. It is the evidence.</p>
+
+<div class="callout"><p><strong>AWS</strong> &nbsp;Amazon CloudWatch holds metrics, logs, and alarms. AWS X-Ray and the AWS Distro for OpenTelemetry (ADOT) carry distributed tracing, and Amazon Bedrock AgentCore Observability emits agent traces and spans into CloudWatch directly. AWS Cost Explorer and tagging attribute spend. AWS CloudTrail records every API action, and Amazon S3 with Object Lock provides the immutable, WORM audit store.</p></div>
+
+<p>How this whole estate is governed over its lifecycle, from model selection through approval, deployment, and monitoring, is its own substantial topic, covered in <a href="/architectures/model-lifecycle-governance-sagemaker/">the model lifecycle and governance reference architecture</a>.</p>
+
+<h2>The request, traced end to end</h2>
+
+<p>Layers explained one at a time can still feel like parts in a box. The test of an architecture is what happens when a single real request moves through all of it at once. So take a concrete one. A relationship manager asks the system to summarise a client's last three support tickets and open a follow up case if any of them are still unresolved. That request is both a read and a conditional action, which is exactly the kind of thing a demo cannot safely do and a production system can.</p>
+
+<figure class="diagram">
+  <svg viewBox="0 0 960 752" role="img" aria-label="A twelve-step trace of one enterprise request. The request enters at the top, then descends the left column through six steps from the user experience layer to a guardrail on retrieved content, then continues down the right column through six more steps from the LLM layer to the audit log. Observability and audit run across every hop.">
+    <!-- request banner -->
+    <rect class="band" x="20" y="20" width="920" height="56" rx="12"/>
+    <text x="40" y="44" class="num" font-size="11">REQUEST</text>
+    <text x="40" y="63" class="lbl" font-size="12">&#8220;Summarise this client's last three support tickets, and open a follow-up case if any remain unresolved.&#8221;</text>
+
+    <!-- column rails -->
+    <line class="conna" x1="44"  y1="114" x2="44"  y2="604"/>
+    <line class="conna" x1="496" y1="114" x2="496" y2="604"/>
+    <!-- dashed connector joining the two columns -->
+    <path class="conna" d="M44 604 L44 678 L496 678 L496 604" fill="none" stroke-dasharray="4 4"/>
+
+    <!-- LEFT COLUMN -->
+    <!-- 1 -->
+    <circle cx="44" cy="114" r="13" class="bar"/>
+    <text x="44" y="118" font-size="11" text-anchor="middle" font-weight="600" fill="#ffffff">1</text>
+    <rect class="box" x="70" y="92" width="380" height="84" rx="10"/>
+    <text x="86" y="114" class="lbl" font-size="12">User Experience Layer</text>
+    <text x="86" y="134" class="sub" font-size="9.5">The manager submits the request from the web app</text>
+    <text x="86" y="147" class="sub" font-size="9.5">carrying a signed session token.</text>
+    <text x="86" y="166" class="num" font-size="9">CloudFront · Amplify</text>
+    <!-- 2 -->
+    <circle cx="44" cy="212" r="13" class="bar"/>
+    <text x="44" y="216" font-size="11" text-anchor="middle" font-weight="600" fill="#ffffff">2</text>
+    <rect class="box" x="70" y="190" width="380" height="84" rx="10"/>
+    <text x="86" y="212" class="lbl" font-size="12">API Gateway &amp; Security Layer</text>
+    <text x="86" y="232" class="sub" font-size="9.5">Validate the token, confirm role-based access to</text>
+    <text x="86" y="245" class="sub" font-size="9.5">this client, apply rate limits, check request shape.</text>
+    <text x="86" y="264" class="num" font-size="9">API Gateway · Cognito · WAF</text>
+    <!-- 3 -->
+    <circle cx="44" cy="310" r="13" class="bar"/>
+    <text x="44" y="314" font-size="11" text-anchor="middle" font-weight="600" fill="#ffffff">3</text>
+    <rect class="box" x="70" y="288" width="380" height="84" rx="10"/>
+    <text x="86" y="310" class="lbl" font-size="12">AI Orchestrator</text>
+    <text x="86" y="330" class="sub" font-size="9.5">Classify intent as a read plus a conditional action,</text>
+    <text x="86" y="343" class="sub" font-size="9.5">plan the two steps, and build the grounded prompt.</text>
+    <text x="86" y="362" class="num" font-size="9">AgentCore Runtime · Step Functions</text>
+    <!-- 4 -->
+    <circle cx="44" cy="408" r="13" class="bar"/>
+    <text x="44" y="412" font-size="11" text-anchor="middle" font-weight="600" fill="#ffffff">4</text>
+    <rect class="box" x="70" y="386" width="380" height="84" rx="10"/>
+    <text x="86" y="408" class="lbl" font-size="12">Memory Layer</text>
+    <text x="86" y="428" class="sub" font-size="9.5">Load session state, prior workflow state, and the</text>
+    <text x="86" y="441" class="sub" font-size="9.5">manager's long-term user context.</text>
+    <text x="86" y="460" class="num" font-size="9">AgentCore Memory · DynamoDB</text>
+    <!-- 5 -->
+    <circle cx="44" cy="506" r="13" class="bar"/>
+    <text x="44" y="510" font-size="11" text-anchor="middle" font-weight="600" fill="#ffffff">5</text>
+    <rect class="box" x="70" y="484" width="380" height="84" rx="10"/>
+    <text x="86" y="506" class="lbl" font-size="12">RAG &amp; Knowledge Layer</text>
+    <text x="86" y="526" class="sub" font-size="9.5">Retrieve the three support tickets from the</text>
+    <text x="86" y="539" class="sub" font-size="9.5">knowledge base and re-rank them by relevance.</text>
+    <text x="86" y="558" class="num" font-size="9">Bedrock Knowledge Bases · OpenSearch</text>
+    <!-- 6 -->
+    <circle cx="44" cy="604" r="13" class="bar"/>
+    <text x="44" y="608" font-size="11" text-anchor="middle" font-weight="600" fill="#ffffff">6</text>
+    <rect class="box" x="70" y="582" width="380" height="84" rx="10"/>
+    <text x="86" y="604" class="lbl" font-size="12">Guardrail on Retrieved Content</text>
+    <text x="86" y="624" class="sub" font-size="9.5">Treat retrieved text as untrusted and scan it for</text>
+    <text x="86" y="637" class="sub" font-size="9.5">prompt injection before it reaches the model.</text>
+    <text x="86" y="656" class="num" font-size="9">Bedrock Guardrails (prompt attack)</text>
+
+    <!-- RIGHT COLUMN -->
+    <!-- 7 -->
+    <circle cx="496" cy="114" r="13" class="bar"/>
+    <text x="496" y="118" font-size="11" text-anchor="middle" font-weight="600" fill="#ffffff">7</text>
+    <rect class="box" x="522" y="92" width="380" height="84" rx="10"/>
+    <text x="538" y="114" class="lbl" font-size="12">LLM Layer</text>
+    <text x="538" y="134" class="sub" font-size="9.5">Reason over the tickets, identify the one that is</text>
+    <text x="538" y="147" class="sub" font-size="9.5">unresolved, and decide a follow-up case is required.</text>
+    <text x="538" y="166" class="num" font-size="9">Amazon Bedrock (Nova, Claude)</text>
+    <!-- 8 -->
+    <circle cx="496" cy="212" r="13" class="bar"/>
+    <text x="496" y="216" font-size="11" text-anchor="middle" font-weight="600" fill="#ffffff">8</text>
+    <rect class="box" x="522" y="190" width="380" height="84" rx="10"/>
+    <text x="538" y="212" class="lbl" font-size="12">Tool / API Calling Layer</text>
+    <text x="538" y="232" class="sub" font-size="9.5">Resolve the open-case tool through the gateway and</text>
+    <text x="538" y="245" class="sub" font-size="9.5">registry using semantic tool selection.</text>
+    <text x="538" y="264" class="num" font-size="9">AgentCore Gateway (MCP) · Lambda</text>
+    <!-- 9 -->
+    <circle cx="496" cy="310" r="13" class="bar"/>
+    <text x="496" y="314" font-size="11" text-anchor="middle" font-weight="600" fill="#ffffff">9</text>
+    <rect class="box" x="522" y="288" width="380" height="84" rx="10"/>
+    <text x="538" y="310" class="lbl" font-size="12">Validation Checkpoint</text>
+    <text x="538" y="330" class="sub" font-size="9.5">Authorise the action with a Cedar policy and run a</text>
+    <text x="538" y="343" class="sub" font-size="9.5">safety check before anything executes.</text>
+    <text x="538" y="362" class="num" font-size="9">AgentCore Policy · ApplyGuardrail</text>
+    <!-- 10 -->
+    <circle cx="496" cy="408" r="13" class="bar"/>
+    <text x="496" y="412" font-size="11" text-anchor="middle" font-weight="600" fill="#ffffff">10</text>
+    <rect class="box" x="522" y="386" width="380" height="84" rx="10"/>
+    <text x="538" y="408" class="lbl" font-size="12">Tool Executes</text>
+    <text x="538" y="428" class="sub" font-size="9.5">Open the follow-up case in the customer system</text>
+    <text x="538" y="441" class="sub" font-size="9.5">through an approved and audited API.</text>
+    <text x="538" y="460" class="num" font-size="9">Lambda · SaaS API</text>
+    <!-- 11 -->
+    <circle cx="496" cy="506" r="13" class="bar"/>
+    <text x="496" y="510" font-size="11" text-anchor="middle" font-weight="600" fill="#ffffff">11</text>
+    <rect class="box" x="522" y="484" width="380" height="84" rx="10"/>
+    <text x="538" y="506" class="lbl" font-size="12">Response &amp; Action Layer</text>
+    <text x="538" y="526" class="sub" font-size="9.5">Confirm the summary is grounded, redact any PII,</text>
+    <text x="538" y="539" class="sub" font-size="9.5">then return the answer, case link, and notification.</text>
+    <text x="538" y="558" class="num" font-size="9">Bedrock Guardrails · SNS</text>
+    <!-- 12 -->
+    <circle cx="496" cy="604" r="13" class="bar"/>
+    <text x="496" y="608" font-size="11" text-anchor="middle" font-weight="600" fill="#ffffff">12</text>
+    <rect class="box" x="522" y="582" width="380" height="84" rx="10"/>
+    <text x="538" y="604" class="lbl" font-size="12">Audit Log</text>
+    <text x="538" y="624" class="sub" font-size="9.5">Write an immutable record of the request, retrieved</text>
+    <text x="538" y="637" class="sub" font-size="9.5">sources, action, and response.</text>
+    <text x="538" y="656" class="num" font-size="9">CloudTrail · S3 Object Lock</text>
+
+    <!-- observability footer -->
+    <line class="conn" x1="20" y1="708" x2="940" y2="708" stroke-dasharray="2 5"/>
+    <text x="20" y="730" class="lbl" font-size="11">Observability and audit run across every hop</text>
+    <text x="338" y="730" class="sub" font-size="11">tracing, metrics, cost, and an immutable log on each step.</text>
+  </svg>
+  <figcaption>The same request, followed through every hop. The model call is step seven of twelve. Everything around it is the production system.</figcaption>
+</figure>
+
+<p>It begins at the user experience layer, where the manager submits the request from the web application carrying a signed session token. At the gateway, that token is validated, the manager's role is checked against this particular client, the request is rate limited, and its shape is verified. Only then does the orchestrator take over, classifying the request as a read plus a conditional action, planning the two steps, and beginning to assemble context. It pulls the manager's user context and any prior workflow state from the memory layer, then asks the retrieval layer for the three tickets, which come back from the knowledge base re-ranked by relevance.</p>
+
+<p>Before any of that retrieved text reaches the model, a guardrail screens it, because a support ticket is untrusted content and could carry an injected instruction. The model then does the one thing only it can do. It reads the three tickets, reasons that one is unresolved, and decides a follow up case is warranted. That decision becomes a tool selection. The agent gateway resolves the open case tool from the registry, and the validation checkpoint runs before anything executes, confirming with a Cedar policy that this manager may open a case for this client and running a safety check on the proposed action.</p>
+
+<p>With authorisation and safety satisfied, the tool executes, opening the case through an approved and audited interface. The response and action layer then confirms the summary is grounded in the actual tickets, redacts any personal data, and returns three things together, a written summary, a link to the new case, and a notification. Through every one of those hops, the observability band has been recording traces, metrics, and cost, and the audit log has been writing an immutable record of the request, the sources, the action, and the response. The model was step seven of twelve. The other eleven are the reason the answer can be trusted.</p>
+
+<h2>What this changes about how you build</h2>
+
+<p>The single most useful shift this map produces is in where you spend your attention. A great deal of energy goes into prompt wording and model choice, and both matter, but neither is where production systems succeed or fail. They succeed or fail at the boundaries, at the gateway that decides who may call, at the retrieval that decides what the model may read, at the validation that decides what it may do, and at the observability that decides whether anyone can ever explain it afterwards. The model is one box. The engineering is the other eight.</p>
+
+<p>A second shift is that none of this is speculative anymore. Each layer in the diagram now maps to a managed service. Amazon Bedrock AgentCore reached general availability with its runtime, memory, gateway, identity, policy, and observability components, and Amazon Bedrock Guardrails ships the prompt attack detection, contextual grounding, PII filtering, and Automated Reasoning checks that the governance band needs. The pattern that was recently a hand built collection of glue code is becoming a set of composable, governed building blocks, which lowers the cost of doing it properly and raises the bar for doing it poorly.</p>
+
+<p>Finally, the architecture is not finished when it works once. It has to keep working across regions and through failure, which is why the production posture here is multi region by default and why the resilience patterns sit in their own treatment, <a href="/architectures/resilient-transaction-core/">the resilient transaction processing reference architecture</a>. How all of this is built, signed, and shipped, from rootless container builds through image signing to fully private runners, is covered in turn by <a href="/architectures/build-and-deploy-pipeline/">the build and deployment pipeline</a> and <a href="/architectures/managed-gha-runners-ecs/">the self hosted runners on AWS</a>. Taken together they answer the last question a production system always raises, which is not whether the model is clever but whether the whole machine around it can be trusted, paid for, and explained. That machine is the architecture. The model is one box in it.</p>
+      </div>
+
+      <section class="prose refs">
+        <h2>References</h2>
+        <ol>
+          <li>Amazon Bedrock AgentCore is now generally available.<span class="src">https://aws.amazon.com/about-aws/whats-new/2025/10/amazon-bedrock-agentcore-available/</span></li>
+          <li>Amazon Bedrock AgentCore Developer Guide, service overview.<span class="src">https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/what-is-bedrock-agentcore.html</span></li>
+          <li>Introducing Amazon Bedrock AgentCore Gateway, transforming enterprise AI agent tool development.<span class="src">https://aws.amazon.com/blogs/machine-learning/introducing-amazon-bedrock-agentcore-gateway-transforming-enterprise-ai-agent-tool-development/</span></li>
+          <li>Amazon Bedrock Guardrails, product overview and safeguard policies.<span class="src">https://aws.amazon.com/bedrock/guardrails/</span></li>
+          <li>Use a contextual grounding check to filter hallucinations in responses.<span class="src">https://docs.aws.amazon.com/bedrock/latest/userguide/guardrails-contextual-grounding-check.html</span></li>
+          <li>What are Automated Reasoning checks in Amazon Bedrock Guardrails.<span class="src">https://docs.aws.amazon.com/bedrock/latest/userguide/guardrails-automated-reasoning-checks.html</span></li>
+          <li>Guardrail components, content filters and prompt attacks.<span class="src">https://docs.aws.amazon.com/bedrock/latest/userguide/guardrails-components.html</span></li>
+          <li>AWS CloudFormation resource reference, AWS::Bedrock::Guardrail.<span class="src">https://docs.aws.amazon.com/AWSCloudFormation/latest/TemplateReference/aws-resource-bedrock-guardrail.html</span></li>
+          <li>Amazon Bedrock Knowledge Bases and the RetrieveAndGenerate flow.<span class="src">https://docs.aws.amazon.com/bedrock/latest/userguide/knowledge-base.html</span></li>
+          <li>Cedar policy language reference.<span class="src">https://docs.cedarpolicy.com</span></li>
+        </ol>
+      </section>
+
+      <div class="article-foot">
+        <div class="cta-row">
+          <a class="btn" href="/blog/">More writing</a>
+          <a class="btn" href="/architectures/">Reference architectures</a>
+        </div>
+      </div>
+    </div>
+  </article>
+</main>
+
+<footer>
+  <div class="wrap foot">
+    <div class="links">
+      <a href="https://github.com/akanjilal-work">GitHub</a>
+      <a href="https://www.linkedin.com/in/akanjilal/">LinkedIn</a>
+      <a href="mailto:anirban.kanjilal@gmail.com">Email</a>
+    </div>
+    <div class="copy">© 2026 Anirban Kanjilal</div>
+  </div>
+</footer>
+
+</body>
+</html>
