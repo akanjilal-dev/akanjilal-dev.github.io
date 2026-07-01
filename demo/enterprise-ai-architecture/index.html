@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Enterprise AI architecture, a live request you can trigger, Anirban Kanjilal</title>
+<meta name="description" content="Press a button to bring up a real nine-layer enterprise AI environment in an Amazon Web Services account, run one governed request through all twelve hops with the model as step seven, optionally trip a guardrail with a poisoned document, then tear the environment down.">
+<meta property="og:title" content="Enterprise AI architecture, a live request you can trigger">
+<meta property="og:description" content="A real, account-owned nine-layer AI environment you spin up, run one governed request through, and tear down, with an immutable audit record at the end.">
+<meta property="og:type" content="website">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/site.css">
+<style>
+  .demo{padding:48px 0 24px;max-width:860px;margin:0 auto}
+  .demo .lead{color:var(--muted);font-size:16.5px;margin:14px 0 0;text-align:justify}
+  .note{margin:18px 0 0;font-family:"IBM Plex Mono",monospace;font-size:12.5px;color:var(--muted);
+    background:var(--accent-soft);border:1px solid var(--hairline);border-radius:11px;padding:13px 15px;line-height:1.55;text-align:justify}
+  .demo h2{font-size:20px;margin:40px 0 6px;letter-spacing:-0.01em}
+  .demo p{color:var(--muted);font-size:15.5px;line-height:1.6;margin:10px 0;text-align:justify}
+  figure.diagram{margin:22px 0}
+  figure.diagram svg{width:100%;height:auto;display:block;font-family:"IBM Plex Sans",system-ui,sans-serif}
+  figure.diagram figcaption{font-size:13px;color:var(--faint);margin-top:8px;font-family:"IBM Plex Sans",sans-serif}
+  /* live panel */
+  .run{margin:18px 0 0;border:1px solid var(--hairline);border-radius:16px;background:var(--surface);padding:20px}
+  .run-note{margin:0 0 16px;font-size:13.5px;color:var(--muted);line-height:1.55}
+  .run-note b{color:var(--ink);font-weight:600}
+  .run-top{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+  .runbtn{font-family:"IBM Plex Mono",monospace;font-size:14.5px;font-weight:600;padding:12px 22px;border-radius:10px;
+    border:1px solid var(--accent);background:var(--accent);color:#fff;cursor:pointer;transition:background .15s,transform .12s}
+  .runbtn:hover:not(:disabled){background:var(--accent-ink);transform:translateY(-1px)}
+  .runbtn:disabled{opacity:.55;cursor:not-allowed}
+  .runstat{font-family:"IBM Plex Mono",monospace;font-size:12.5px;color:var(--muted)}
+  .poison{display:flex;align-items:center;gap:8px;margin-top:12px;font-family:"IBM Plex Mono",monospace;font-size:12.5px;color:var(--muted)}
+  .poison input{accent-color:var(--accent)}
+  .env-row{display:flex;align-items:center;gap:12px;margin-top:14px;flex-wrap:wrap;padding-top:14px;border-top:1px solid var(--hairline)}
+  .env-pill{font-family:"IBM Plex Mono",monospace;font-size:12px;padding:5px 11px;border-radius:999px;background:var(--chip);color:var(--muted)}
+  .env-pill.up{background:color-mix(in srgb,#1F9D7A 16%,transparent);color:#1F9D7A}
+  .env-pill.down{background:var(--chip);color:var(--faint)}
+  .env-pill.creating,.env-pill.destroying{background:var(--accent-soft);color:var(--accent)}
+  .envbtn{font-family:"IBM Plex Mono",monospace;font-size:12.5px;padding:8px 14px;border-radius:9px;border:1px solid var(--hairline);background:var(--surface);color:var(--ink);cursor:pointer}
+  .envbtn:hover:not(:disabled){border-color:var(--accent)}
+  .envbtn.danger{color:#C7131F;border-color:color-mix(in srgb,#C7131F 35%,transparent)}
+  .envbtn:disabled{opacity:.5;cursor:not-allowed}
+  .progress{margin-top:14px;display:none}
+  .progress.show{display:block}
+  .progress .track{height:10px;border-radius:999px;background:var(--chip);overflow:hidden}
+  .progress .fill{height:100%;border-radius:999px;width:0;transition:width 1.1s linear;
+    background:linear-gradient(90deg,var(--accent),color-mix(in srgb,var(--accent) 55%,#fff));
+    background-size:200% 100%;animation:slide 1.4s linear infinite}
+  @keyframes slide{0%{background-position:200% 0}100%{background-position:0 0}}
+  .progress .ptext{font-family:"IBM Plex Mono",monospace;font-size:11.5px;color:var(--muted);margin-top:7px}
+  .reslist{margin-top:14px;border:1px solid var(--hairline);border-radius:11px;overflow:hidden}
+  .reslist h4{margin:0;padding:9px 14px;background:var(--paper);font-family:"IBM Plex Mono",monospace;font-size:11px;
+    text-transform:uppercase;letter-spacing:.06em;color:var(--faint);font-weight:600}
+  .reslist .row{display:grid;grid-template-columns:190px 1fr;gap:10px;padding:8px 14px;border-top:1px solid var(--hairline);
+    font-family:"IBM Plex Mono",monospace;font-size:12px}
+  .reslist .k{color:var(--faint)}
+  .reslist .v{color:var(--ink);word-break:break-all}
+  .ms-list{list-style:none;padding:0;margin:20px 0 0;display:flex;flex-direction:column;gap:2px}
+  .ms{display:flex;align-items:center;gap:12px;padding:9px 10px;border-radius:9px;font-size:13.5px}
+  .ms .num{width:20px;height:20px;border-radius:50%;flex:none;border:2px solid var(--hairline);background:var(--paper);
+    font-family:"IBM Plex Mono",monospace;font-size:10.5px;display:flex;align-items:center;justify-content:center;color:var(--faint)}
+  .ms.done .num{background:#1F9D7A;border-color:#1F9D7A;color:#fff}
+  .ms.active .num{border-color:var(--accent);background:var(--accent);color:#fff;animation:pulse 1s infinite}
+  .ms.blocked .num{background:#C7131F;border-color:#C7131F;color:#fff}
+  @keyframes pulse{0%,100%{box-shadow:0 0 0 0 color-mix(in srgb,var(--accent) 45%,transparent)}50%{box-shadow:0 0 0 6px transparent}}
+  .ms .lab{flex:1}
+  .ms .det{font-family:"IBM Plex Mono",monospace;font-size:11px;color:var(--faint)}
+  .ms.pending{color:var(--faint)}
+  .ms.done,.ms.active{color:var(--ink)}
+  .ms.blocked{color:#C7131F}
+  .ms.active .lab{font-weight:600}
+  .ms.model .num{background:var(--accent-soft);border-color:var(--accent);color:var(--accent)}
+  .ms.model.done .num{background:#1F9D7A;border-color:#1F9D7A;color:#fff}
+  .logs{margin-top:18px;display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  @media(max-width:680px){.logs{grid-template-columns:1fr}}
+  .logbox h3{font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--faint);margin:0 0 6px}
+  .term{background:var(--code-bg);color:var(--code-ink);border:1px solid var(--hairline);border-radius:11px;padding:13px 14px;
+    font-family:"IBM Plex Mono",monospace;font-size:11.5px;line-height:1.6;white-space:pre-wrap;word-break:break-word;
+    min-height:90px;max-height:300px;overflow:auto}
+  .term .ok{color:var(--code-str)}.term .mut{color:var(--code-faint)}.term .bad{color:#FF8087}
+  .demo-foot{margin-top:34px;display:flex;gap:12px;flex-wrap:wrap}
+</style>
+</head>
+<body>
+
+<header class="bar">
+  <div class="wrap">
+    <a class="brand" href="/">akanjilal<span class="dot">.dev</span></a>
+    <nav class="nav" aria-label="Primary">
+      <a href="/#work">work</a>
+      <a href="/blog/">my blogs</a>
+      <a href="/architectures/">architectures</a>
+      <a href="/#background">background</a>
+      <a class="ext" href="https://github.com/akanjilal-work">github</a>
+      <a class="ext" href="https://www.linkedin.com/in/akanjilal/">linkedin</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <div class="wrap">
+    <div class="demo">
+      <div class="page-head" style="padding:0">
+        <div class="kicker">Live demo</div>
+        <h1>Press a button and watch one governed request run</h1>
+        <p class="lead">This page brings up a real nine-layer enterprise AI environment in an Amazon Web Services account, then runs one request through all of it. The request is the worked example from the article: summarise a client's last three support tickets and open a follow-up case if any remain unresolved. You watch it walk twelve hops, with the model as step seven, and at the end you read the immutable audit record the run produced. You can also inject a poisoned document and watch the guardrail stop it at the retrieval boundary, before any action is taken.</p>
+        <p class="note">This is the architecture described in the <a href="/blog/enterprise-ai-architecture/">capstone article</a>, running for real. The gateway, retrieval, model, guardrails, validation, tools, and the write once audit store are all live in the region US East. The page talks to a small control interface that holds the credentials, so your browser only ever asks to bring the environment up or down, to run the request, and to read its state. Data is entirely synthetic, and runs are limited per day to keep cost bounded.</p>
+      </div>
+
+      <!-- LIVE PANEL -->
+      <div class="run" id="run">
+        <p class="run-note"><b>Three steps.</b> If the environment is off, press Recreate to bring it up, which takes a couple of minutes. Then press Run the request to send one governed request through all nine layers. Tear it down with Destroy when you are done. Tick the box to inject a poisoned ticket and watch the guardrail block it.</p>
+        <div class="run-top">
+          <button class="runbtn" id="runbtn">Run the request</button>
+          <span class="runstat" id="runstat">Press the button to send one governed request.</span>
+        </div>
+        <label class="poison"><input type="checkbox" id="poison"> inject a poisoned ticket (trip the input guardrail)</label>
+        <div class="env-row">
+          <span class="env-pill" id="envpill">checking environment</span>
+          <button class="envbtn" id="recreatebtn" hidden>Recreate environment</button>
+          <button class="envbtn danger" id="destroybtn" hidden>Destroy environment</button>
+          <span class="runstat" id="envnote"></span>
+        </div>
+        <div class="progress" id="progress"><div class="track"><div class="fill" id="pfill"></div></div><div class="ptext" id="ptext"></div></div>
+        <div class="reslist" id="reslist" hidden></div>
+        <ul class="ms-list" id="mslist" hidden></ul>
+        <div class="logs" id="logs" hidden>
+          <div class="logbox"><h3>The answer</h3><div class="term" id="answer"></div></div>
+          <div class="logbox"><h3>Immutable audit record</h3><div class="term" id="audit"></div></div>
+        </div>
+      </div>
+
+      <h2>What is actually running</h2>
+      <p>The environment below is the whole nine-layer architecture, not a mock. A request enters at the gateway, the orchestrator plans it, retrieval pulls the relevant tickets, a guardrail screens that retrieved text, the model reads and reasons, a validation checkpoint authorises the action with a policy and a safety check, the tool opens the case, the response is grounded and stripped of personal data, and every hop is written to an immutable audit store. The model is one box of nine.</p>
+
+      <figure class="diagram">
+  <svg viewBox="0 0 960 532" role="img" aria-label="The nine-layer enterprise AI architecture. A top row of primary-flow layers runs left to right: user experience, API gateway and security, AI orchestrator, the LLM, the tool and API calling layer with a validation checkpoint, and the response and action layer. Below sit the retrieval and memory layers feeding the orchestrator, and an audit log. A full-width governance, guardrails and observability band spans everything as a cross-cutting layer.">
+    <text x="87"  y="44" class="sub" font-size="10" text-anchor="middle">user request</text>
+    <text x="401" y="44" class="sub" font-size="10" text-anchor="middle">orchestration</text>
+    <text x="558" y="44" class="sub" font-size="10" text-anchor="middle">reasoning</text>
+    <text x="872" y="44" class="sub" font-size="10" text-anchor="middle">governed response</text>
+    <rect class="box"  x="20"  y="64" width="135" height="80" rx="11"/>
+    <text x="34" y="90" class="num" font-size="15">1</text>
+    <text x="52" y="86" class="lbl" font-size="11.5">User</text>
+    <text x="52" y="101" class="lbl" font-size="11.5">Experience</text>
+    <text x="34" y="132" class="sub" font-size="9">CloudFront · Amplify · S3</text>
+    <rect class="box"  x="177" y="64" width="135" height="80" rx="11"/>
+    <text x="191" y="90" class="num" font-size="15">2</text>
+    <text x="209" y="86" class="lbl" font-size="11.5">API Gateway</text>
+    <text x="209" y="101" class="lbl" font-size="11.5">&amp; Security</text>
+    <text x="191" y="132" class="sub" font-size="9">API GW · Cognito · WAF · IAM</text>
+    <rect class="box"  x="334" y="64" width="135" height="80" rx="11"/>
+    <text x="348" y="90" class="num" font-size="15">3</text>
+    <text x="366" y="86" class="lbl" font-size="11.5">AI</text>
+    <text x="366" y="101" class="lbl" font-size="11.5">Orchestrator</text>
+    <text x="348" y="132" class="sub" font-size="9">Step Functions · Lambda</text>
+    <rect class="boxa" x="491" y="64" width="135" height="80" rx="11"/>
+    <text x="505" y="90" class="num" font-size="15">4</text>
+    <text x="523" y="86" class="lbl" font-size="11.5">LLM Layer</text>
+    <text x="523" y="101" class="sub" font-size="9.5">the model</text>
+    <text x="505" y="132" class="sub" font-size="9">Bedrock — Nova, Claude</text>
+    <rect class="box"  x="648" y="64" width="135" height="80" rx="11"/>
+    <text x="662" y="90" class="num" font-size="15">7</text>
+    <text x="680" y="86" class="lbl" font-size="11.5">Tool / API</text>
+    <text x="680" y="101" class="lbl" font-size="11.5">Calling</text>
+    <text x="662" y="132" class="sub" font-size="9">Tool gateway · Lambda</text>
+    <rect class="box"  x="805" y="64" width="135" height="80" rx="11"/>
+    <text x="819" y="90" class="num" font-size="15">8</text>
+    <text x="837" y="86" class="lbl" font-size="11.5">Response</text>
+    <text x="837" y="101" class="lbl" font-size="11.5">&amp; Action</text>
+    <text x="819" y="132" class="sub" font-size="9">Lambda · EventBridge · SNS</text>
+    <line class="conna" x1="158" y1="104" x2="172" y2="104"/>
+    <path  class="dot"  d="M172 104 l-6 -3 l0 6 z"/>
+    <line class="conna" x1="315" y1="104" x2="329" y2="104"/>
+    <path  class="dot"  d="M329 104 l-6 -3 l0 6 z"/>
+    <line class="conna" x1="472" y1="104" x2="486" y2="104"/>
+    <path  class="dot"  d="M486 104 l-6 -3 l0 6 z"/>
+    <line class="conna" x1="629" y1="104" x2="643" y2="104"/>
+    <path  class="dot"  d="M643 104 l-6 -3 l0 6 z"/>
+    <line class="conna" x1="786" y1="104" x2="800" y2="104"/>
+    <path  class="dot"  d="M800 104 l-6 -3 l0 6 z"/>
+    <circle cx="793" cy="170" r="12" class="bar"/>
+    <text x="793" y="174" font-size="11" text-anchor="middle" font-weight="600" fill="#ffffff">V</text>
+    <text x="793" y="196" class="sub" font-size="8.5" text-anchor="middle">policy + safety</text>
+    <line class="conna" x1="793" y1="144" x2="793" y2="158" stroke-dasharray="3 3"/>
+    <rect class="box" x="190" y="220" width="245" height="72" rx="11"/>
+    <text x="204" y="246" class="num" font-size="15">5</text>
+    <text x="224" y="244" class="lbl" font-size="11.5">RAG &amp; Knowledge Layer</text>
+    <text x="204" y="266" class="sub" font-size="9.5">documents · embeddings · vectors · re-ranking</text>
+    <text x="204" y="282" class="sub" font-size="9">Bedrock Knowledge Bases · S3 Vectors</text>
+    <rect class="box" x="465" y="220" width="245" height="72" rx="11"/>
+    <text x="479" y="246" class="num" font-size="15">6</text>
+    <text x="499" y="244" class="lbl" font-size="11.5">Memory Layer</text>
+    <text x="479" y="266" class="sub" font-size="9.5">session · user · workflow state · long-term</text>
+    <text x="479" y="282" class="sub" font-size="9">DynamoDB</text>
+    <line class="conna" x1="312" y1="220" x2="392" y2="146" stroke-dasharray="4 4"/>
+    <line class="conna" x1="560" y1="220" x2="420" y2="146" stroke-dasharray="4 4"/>
+    <rect class="box" x="805" y="220" width="135" height="72" rx="11"/>
+    <text x="819" y="244" class="lbl" font-size="11.5">Audit Log</text>
+    <text x="819" y="264" class="sub" font-size="9">immutable record of every</text>
+    <text x="819" y="276" class="sub" font-size="9">request, action, response</text>
+    <text x="819" y="290" class="sub" font-size="8.5">CloudTrail · Object Lock</text>
+    <line class="conna" x1="872" y1="144" x2="872" y2="220" stroke-dasharray="3 3"/>
+    <rect class="band" x="20" y="320" width="920" height="150" rx="14"/>
+    <text x="38" y="352" class="num" font-size="15">9</text>
+    <text x="58" y="350" class="lbl" font-size="13">Governance, Guardrails &amp; Observability</text>
+    <text x="368" y="350" class="sub" font-size="10" font-style="italic">cross-cutting — it touches every layer</text>
+    <g font-size="10">
+      <circle cx="40"  cy="392" r="3" class="dot"/>
+      <text x="52"  y="396" class="lbl" font-size="10">Guardrails</text>
+      <text x="40"  y="412" class="sub" font-size="8.5">Bedrock Guardrails</text>
+      <circle cx="152" cy="392" r="3" class="dot"/>
+      <text x="164" y="396" class="lbl" font-size="10">PII detection</text>
+      <text x="152" y="412" class="sub" font-size="8.5">Macie · Guardrails</text>
+      <circle cx="264" cy="392" r="3" class="dot"/>
+      <text x="276" y="396" class="lbl" font-size="10">Audit logs</text>
+      <text x="264" y="412" class="sub" font-size="8.5">CloudTrail</text>
+      <circle cx="376" cy="392" r="3" class="dot"/>
+      <text x="388" y="396" class="lbl" font-size="10">Human approval</text>
+      <text x="376" y="412" class="sub" font-size="8.5">Step Functions</text>
+      <circle cx="488" cy="392" r="3" class="dot"/>
+      <text x="500" y="396" class="lbl" font-size="10">Tracing</text>
+      <text x="488" y="412" class="sub" font-size="8.5">X-Ray · ADOT</text>
+      <circle cx="600" cy="392" r="3" class="dot"/>
+      <text x="612" y="396" class="lbl" font-size="10">Metrics</text>
+      <text x="600" y="412" class="sub" font-size="8.5">CloudWatch</text>
+      <circle cx="712" cy="392" r="3" class="dot"/>
+      <text x="724" y="396" class="lbl" font-size="10">Cost monitoring</text>
+      <text x="712" y="412" class="sub" font-size="8.5">Cost Explorer</text>
+      <circle cx="824" cy="392" r="3" class="dot"/>
+      <text x="836" y="396" class="lbl" font-size="10">Model evaluation</text>
+      <text x="824" y="412" class="sub" font-size="8.5">AgentCore Evals</text>
+    </g>
+    <line class="conna" x1="20" y1="505" x2="46" y2="505"/>
+    <path class="dot" d="M46 505 l-6 -3 l0 6 z"/>
+    <text x="54" y="509" class="sub" font-size="10">primary flow</text>
+    <line class="conna" x1="160" y1="505" x2="186" y2="505" stroke-dasharray="4 4"/>
+    <text x="194" y="509" class="sub" font-size="10">context / support flow</text>
+    <text x="940" y="509" class="num" font-size="11" text-anchor="end">the model is one box of nine</text>
+  </svg>
+        <figcaption>The environment the button brings up. Each numbered step in the live panel above corresponds to a hop through these layers.</figcaption>
+      </figure>
+
+      <h2>Spin it up, run it, tear it down</h2>
+      <p>Bringing the environment up provisions the retrieval index on S3 Vectors, the orchestrator state machine, the guardrails and the validation policy, and the immutable audit store, then warms the path so your first request is fast. Tearing it down returns the account to a near zero idle baseline. The whole environment is account owned and reproducible, brought into being from infrastructure as code on the button you press.</p>
+
+      <h2>The poisoned ticket</h2>
+      <p>Tick the box before you run, and one of the retrieved tickets carries a hidden instruction telling the assistant to ignore its rules and export the customer list. That is a prompt injection, and it arrives through the same retrieval path as any other document. The guardrail screens retrieved content before it reaches the model, recognises the attack, and blocks the run at the retrieval boundary. The trace stops at the guardrail, no tool is called, and the attempt is written to the audit record. Security here is not a perimeter you cross once, it is re-established at every boundary where untrusted text enters the loop.</p>
+
+      <div class="demo-foot">
+        <a class="btn primary" href="https://github.com/akanjilal-work/enterprise-ai-arch-demo">Read the code</a>
+        <a class="btn" href="/blog/enterprise-ai-architecture/">The article</a>
+      </div>
+    </div>
+  </div>
+</main>
+
+<footer>
+  <div class="wrap foot">
+    <div class="links">
+      <a href="https://github.com/akanjilal-work">GitHub</a>
+      <a href="https://www.linkedin.com/in/akanjilal/">LinkedIn</a>
+      <a href="mailto:anirban.kanjilal@gmail.com">Email</a>
+    </div>
+    <div class="copy">© 2026 Anirban Kanjilal · this request runs on real infrastructure</div>
+  </div>
+</footer>
+
+<script>
+// Control API base URL (control plane in us-east-1, account-owned).
+const CTRL = "https://nybuuj56l2.execute-api.us-east-1.amazonaws.com";
+const btn = document.getElementById("runbtn");
+const stat = document.getElementById("runstat");
+const poison = document.getElementById("poison");
+const msList = document.getElementById("mslist");
+const logs = document.getElementById("logs");
+const answerEl = document.getElementById("answer");
+const auditEl = document.getElementById("audit");
+const envpill = document.getElementById("envpill");
+const recreatebtn = document.getElementById("recreatebtn");
+const destroybtn = document.getElementById("destroybtn");
+const envnote = document.getElementById("envnote");
+const reslist = document.getElementById("reslist");
+const progress = document.getElementById("progress");
+const pfill = document.getElementById("pfill");
+const ptext = document.getElementById("ptext");
+let timer = null, envTimer = null, running = false;
+
+function esc(s){ const d=document.createElement("div"); d.textContent=s==null?"":String(s); return d.innerHTML; }
+
+async function checkEnv(){
+  if (!CTRL){ envpill.textContent = "environment: control interface not configured"; envpill.className = "env-pill"; return; }
+  try{
+    const d = await (await fetch(`${CTRL}/env-status`, {cache:"no-store"})).json();
+    const st = d.state || "unknown";
+    envpill.textContent = "environment: " + st;
+    envpill.className = "env-pill " + st;
+    const transitioning = (st === "creating" || st === "destroying");
+    const capped = !!d.capped;
+    btn.disabled = (st !== "up") || running || capped;
+    destroybtn.hidden = (st !== "up");
+    recreatebtn.hidden = (st !== "down");
+    destroybtn.disabled = false; recreatebtn.disabled = capped;
+    const res = d.resources || {};
+    if (st === "up" && Object.keys(res).length){
+      reslist.hidden = false;
+      reslist.innerHTML = "<h4>Live resources in the account</h4>" +
+        Object.entries(res).map(([k,v]) => `<div class="row"><span class="k">${esc(k)}</span><span class="v">${esc(v)}</span></div>`).join("");
+    } else { reslist.hidden = true; reslist.innerHTML = ""; }
+    if (capped){ envnote.textContent = "the daily limit has been reached, please come back tomorrow."; }
+    else if (st === "down"){ envnote.textContent = "the environment is off, recreate it to run a request."; btn.textContent = "Run the request"; }
+    else if (st === "up"){ envnote.textContent = ""; }
+    else if (transitioning){ envnote.textContent = st === "creating" ? "bringing the environment up, this takes a couple of minutes." : "tearing the environment down."; }
+    if (transitioning){
+      progress.classList.add("show");
+      const est = d.estimate || (st === "destroying" ? 150 : 180);
+      const el = d.elapsed || 0;
+      pfill.style.width = Math.min(96, Math.round(el / est * 100)) + "%";
+      const m = Math.floor(el / 60), s = el % 60;
+      const verb = st === "destroying" ? "tearing the environment down" : "bringing the environment up";
+      ptext.textContent = `${verb}, ${m}m ${s < 10 ? "0" + s : s}s elapsed, this usually takes about ${Math.max(1, Math.round(est / 60))} minutes`;
+    } else {
+      progress.classList.remove("show"); pfill.style.width = "0%";
+    }
+    clearTimeout(envTimer); envTimer = setTimeout(checkEnv, transitioning ? 5000 : 9000);
+  }catch(e){ envpill.textContent = "environment: unknown"; clearTimeout(envTimer); envTimer = setTimeout(checkEnv, 12000); }
+}
+destroybtn.addEventListener("click", async () => {
+  if (!confirm("Destroy the environment? You can recreate it later.")) return;
+  destroybtn.disabled = true; envnote.textContent = "starting teardown...";
+  try{ await fetch(`${CTRL}/destroy`, {method:"POST"}); checkEnv(); }
+  catch(e){ envnote.textContent = "could not start the teardown."; destroybtn.disabled = false; }
+});
+recreatebtn.addEventListener("click", async () => {
+  recreatebtn.disabled = true; envnote.textContent = "starting the environment...";
+  try{ await fetch(`${CTRL}/apply`, {method:"POST"}); checkEnv(); }
+  catch(e){ envnote.textContent = "could not start the environment."; recreatebtn.disabled = false; }
+});
+
+function renderSteps(steps){
+  msList.hidden = false;
+  msList.innerHTML = steps.map(m => {
+    const cls = "ms " + (m.state || "pending") + (m.model ? " model" : "");
+    const num = m.state === "done" ? "&#10003;" : (m.state === "blocked" ? "&#33;" : esc(m.n));
+    return `<li class="${cls}"><span class="num">${num}</span><span class="lab">${esc(m.label)}</span><span class="det">${esc(m.detail || "")}</span></li>`;
+  }).join("");
+}
+function renderAnswer(d){
+  logs.hidden = false;
+  if (d.blocked){
+    answerEl.innerHTML = '<span class="bad">request blocked at the retrieval boundary.</span>\n<span class="mut">the input guardrail detected a prompt injection in a retrieved ticket. no tool was called and no action was taken.</span>';
+  } else if (d.answer){
+    answerEl.innerHTML = '<span class="ok">' + esc(d.answer) + '</span>';
+  } else {
+    answerEl.innerHTML = '<span class="mut">the run has not produced an answer yet</span>';
+  }
+}
+function renderAudit(d){
+  if (d.audit_record){
+    auditEl.textContent = (typeof d.audit_record === "string") ? d.audit_record : JSON.stringify(d.audit_record, null, 2);
+  } else {
+    auditEl.innerHTML = '<span class="mut">the audit record is written when the run completes</span>';
+  }
+}
+
+async function poll(runId){
+  try{
+    const r = await fetch(`${CTRL}/status?run_id=${runId}`, {cache:"no-store"});
+    const d = await r.json();
+    renderSteps(d.steps || []);
+    renderAnswer(d);
+    renderAudit(d);
+    if (d.failed){ stat.textContent = "the run failed. " + (d.error || ""); stop(); return; }
+    if (d.blocked){ stat.textContent = "blocked. the guardrail stopped the run before any action was taken."; stop(); return; }
+    if (d.done){ stat.textContent = "done. the answer and the immutable audit record are above."; stop(); return; }
+    stat.textContent = "running... following the request through the layers.";
+  }catch(e){ stat.textContent = "could not read the run state, retrying."; }
+}
+function stop(){ if(timer){clearInterval(timer); timer=null;} running=false; btn.disabled=false; btn.textContent="Run the request again"; checkEnv(); }
+
+btn.addEventListener("click", async () => {
+  btn.disabled = true; btn.textContent = "starting..."; stat.textContent = "sending the request...";
+  try{
+    const r = await fetch(`${CTRL}/trigger`, {method:"POST", headers:{"content-type":"application/json"}, body: JSON.stringify({poisoned: poison.checked})});
+    const d = await r.json();
+    if (!d.run_id){ stat.textContent = d.error || "could not start the run."; btn.disabled=false; btn.textContent="Run the request"; return; }
+    running = true; stat.textContent = "request started. following it live..."; btn.textContent = "request running";
+    poll(d.run_id);
+    timer = setInterval(() => poll(d.run_id), 4000);
+  }catch(e){ stat.textContent = "could not reach the control interface."; btn.disabled=false; btn.textContent="Run the request"; }
+});
+
+checkEnv();
+</script>
+
+</body>
+</html>
