@@ -170,7 +170,7 @@
 
         <h2>Enforcing private builds only</h2>
 
-        <p>Enforcement works as defence in depth across three layers, and the third is the one that makes it stick. Source governance in GitHub, code owners on the workflow files, an allowed-actions policy, and a pinned-commit ruleset, makes building elsewhere hard to introduce. Capacity gating means a job only receives a runner if it requests the exact labels, so a misconfigured job simply never gets capacity rather than falling back to a hosted runner. The registry gate is the real control.</p>
+        <p>Enforcement works as defense in depth across three layers, and the third is the one that makes it stick. Source governance in GitHub, code owners on the workflow files, an allowed-actions policy, and a pinned-commit ruleset, makes building elsewhere hard to introduce. Capacity gating means a job only receives a runner if it requests the exact labels, so a misconfigured job simply never gets capacity rather than falling back to a hosted runner. The registry gate is the real control.</p>
 
         <figure class="diagram">
           <img src="/assets/img/ghar-enforcement.svg" alt="The ECR app repository policy allows PutImage only from the runner task role and denies it for a laptop, a rogue CI pipeline, and any other principal. Deploy targets pull only from the repository and verify the cosign signature before admitting an image." loading="lazy">

@@ -4,9 +4,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Enterprise AI architecture, from an LLM demo to a production system, Anirban Kanjilal</title>
-<meta name="description" content="A capstone walk through the nine layers that separate an impressive language model demo from a governed production system on AWS, organised around the failure modes that force each layer into existence.">
+<meta name="description" content="A capstone walk through the nine layers that separate an impressive language model demo from a governed production system on AWS, organized around the failure modes that force each layer into existence.">
 <meta property="og:title" content="Enterprise AI architecture, from an LLM demo to a production system">
-<meta property="og:description" content="In a production system, the language model is one component of nine. The other eight are what make it safe to operate. A walk through all nine, organised around the failures that force each one into being and mapped to the AWS services that deliver them.">
+<meta property="og:description" content="In a production system, the language model is one component of nine. The other eight are what make it safe to operate. A walk through all nine, organized around the failures that force each one into being and mapped to the AWS services that deliver them.">
 <meta property="og:type" content="article">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -35,7 +35,7 @@
       <div class="article-head">
         <div class="meta"><span>AI architecture</span><span>June 30, 2026</span><span>22 minute read</span></div>
         <h1>Enterprise AI architecture, from an LLM demo to a production system</h1>
-        <p class="standfirst">In a production system, the language model is one component of nine. The other eight are what make it safe to operate. This is a walk through all nine, organised around the failures that force each one into being, mapped to the services that deliver them on AWS.</p>
+        <p class="standfirst">In a production system, the language model is one component of nine. The other eight are what make it safe to operate. This is a walk through all nine, organized around the failures that force each one into being, mapped to the services that deliver them on AWS.</p>
       </div>
 
       <div class="prose">
@@ -304,7 +304,7 @@
 
 <p>The notebook called the model directly with a key on the developer's machine. There was no notion of who was asking, what they were allowed to ask for, or how often they could ask. The first thing reality does to that arrangement is send it ten thousand requests, a few of them hostile, and watch the bill and the blast radius climb together. The fix is not one control but a layer of them, and it sits in front of everything else.</p>
 
-<p>The user experience layer is where a real person actually meets the system, through a web application, a mobile application, a chat surface, or an upload for a document or an image. Behind it, the application programming interface (API) gateway and security layer is the part that turns an open endpoint into a governed one. Authentication establishes who is calling. Authorisation and role based access control (RBAC) establish what that caller may do, which matters enormously the moment an agent can act on a user's behalf. Rate limiting keeps a single caller, friendly or not, from consuming the whole system. Request validation rejects malformed or oversized input before it ever reaches a model you are paying for by the token.</p>
+<p>The user experience layer is where a real person actually meets the system, through a web application, a mobile application, a chat surface, or an upload for a document or an image. Behind it, the application programming interface (API) gateway and security layer is the part that turns an open endpoint into a governed one. Authentication establishes who is calling. Authorization and role based access control (RBAC) establish what that caller may do, which matters enormously the moment an agent can act on a user's behalf. Rate limiting keeps a single caller, friendly or not, from consuming the whole system. Request validation rejects malformed or oversized input before it ever reaches a model you are paying for by the token.</p>
 
 <div class="callout"><p><strong>AWS</strong> &nbsp;Amazon CloudFront and AWS Amplify front the experience. Amazon API Gateway terminates the request. Amazon Cognito issues and validates the JSON Web Token (JWT) that carries identity. AWS WAF and usage plans handle rate limiting and abuse. AWS Identity and Access Management (IAM) grants the least privilege each downstream call needs.</p></div>
 
@@ -350,7 +350,7 @@
 
 <blockquote>One model call is a sentence. A real task is a paragraph with branches, retries, and a plan.</blockquote>
 
-<p>The demo did its work in one call. Ask the system to summarise three tickets and open a case only if one is unresolved, and a single prompt has to route the request, decide what information it needs, gather it, reason, and act, all at once and with no recovery if any part fails. The orchestrator is the layer that breaks that into a managed sequence and supervises it.</p>
+<p>The demo did its work in one call. Ask the system to summarize three tickets and open a case only if one is unresolved, and a single prompt has to route the request, decide what information it needs, gather it, reason, and act, all at once and with no recovery if any part fails. The orchestrator is the layer that breaks that into a managed sequence and supervises it.</p>
 
 <p>A request router classifies the incoming request and decides how to handle it. A task planner decomposes a goal into steps. A context manager assembles exactly the right material from memory and retrieval for each step, rather than dumping everything into one oversized prompt. A prompt builder constructs the model call. A confidence check inspects the result before the system acts on it, so a low confidence answer can trigger a clarifying question or a fallback rather than a wrong action. An error handler catches the failures that will happen and decides whether to retry, degrade, or stop.</p>
 
@@ -392,11 +392,11 @@ def route(user_text, threshold=0.75):
 
 <h2>Layer 7 · It invents a tool call, or calls a real tool with bad inputs</h2>
 
-<blockquote>An agent that can act is only as safe as the catalogue of actions it is allowed to take.</blockquote>
+<blockquote>An agent that can act is only as safe as the catalog of actions it is allowed to take.</blockquote>
 
-<p>The demo could talk. A production agent has to do, which means calling real application programming interfaces, querying databases, and driving software as a service (SaaS) tools. Two failures arrive immediately. The model invents a tool that does not exist, or it calls a real tool with arguments that are malformed or out of policy. Handing a model an unbounded ability to call anything is how a plausible sentence becomes a real and damaging action. The tool and API calling layer is the controlled catalogue that prevents this.</p>
+<p>The demo could talk. A production agent has to do, which means calling real application programming interfaces, querying databases, and driving software as a service (SaaS) tools. Two failures arrive immediately. The model invents a tool that does not exist, or it calls a real tool with arguments that are malformed or out of policy. Handing a model an unbounded ability to call anything is how a plausible sentence becomes a real and damaging action. The tool and API calling layer is the controlled catalog that prevents this.</p>
 
-<p>At its centre is a tool registry, the explicit and versioned set of actions the agent may take, each with a typed schema for its inputs. The model never calls a raw endpoint. It selects from the registry, and the agent gateway mediates the call, handling authorisation outward to the target system and shaping the request. The Model Context Protocol (MCP) has become the common language for exposing tools to agents in a uniform way, so a database, an approved internal API, and a SaaS connector can all be presented to the model through one consistent interface.</p>
+<p>At its centre is a tool registry, the explicit and versioned set of actions the agent may take, each with a typed schema for its inputs. The model never calls a raw endpoint. It selects from the registry, and the agent gateway mediates the call, handling authorization outward to the target system and shaping the request. The Model Context Protocol (MCP) has become the common language for exposing tools to agents in a uniform way, so a database, an approved internal API, and a SaaS connector can all be presented to the model through one consistent interface.</p>
 
 <p>Describing a tool well is most of the safety. The schema below is what the model is actually allowed to ask for, and a strict schema is what stops a vague intention from becoming a malformed call.</p>
 
@@ -429,15 +429,15 @@ def route(user_text, threshold=0.75):
 }
 </code></pre>
 
-<div class="callout"><p><strong>AWS</strong> &nbsp;Amazon Bedrock AgentCore Gateway turns AWS Lambda functions, OpenAPI definitions, and existing MCP servers into governed, discoverable tools behind a single secure endpoint. It applies dual sided security, validating inbound calls and authorising outbound ones with IAM or OAuth, and its semantic tool selection helps an agent find the right tool from a large catalogue without being overwhelmed by the full list.</p></div>
+<div class="callout"><p><strong>AWS</strong> &nbsp;Amazon Bedrock AgentCore Gateway turns AWS Lambda functions, OpenAPI definitions, and existing MCP servers into governed, discoverable tools behind a single secure endpoint. It applies dual sided security, validating inbound calls and authorizing outbound ones with IAM or OAuth, and its semantic tool selection helps an agent find the right tool from a large catalog without being overwhelmed by the full list.</p></div>
 
 <h2>The validation checkpoint · It takes an irreversible action that no one approved</h2>
 
 <blockquote>Reading the wrong document is recoverable. Wiring the wrong payment is not.</blockquote>
 
-<p>The most dangerous moment in the whole flow is the instant between deciding to act and acting. A read can be retracted. A refund, a deletion, or an outbound message cannot. The validation checkpoint is the deliberate gate that sits on the path from the tool layer to the action layer, and it asks two different questions. Is this caller authorised to take this specific action on this specific resource, and is this action itself safe to take right now.</p>
+<p>The most dangerous moment in the whole flow is the instant between deciding to act and acting. A read can be retracted. A refund, a deletion, or an outbound message cannot. The validation checkpoint is the deliberate gate that sits on the path from the tool layer to the action layer, and it asks two different questions. Is this caller authorized to take this specific action on this specific resource, and is this action itself safe to take right now.</p>
 
-<p>Authorisation here is not the coarse role check from the gateway. It is a fine grained policy decision about a concrete action on a concrete resource, and it is best expressed as policy rather than buried in code, so it can be reviewed, versioned, and audited on its own.</p>
+<p>Authorization here is not the coarse role check from the gateway. It is a fine grained policy decision about a concrete action on a concrete resource, and it is best expressed as policy rather than buried in code, so it can be reviewed, versioned, and audited on its own.</p>
 
 <pre><code>// Cedar policy: a relationship manager may open a case
 // only for the client they are assigned to.
@@ -469,13 +469,13 @@ def safety_gate(proposed_output, guardrail_id, version="DRAFT"):
 
 <p>For genuinely consequential actions, the right answer is sometimes to stop and ask a person. Human approval is a first class step, not an admission of failure, and it belongs in the orchestrated flow so that the wait is auditable and the approver's decision is recorded.</p>
 
-<div class="callout"><p><strong>AWS</strong> &nbsp;Amazon Bedrock AgentCore Policy uses Cedar to express fine grained authorisation over agent actions. Amazon Bedrock Guardrails, through <code>ApplyGuardrail</code>, performs the safety validation. AWS Step Functions holds the human approval task, pausing the workflow until a person decides.</p></div>
+<div class="callout"><p><strong>AWS</strong> &nbsp;Amazon Bedrock AgentCore Policy uses Cedar to express fine grained authorization over agent actions. Amazon Bedrock Guardrails, through <code>ApplyGuardrail</code>, performs the safety validation. AWS Step Functions holds the human approval task, pausing the workflow until a person decides.</p></div>
 
 <h2>Layer 8 · The answer is ungrounded, or it quietly leaks personal data</h2>
 
 <blockquote>Even a correct system can produce a response you must not send.</blockquote>
 
-<p>Suppose every prior layer did its job. The caller was authorised, the right documents were retrieved, the plan was sound, the tool was valid, and the action was approved. The response can still be wrong in two specific and costly ways. It can drift from the retrieved evidence into something the source never said, which is a hallucination dressed as a citation, and it can include personally identifiable information (PII) that should never leave the system. The response and action layer is the last line before output becomes a final answer, an application programming interface action, a ticket update, a notification, or a generated report.</p>
+<p>Suppose every prior layer did its job. The caller was authorized, the right documents were retrieved, the plan was sound, the tool was valid, and the action was approved. The response can still be wrong in two specific and costly ways. It can drift from the retrieved evidence into something the source never said, which is a hallucination dressed as a citation, and it can include personally identifiable information (PII) that should never leave the system. The response and action layer is the last line before output becomes a final answer, an application programming interface action, a ticket update, a notification, or a generated report.</p>
 
 <p>Two checks matter most here. A contextual grounding check compares the response against the source material and scores how well it is supported and how relevant it is, so an answer that wandered off the evidence can be blocked or flagged before it is sent. A sensitive information filter detects and redacts PII in the output, by standard entity type and by custom pattern. Both can be configured as policy and deployed through infrastructure as code, which is how they stay consistent across regions and environments.</p>
 
@@ -508,9 +508,9 @@ Properties:
 
 <blockquote>A system you cannot see, cannot bill, and cannot explain is not in production. It is just running.</blockquote>
 
-<p>The final failure is the quiet one. The demo had no meter and no memory of its own behaviour. In production, token spend climbs without anyone noticing, latency varies without anyone measuring, and three months later a customer asks why the system did what it did and no one can answer. Governance, guardrails, and observability are drawn as a band beneath everything else in the diagram because they are cross cutting. They touch every layer rather than sitting at one point in the flow.</p>
+<p>The final failure is the quiet one. The demo had no meter and no memory of its own behavior. In production, token spend climbs without anyone noticing, latency varies without anyone measuring, and three months later a customer asks why the system did what it did and no one can answer. Governance, guardrails, and observability are drawn as a band beneath everything else in the diagram because they are cross cutting. They touch every layer rather than sitting at one point in the flow.</p>
 
-<p>The band carries eight concerns. Guardrails and PII detection we have already met at the points where they act. Audit logs, human approval, tracing, metrics, cost monitoring, and model evaluation are the operational backbone. Tracing follows a single request across every hop so a slow or wrong result can be diagnosed. Metrics turn behaviour into numbers you can alarm on. Cost monitoring makes token spend visible per feature and per tenant before it becomes a surprise. Model evaluation watches quality over time so a regression is caught by a graph rather than by a complaint.</p>
+<p>The band carries eight concerns. Guardrails and PII detection we have already met at the points where they act. Audit logs, human approval, tracing, metrics, cost monitoring, and model evaluation are the operational backbone. Tracing follows a single request across every hop so a slow or wrong result can be diagnosed. Metrics turn behavior into numbers you can alarm on. Cost monitoring makes token spend visible per feature and per tenant before it becomes a surprise. Model evaluation watches quality over time so a regression is caught by a graph rather than by a complaint.</p>
 
 <p>Beside the band sits the audit log, drawn separately because it has a property the rest do not. It is immutable. Every request, every retrieved source, every action, and every response is written to a store that cannot be altered after the fact, which is what lets you reconstruct exactly what happened and prove it. A write once read many (WORM) store is not optional in a regulated setting. It is the evidence.</p>
 
@@ -520,14 +520,14 @@ Properties:
 
 <h2>The request, traced end to end</h2>
 
-<p>Layers explained one at a time can still feel like parts in a box. The test of an architecture is what happens when a single real request moves through all of it at once. So take a concrete one. A relationship manager asks the system to summarise a client's last three support tickets and open a follow up case if any of them are still unresolved. That request is both a read and a conditional action, which is exactly the kind of thing a demo cannot safely do and a production system can.</p>
+<p>Layers explained one at a time can still feel like parts in a box. The test of an architecture is what happens when a single real request moves through all of it at once. So take a concrete one. A relationship manager asks the system to summarize a client's last three support tickets and open a follow up case if any of them are still unresolved. That request is both a read and a conditional action, which is exactly the kind of thing a demo cannot safely do and a production system can.</p>
 
 <figure class="diagram">
   <svg viewBox="0 0 960 752" role="img" aria-label="A twelve-step trace of one enterprise request. The request enters at the top, then descends the left column through six steps from the user experience layer to a guardrail on retrieved content, then continues down the right column through six more steps from the LLM layer to the audit log. Observability and audit run across every hop.">
     <!-- request banner -->
     <rect class="band" x="20" y="20" width="920" height="56" rx="12"/>
     <text x="40" y="44" class="num" font-size="11">REQUEST</text>
-    <text x="40" y="63" class="lbl" font-size="12">&#8220;Summarise this client's last three support tickets, and open a follow-up case if any remain unresolved.&#8221;</text>
+    <text x="40" y="63" class="lbl" font-size="12">&#8220;Summarize this client's last three support tickets, and open a follow-up case if any remain unresolved.&#8221;</text>
 
     <!-- column rails -->
     <line class="conna" x1="44"  y1="114" x2="44"  y2="604"/>
@@ -607,7 +607,7 @@ Properties:
     <text x="496" y="314" font-size="11" text-anchor="middle" font-weight="600" fill="#ffffff">9</text>
     <rect class="box" x="522" y="288" width="380" height="84" rx="10"/>
     <text x="538" y="310" class="lbl" font-size="12">Validation Checkpoint</text>
-    <text x="538" y="330" class="sub" font-size="9.5">Authorise the action with a Cedar policy and run a</text>
+    <text x="538" y="330" class="sub" font-size="9.5">Authorize the action with a Cedar policy and run a</text>
     <text x="538" y="343" class="sub" font-size="9.5">safety check before anything executes.</text>
     <text x="538" y="362" class="num" font-size="9">AgentCore Policy · ApplyGuardrail</text>
     <!-- 10 -->
@@ -647,7 +647,7 @@ Properties:
 
 <p>Before any of that retrieved text reaches the model, a guardrail screens it, because a support ticket is untrusted content and could carry an injected instruction. The model then does the one thing only it can do. It reads the three tickets, reasons that one is unresolved, and decides a follow up case is warranted. That decision becomes a tool selection. The agent gateway resolves the open case tool from the registry, and the validation checkpoint runs before anything executes, confirming with a Cedar policy that this manager may open a case for this client and running a safety check on the proposed action.</p>
 
-<p>With authorisation and safety satisfied, the tool executes, opening the case through an approved and audited interface. The response and action layer then confirms the summary is grounded in the actual tickets, redacts any personal data, and returns three things together, a written summary, a link to the new case, and a notification. Through every one of those hops, the observability band has been recording traces, metrics, and cost, and the audit log has been writing an immutable record of the request, the sources, the action, and the response. The model handled one of the twelve steps. The other eleven are what allow the answer to be trusted.</p>
+<p>With authorization and safety satisfied, the tool executes, opening the case through an approved and audited interface. The response and action layer then confirms the summary is grounded in the actual tickets, redacts any personal data, and returns three things together, a written summary, a link to the new case, and a notification. Through every one of those hops, the observability band has been recording traces, metrics, and cost, and the audit log has been writing an immutable record of the request, the sources, the action, and the response. The model handled one of the twelve steps. The other eleven are what allow the answer to be trusted.</p>
 
 <h2>What this changes about how you build</h2>
 

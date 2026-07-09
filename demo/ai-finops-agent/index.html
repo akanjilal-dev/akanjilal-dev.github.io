@@ -148,7 +148,7 @@ async function boot() {
     const csv = await fetchText("py/sample_focus.csv");
     pyodide.FS.writeFile("/home/pyodide/sample_focus.csv", enc.encode(csv));
 
-    // Initialise the agent over the sample data.
+    // Initialize the agent over the sample data.
     const stats = await pyodide.runPythonAsync(`
 import sys
 sys.path.insert(0, "/home/pyodide")

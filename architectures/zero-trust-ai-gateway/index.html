@@ -110,8 +110,8 @@
 
         <h3>3. Bedrock Guardrails applied independently rather than relying on a model's built in safety</h3>
         <p><strong>Decision.</strong> Apply Bedrock Guardrails to both the input and the output of every call using the independent guardrail interface, so the same policy holds for any model.</p>
-        <p><strong>Alternatives.</strong> Trusting the safety behaviour built into each model, or filtering only the input.</p>
-        <p><strong>Rationale.</strong> A guardrail applied independently enforces one consistent policy across every model and is the place to catch prompt attacks on the way in and personal data or secrets on the way out, which a single model's behaviour cannot be relied upon to do. This serves functional requirement 3 and the security attribute.</p>
+        <p><strong>Alternatives.</strong> Trusting the safety behavior built into each model, or filtering only the input.</p>
+        <p><strong>Rationale.</strong> A guardrail applied independently enforces one consistent policy across every model and is the place to catch prompt attacks on the way in and personal data or secrets on the way out, which a single model's behavior cannot be relied upon to do. This serves functional requirement 3 and the security attribute.</p>
         <p><strong>Consequences.</strong> Each call carries two inspection steps, which is a small and bounded cost accepted for a consistent control.</p>
 
         <h3>4. An allow list of models and tools rather than open access</h3>
@@ -124,12 +124,12 @@
         <p><strong>Decision.</strong> Issue a credential that is scoped to a single tool and a single purpose, valid for a short time, through AgentCore Identity.</p>
         <p><strong>Alternatives.</strong> A shared service credential that every tool call uses.</p>
         <p><strong>Rationale.</strong> A scoped and short lived credential limits what a compromised call can do and for how long, where a shared standing secret would expose every tool at once if it leaked. This serves functional requirement 4 and the security attribute.</p>
-        <p><strong>Consequences.</strong> The identity service must mint credentials on demand, which is the managed behaviour of AgentCore Identity.</p>
+        <p><strong>Consequences.</strong> The identity service must mint credentials on demand, which is the managed behavior of AgentCore Identity.</p>
 
         <h3>6. A human approval step for high impact actions rather than full autonomy</h3>
         <p><strong>Decision.</strong> Require a person to confirm any action that moves money, changes a record of value, or is otherwise irreversible.</p>
         <p><strong>Alternatives.</strong> Allowing the agent to complete such actions on its own once it decides to.</p>
-        <p><strong>Rationale.</strong> An agent's judgement is probabilistic, so the cost of a wrong irreversible action is too high to leave unattended, and a single confirmation point removes the most damaging class of mistake. This serves functional requirement 5.</p>
+        <p><strong>Rationale.</strong> An agent's judgment is probabilistic, so the cost of a wrong irreversible action is too high to leave unattended, and a single confirmation point removes the most damaging class of mistake. This serves functional requirement 5.</p>
         <p><strong>Consequences.</strong> Some actions are slower because they wait for a person, which is accepted in exchange for preventing the worst outcomes.</p>
 
         <h3>7. Two regions in warm standby rather than a single region</h3>

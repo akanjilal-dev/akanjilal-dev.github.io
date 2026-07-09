@@ -179,7 +179,7 @@
             <tr><td>Account Directory</td><td>Resolves account status, ownership, and eligibility.</td><td>Synchronous, cached</td></tr>
             <tr><td>Notification</td><td>Tells the customer the outcome.</td><td>Asynchronous, on a domain event</td></tr>
             <tr><td>Reconciliation and Settlement</td><td>Nets and settles to the scheme and reconciles the ledger against the scheme statement.</td><td>Asynchronous</td></tr>
-            <tr><td>Analytics sink</td><td>Lands every event for reporting and modelling.</td><td>Asynchronous</td></tr>
+            <tr><td>Analytics sink</td><td>Lands every event for reporting and modeling.</td><td>Asynchronous</td></tr>
             <tr><td>Scheme Connector</td><td>Carries the outbound instruction to the external network and ingests its responses.</td><td>Asynchronous, isolated</td></tr>
           </tbody>
         </table>
@@ -345,7 +345,7 @@ table.put_item(
 
         <h2>The deployment architecture</h2>
 
-        <p>Everything above describes behaviour. This is where it physically lives. Each region is a single Virtual Private Cloud spread across three availability zones and divided into four subnet tiers, attached to the rest of the organisation through AWS Cloud WAN, and able to reach the external payment scheme only from an isolated connector. The second region is the same definition with the region as a parameter, not a hand built copy.</p>
+        <p>Everything above describes behavior. This is where it physically lives. Each region is a single Virtual Private Cloud spread across three availability zones and divided into four subnet tiers, attached to the rest of the organization through AWS Cloud WAN, and able to reach the external payment scheme only from an isolated connector. The second region is the same definition with the region as a parameter, not a hand built copy.</p>
 
         <figure class="diagram">
           <svg viewBox="0 0 900 575" role="img" aria-label="Deployment view of one region. A Virtual Private Cloud across three availability zones with ingress, application, data, and egress subnet tiers. Core services run on Amazon EKS with Fargate behind a mutually authenticated mesh, and an isolated scheme connector reaches the external payment scheme over AWS PrivateLink.">
@@ -401,10 +401,10 @@ table.put_item(
         <table>
           <thead><tr><th>Tier</th><th>What runs there</th><th>Reachability</th></tr></thead>
           <tbody>
-            <tr><td>Ingress</td><td>The Ingress Gateway and an internal load balancer.</td><td>Reachable only from the organisation network over AWS Cloud WAN, never from the public internet.</td></tr>
+            <tr><td>Ingress</td><td>The Ingress Gateway and an internal load balancer.</td><td>Reachable only from the organization network over AWS Cloud WAN, never from the public internet.</td></tr>
             <tr><td>Application</td><td>The core domain services on Amazon EKS with Fargate, behind a mesh that mutually authenticates every service to service call.</td><td>East to west traffic only, inside the mesh.</td></tr>
             <tr><td>Data</td><td>The ledger, the idempotency store, the balance cache, the signing cluster, and the interface endpoints for the regional services.</td><td>No route to the public internet at all.</td></tr>
-            <tr><td>Egress and inspection</td><td>The isolated Scheme Connector and centralised outbound inspection.</td><td>The only tier permitted to reach outside the Virtual Private Cloud, and only to the scheme.</td></tr>
+            <tr><td>Egress and inspection</td><td>The isolated Scheme Connector and centralized outbound inspection.</td><td>The only tier permitted to reach outside the Virtual Private Cloud, and only to the scheme.</td></tr>
           </tbody>
         </table>
 
@@ -504,16 +504,16 @@ table.put_item(
 
         <p>The worker fleet scales on the depth of the Work Queue rather than on a fixed size, which lets the core hold a sustained rate of about 2,000 transactions per second and absorb peaks near 8,000 by letting the queue grow and draining it as workers scale out. Capacity follows demand rather than being provisioned for a peak that rarely arrives.</p>
 
-        <p>The whole core is defined in AWS Cloud Development Kit stacks and delivered through a pipeline that runs the tests, deploys to the standby region first, runs a synthetic transaction from end to end, and only then promotes the primary, with a blue green cutover so that a bad release is reversed in seconds rather than recovered from over hours. The core sits in the production segment of the landing zone described elsewhere in these architectures and inherits its account isolation, its centralised inspection, and its guardrails.</p>
+        <p>The whole core is defined in AWS Cloud Development Kit stacks and delivered through a pipeline that runs the tests, deploys to the standby region first, runs a synthetic transaction from end to end, and only then promotes the primary, with a blue green cutover so that a bad release is reversed in seconds rather than recovered from over hours. The core sits in the production segment of the landing zone described elsewhere in these architectures and inherits its account isolation, its centralized inspection, and its guardrails.</p>
 
-        <p>Operations that move money are signed inside AWS CloudHSM, so the keys that authorise a movement never leave the hardware security module. Every store is encrypted at rest, every call between services is mutually authenticated inside the mesh, and the components that touch payment data sit inside a clearly drawn compliance boundary, which keeps the scope of the relevant standard small and auditable. Every component runs with the least privilege it needs and nothing more.</p>
+        <p>Operations that move money are signed inside AWS CloudHSM, so the keys that authorize a movement never leave the hardware security module. Every store is encrypted at rest, every call between services is mutually authenticated inside the mesh, and the components that touch payment data sit inside a clearly drawn compliance boundary, which keeps the scope of the relevant standard small and auditable. Every component runs with the least privilege it needs and nothing more.</p>
 
         <h3>The full build sheet</h3>
 
         <p>The view below is deliberately literal. It names every network boundary, the address ranges, the security groups, the subnets, the compute namespaces, the data stores, and the managed services, so that someone could take it and stand the environment up. One region is shown. The second region is identical for production, with the address range moved from 10.20.0.0/16 to 10.21.0.0/16. The decision services named earlier sit in their own accounts and are reached over AWS Cloud WAN, so they are not redrawn here.</p>
 
         <figure class="diagram">
-          <svg viewBox="0 0 1080 1095" role="img" aria-label="A build ready component architecture for one region. A Virtual Private Cloud on 10.20.0.0/16 across three availability zones, with an ingress tier carrying AWS WAF and an internal load balancer, an application tier running Amazon EKS with Fargate namespaces alongside Amazon ECS, AWS Lambda, and AWS Step Functions, a data tier with Amazon Aurora, Amazon ElastiCache, Amazon MSK, AWS CloudHSM and the VPC endpoints, a regional services catalogue, and an egress tier with AWS Network Firewall, NAT gateways, and the isolated Scheme Connector reaching the external scheme. Fronted by Amazon Route 53, AWS Cloud WAN, and AWS Direct Connect.">
+          <svg viewBox="0 0 1080 1095" role="img" aria-label="A build ready component architecture for one region. A Virtual Private Cloud on 10.20.0.0/16 across three availability zones, with an ingress tier carrying AWS WAF and an internal load balancer, an application tier running Amazon EKS with Fargate namespaces alongside Amazon ECS, AWS Lambda, and AWS Step Functions, a data tier with Amazon Aurora, Amazon ElastiCache, Amazon MSK, AWS CloudHSM and the VPC endpoints, a regional services catalog, and an egress tier with AWS Network Firewall, NAT gateways, and the isolated Scheme Connector reaching the external scheme. Fronted by Amazon Route 53, AWS Cloud WAN, and AWS Direct Connect.">
             <text x="20" y="26" class="lbl" font-size="13">Full component architecture, one region: ca-central-1</text>
             <text x="20" y="44" class="sub" font-size="11">The second region, ca-west-1, is identical for production. Replace 10.20.0.0/16 with 10.21.0.0/16.</text>
 
@@ -601,10 +601,10 @@ table.put_item(
 
         <ul>
           <li><strong>Operational excellence.</strong> The whole core is defined in infrastructure as code and delivered through the standby first, blue green pipeline, so a change is rehearsed in the second region before it touches the first. A single transaction identifier threads through the Ingress Gateway, the Work Queue, the saga, the Ledger, and the events, so any one transaction can be traced from end to end, and the same identifier keys the metrics and alarms that page a human before a customer notices.</li>
-          <li><strong>Security.</strong> Entry is authenticated and rate limited at the Ingress Gateway, every call between services inside the mesh is mutually authenticated, and the data subnets have no route to the public internet. The keys that authorise a movement never leave AWS CloudHSM, every store is encrypted at rest, and the core inherits the account isolation and centralised inspection of the landing zone production segment. The only way out is the isolated Scheme Connector over AWS PrivateLink.</li>
+          <li><strong>Security.</strong> Entry is authenticated and rate limited at the Ingress Gateway, every call between services inside the mesh is mutually authenticated, and the data subnets have no route to the public internet. The keys that authorize a movement never leave AWS CloudHSM, every store is encrypted at rest, and the core inherits the account isolation and centralized inspection of the landing zone production segment. The only way out is the isolated Scheme Connector over AWS PrivateLink.</li>
           <li><strong>Reliability.</strong> Every component runs across three availability zones, so the loss of one is handled with no action. Idempotency makes every retry safe, the saga prevents a half moved transaction, and the rehearsed regional failover, backed by replicated idempotency keys and a replicated ledger, recovers from the loss of a whole region within minutes and without double processing.</li>
           <li><strong>Performance efficiency.</strong> The synchronous path does almost nothing, so acceptance stays inside the 99th percentile target of 250 milliseconds even under load. The Work Queue absorbs a surge while the worker fleet scales on its depth, and the Balance Cache keeps hot reads off the ledger, which together hold a sustained rate of about 2,000 transactions per second and absorb peaks near 8,000.</li>
-          <li><strong>Cost optimisation.</strong> Compute runs on Amazon EKS with Fargate and AWS Lambda and follows demand rather than a provisioned peak, so the bill tracks real work. The second region is kept warm rather than fully scaled, which meets the recovery objective at a fraction of the cost of a pair that is fully active in both regions.</li>
+          <li><strong>Cost optimization.</strong> Compute runs on Amazon EKS with Fargate and AWS Lambda and follows demand rather than a provisioned peak, so the bill tracks real work. The second region is kept warm rather than fully scaled, which meets the recovery objective at a fraction of the cost of a pair that is fully active in both regions.</li>
           <li><strong>Sustainability.</strong> The same elasticity is the sustainability story. Capacity scaled to actual load draws less power than capacity provisioned for a peak that rarely arrives, and the managed and serverless components share their underlying hardware across many tenants rather than sitting idle.</li>
         </ul>
 

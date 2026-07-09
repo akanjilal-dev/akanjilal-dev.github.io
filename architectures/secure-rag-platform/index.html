@@ -110,7 +110,7 @@
 
         <h3>3. Guardrails on input and output rather than trusting the model</h3>
         <p><strong>Decision.</strong> Apply Bedrock Guardrails to the question on the way in and to the answer on the way out.</p>
-        <p><strong>Alternatives.</strong> Relying on the model's own behaviour to refuse attacks and to avoid leaking personal data.</p>
+        <p><strong>Alternatives.</strong> Relying on the model's own behavior to refuse attacks and to avoid leaking personal data.</p>
         <p><strong>Rationale.</strong> A guardrail catches prompt attacks before they reach the model and catches personal data before it reaches the user, consistently and independently of the model. This serves functional requirement 3 and the security attribute.</p>
         <p><strong>Consequences.</strong> Two inspection steps per query, a small and bounded cost.</p>
 
@@ -124,7 +124,7 @@
         <p><strong>Decision.</strong> Instruct the model to answer only from the retrieved passages and to cite them, and return the citations with the answer.</p>
         <p><strong>Alternatives.</strong> Letting the model answer from its training and the context together without distinguishing them.</p>
         <p><strong>Rationale.</strong> Grounding the answer in retrieved sources and showing them lets a person verify it and keeps fabrication low, which is what makes the answers usable in a regulated setting. This serves functional requirement 4 and the grounding attribute.</p>
-        <p><strong>Consequences.</strong> The model occasionally has to say it does not have enough to answer, which is the correct behaviour.</p>
+        <p><strong>Consequences.</strong> The model occasionally has to say it does not have enough to answer, which is the correct behavior.</p>
 
         <h3>6. Continuous evaluation rather than a one time test</h3>
         <p><strong>Decision.</strong> Evaluate answer quality and grounding continuously on a sample of real traffic.</p>
@@ -181,7 +181,7 @@
           <figcaption>Multi region. The same knowledge, the same guardrails, and the same keys in both regions, so the standby answers exactly as the primary would.</figcaption>
         </figure>
 
-        <p>The discipline that makes this safe is the same one that runs through the whole collection. The important property is not simply that a model can answer from private data. It is that the platform can prove the answer came from sources the person was allowed to see, that nothing sensitive left the network, and that the answer can be checked against its citations. That is what makes the platform suitable for a regulated organisation to put in front of its people, rather than only a demonstration.</p>
+        <p>The discipline that makes this safe is the same one that runs through the whole collection. The important property is not simply that a model can answer from private data. It is that the platform can prove the answer came from sources the person was allowed to see, that nothing sensitive left the network, and that the answer can be checked against its citations. That is what makes the platform suitable for a regulated organization to put in front of its people, rather than only a demonstration.</p>
       </div>
 
       <section class="prose refs">

@@ -64,7 +64,7 @@
         <table>
           <thead><tr><th>Number</th><th>Attribute</th><th>Intent</th></tr></thead>
           <tbody>
-            <tr><td>1</td><td>Security</td><td>Defence in depth, least privilege, and an inspected path for every flow.</td></tr>
+            <tr><td>1</td><td>Security</td><td>Defense in depth, least privilege, and an inspected path for every flow.</td></tr>
             <tr><td>2</td><td>Reliability</td><td>Tolerate the loss of an availability zone with no human action.</td></tr>
             <tr><td>3</td><td>Recoverability</td><td>Recovery point objective near zero for transactional data, and recovery time objective in minutes for a regional failover.</td></tr>
             <tr><td>4</td><td>Auditability</td><td>Reconstruct who did what and when, with records retained for at least one year.</td></tr>
@@ -118,7 +118,7 @@
         <p><strong>Decision.</strong> Set the isolate attachments property on the production, nonproduction, and cardholder data segments, so that networks within a segment cannot reach one another.</p>
         <p><strong>Alternatives.</strong> Allowing free routing within a segment and relying on security groups and application authentication to prevent unwanted access.</p>
         <p><strong>Rationale.</strong> Removing the route entirely is a stronger control than filtering on a route that exists, and it denies the lateral movement that an attacker relies on after a first foothold. This serves functional requirement 1 and the security attribute.</p>
-        <p><strong>Consequences.</strong> Any legitimate communication between two networks must pass through inspection, which is the intended behaviour and is accepted as slightly less direct.</p>
+        <p><strong>Consequences.</strong> Any legitimate communication between two networks must pass through inspection, which is the intended behavior and is accepted as slightly less direct.</p>
 
         <h3>5. A dedicated account and segment for the cardholder data environment rather than tag based separation</h3>
         <p><strong>Decision.</strong> Place the cardholder data environment in its own account and its own isolated Cloud WAN segment.</p>
@@ -269,7 +269,7 @@
 
         <h2>How this serves the wider goals</h2>
 
-        <p>The structure also answers all six pillars of the AWS Well Architected Framework, which is worth stating plainly because a regulated platform is judged on more than security alone. Operational excellence comes from defining the whole environment, including the network policy, as version controlled configuration that can be reviewed, tested, and rebuilt. Security comes from the layered guardrails, the centralized inspection, and the segmentation described above. Reliability comes from spreading every tier across two availability zones within a region and across two regions for disaster recovery, with a rehearsed failover. Performance efficiency comes from placing workloads close to their users in region and from keeping service traffic on private endpoints rather than the public internet. Cost optimization comes from running the inspection and the shared services once and sharing them, rather than duplicating them in every account, and from running the second region as a warm standby rather than a full duplicate. Sustainability comes from favouring managed and serverless services that are scaled to actual demand rather than provisioned for peak and left running. This landing zone is the foundation that the other reference architectures in this collection are designed to sit inside.</p>
+        <p>The structure also answers all six pillars of the AWS Well Architected Framework, which is worth stating plainly because a regulated platform is judged on more than security alone. Operational excellence comes from defining the whole environment, including the network policy, as version controlled configuration that can be reviewed, tested, and rebuilt. Security comes from the layered guardrails, the centralized inspection, and the segmentation described above. Reliability comes from spreading every tier across two availability zones within a region and across two regions for disaster recovery, with a rehearsed failover. Performance efficiency comes from placing workloads close to their users in region and from keeping service traffic on private endpoints rather than the public internet. Cost optimization comes from running the inspection and the shared services once and sharing them, rather than duplicating them in every account, and from running the second region as a warm standby rather than a full duplicate. Sustainability comes from favoring managed and serverless services that are scaled to actual demand rather than provisioned for peak and left running. This landing zone is the foundation that the other reference architectures in this collection are designed to sit inside.</p>
       </div>
 
       <section class="prose refs">

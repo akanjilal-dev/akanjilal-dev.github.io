@@ -36,7 +36,7 @@
       <div class="article-head">
         <div class="meta"><span>Reference architecture</span><span>Amazon SageMaker</span><span>ca-central-1 and ca-west-1</span></div>
         <h1>Model lifecycle and governance on SageMaker</h1>
-        <p class="standfirst">A model in production is more than a file. It makes decisions that affect people, and its behaviour drifts as the world it was trained on changes. This reference architecture treats the whole lifecycle, from training through approval to monitoring, as one governed pipeline on Amazon SageMaker, with a central registry as the single source of truth, documentation attached to every version, bias and explainability assessed before anything advances, approval as a hard gate, and drift watched continuously, all spread across two regions and separated across accounts so that the people who build models cannot deploy them without review.</p>
+        <p class="standfirst">A model in production is more than a file. It makes decisions that affect people, and its behavior drifts as the world it was trained on changes. This reference architecture treats the whole lifecycle, from training through approval to monitoring, as one governed pipeline on Amazon SageMaker, with a central registry as the single source of truth, documentation attached to every version, bias and explainability assessed before anything advances, approval as a hard gate, and drift watched continuously, all spread across two regions and separated across accounts so that the people who build models cannot deploy them without review.</p>
       </div>
 
       <div class="prose">
@@ -112,7 +112,7 @@
         <p><strong>Decision.</strong> Make the deployment pipeline refuse to deploy any version whose approval status is not approved.</p>
         <p><strong>Alternatives.</strong> Asking teams to follow an approval process by convention.</p>
         <p><strong>Rationale.</strong> A gate enforced by the pipeline cannot be skipped under deadline pressure, where a convention always can. This serves functional requirement 4.</p>
-        <p><strong>Consequences.</strong> An unapproved model cannot reach production even in an emergency, which is the intended behaviour.</p>
+        <p><strong>Consequences.</strong> An unapproved model cannot reach production even in an emergency, which is the intended behavior.</p>
 
         <h3>4. Model Cards attached to the version rather than separate documentation</h3>
         <p><strong>Decision.</strong> Capture the intended use, the risk rating, the training details, and the evaluation results in a SageMaker Model Card linked to the exact model version.</p>
