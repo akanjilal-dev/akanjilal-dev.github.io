@@ -36,11 +36,11 @@
       <div class="article-head">
         <div class="meta"><span>Reference architecture</span><span>Amazon SageMaker</span><span>ca-central-1 and ca-west-1</span></div>
         <h1>Model lifecycle and governance on SageMaker</h1>
-        <p class="standfirst">A model in production is not a file. It is a decision that affects people, made by an artifact whose behaviour drifts as the world changes. This reference architecture treats the whole lifecycle, from training through approval to monitoring, as one governed pipeline on Amazon SageMaker, with a central registry as the single source of truth, documentation attached to every version, bias and explainability assessed before anything advances, approval as a hard gate, and drift watched continuously, all spread across two regions and separated across accounts so that the people who build models cannot quietly deploy them.</p>
+        <p class="standfirst">A model in production is more than a file. It makes decisions that affect people, and its behaviour drifts as the world it was trained on changes. This reference architecture treats the whole lifecycle, from training through approval to monitoring, as one governed pipeline on Amazon SageMaker, with a central registry as the single source of truth, documentation attached to every version, bias and explainability assessed before anything advances, approval as a hard gate, and drift watched continuously, all spread across two regions and separated across accounts so that the people who build models cannot deploy them without review.</p>
       </div>
 
       <div class="prose">
-        <p>In a regulated setting the question is rarely whether a model is accurate. It is whether you can show how it was built, what it was tested for, who approved it and on what evidence, what it is allowed to be used for, and how you would know if it started to behave differently. A pipeline that produces a good model but cannot answer those questions has not finished the job. This design makes the answers a by product of the way the work is done, rather than something assembled after the fact for an audit.</p>
+        <p>In a regulated setting, accuracy is rarely the main question. What matters is whether you can show how the model was built, what it was tested for, who approved it and on what evidence, what it is allowed to be used for, and how you would know if it started to behave differently. A pipeline that produces a good model but cannot answer those questions has not finished the job. This design makes the answers a by-product of how the work is done, rather than something assembled after the fact for an audit.</p>
 
         <h2>Requirements</h2>
 

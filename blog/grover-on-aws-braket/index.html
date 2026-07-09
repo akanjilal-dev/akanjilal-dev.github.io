@@ -35,7 +35,7 @@
       <div class="article-head">
         <div class="meta"><span>Quantum</span><span>March 4, 2026</span><span>10 minute read</span></div>
         <h1>Grover's algorithm on Amazon Braket, and what one search actually costs</h1>
-        <p class="standfirst">This is a search over two qubits that you can run for free on a simulator and, with a single flag, on real superconducting or trapped ion hardware. The interesting part is not that it works. It is the gap between the simulator and the machine, and the line item it leaves on your cloud bill.</p>
+        <p class="standfirst">This is a search over two qubits that you can run for free on a simulator and, with a single flag, on real superconducting or trapped ion hardware. The point of interest is not that the circuit works, but the gap between the simulator and the real machine, and the line item it leaves on your cloud bill.</p>
       </div>
 
       <div class="prose">
@@ -102,11 +102,11 @@ print(result.measurement_counts)</code></pre>
 device = AwsDevice("arn:aws:braket:us-east-1::device/qpu/ionq/Forte-1")
 result = device.run(grover_2qubit("11"), shots=1000).result()</code></pre>
 
-        <p>The same circuit now runs on physical qubits, and the clean hundred percent blurs. The marked answer still dominates, which means the algorithm is working, but a few percent of the shots come back wrong, landing on outcomes that should have been impossible. That spread is not a bug in your code. It is the device's error rate made visible, the combined effect of imperfect gates, decoherence, and readout error. This is the texture of what John Preskill named the era of Noisy Intermediate Scale Quantum hardware in his widely cited 2018 essay, <a href="https://arxiv.org/abs/1801.00862">Quantum Computing in the NISQ era and beyond</a>. A two qubit Grover circuit turns out to be a pleasant little benchmark for how noisy a given machine is on a given day. In a real sense, the error rate is the result.</p>
+        <p>The same circuit now runs on physical qubits, and the clean hundred percent blurs. The marked answer still dominates, which means the algorithm is working, but a few percent of the shots come back wrong, landing on outcomes that should have been impossible. That spread is not a bug in your code. It is the device's error rate made visible, the combined effect of imperfect gates, decoherence, and readout error. This is the texture of what John Preskill named the era of Noisy Intermediate Scale Quantum hardware in his widely cited 2018 essay, <a href="https://arxiv.org/abs/1801.00862">Quantum Computing in the NISQ era and beyond</a>. A two qubit Grover circuit turns out to be a pleasant little benchmark for how noisy a given machine is on a given day. For this exercise, the error rate is the result worth measuring.</p>
 
         <h2>The part most demonstrations skip, the bill</h2>
 
-        <p>Braket charges for hardware on a straightforward model. There is a fee each time you submit a task, plus a fee for every shot, and an option to reserve a machine by the hour if you need dedicated time. The current rates are published on the <a href="https://aws.amazon.com/braket/pricing/">Amazon Braket pricing page</a>. None of it is expensive at this scale, but it is real money, and it is the kind of detail that separates a science fair project from something you would let a team loose on. So the repository refuses to send anything to a quantum processor without telling you the likely cost first.</p>
+        <p>Braket charges for hardware on a straightforward model. There is a fee each time you submit a task, plus a fee for every shot, and an option to reserve a machine by the hour if you need dedicated time. The current rates are published on the <a href="https://aws.amazon.com/braket/pricing/">Amazon Braket pricing page</a>. None of it is expensive at this scale, but it is real money, and accounting for it is what separates a one off experiment from work you would put a team behind. So the repository refuses to send anything to a quantum processor without telling you the likely cost first.</p>
 
         <pre><code>def _estimate_cost(shots):
     per_task, per_shot = 0.30, 0.01      <span class="c"># illustrative only, check current pricing</span>
@@ -115,15 +115,15 @@ result = device.run(grover_2qubit("11"), shots=1000).result()</code></pre>
 
 <span class="c"># and nothing runs on hardware until you type the word yes</span></code></pre>
 
-        <p>It is a small thing, and it is also the habit that twenty years of being accountable for other people's cloud bills burns into you. You make the cost visible at the moment of the decision, not at the end of the month. A spending guard in front of a quantum processor is the same instinct as a budget alarm in front of a fleet of accelerators. Frontier compute does not get a pass on financial discipline.</p>
+        <p>It is a small thing, and it reflects a habit built over twenty years of being accountable for other people's cloud bills. You make the cost visible at the moment of the decision, not at the end of the month. A spending guard in front of a quantum processor is the same instinct as a budget alarm in front of a fleet of accelerators. Frontier compute does not get a pass on financial discipline.</p>
 
-        <div class="callout"><p>Why bother with two qubits in a world that now has machines with more than one hundred of them? Because the small circuit is honest. You can verify the answer by hand, you can see the noise without it drowning the signal, and you can reason about every gate. Scale should come after understanding, not instead of it.</p></div>
+        <div class="callout"><p>Why use two qubits when machines now have more than one hundred? Because the small circuit is verifiable. You can verify the answer by hand, you can see the noise without it drowning the signal, and you can reason about every gate. Scale should come after understanding, not instead of it.</p></div>
 
         <h2>Where this goes next</h2>
 
         <p>Grover's algorithm is the teaching example. The method I find genuinely interesting for the kind of work I do is the Quantum Approximate Optimization Algorithm, because it targets the combinatorial optimization problems that real businesses care about, such as routing, scheduling, and portfolio selection. It is also a hybrid method that loops between a quantum circuit and a classical optimizer, which is exactly what the hybrid jobs feature on Braket is designed to run. That is the next entry in the repository, and the next article here.</p>
 
-        <p>Until then, clone the repository, run the demonstration, and watch a quantum search land for free. When you are ready to feel the noise, add the flag for a real machine and meet the hardware.</p>
+        <p>Until then, clone the repository, run the demonstration, and watch a quantum search land for free. When you are ready to see the noise for yourself, add the flag for a real machine and run it on the hardware.</p>
       </div>
 
       <section class="prose refs">

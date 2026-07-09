@@ -112,7 +112,7 @@
 
       <!-- LIVE PANEL -->
       <div class="run" id="run">
-        <p class="run-note"><b>Three steps.</b> If the environment is off, press Recreate to bring it up, which takes a couple of minutes. Then press Run the request to send one governed request through all nine layers. Tear it down with Destroy when you are done. Tick the box to inject a poisoned ticket and watch the guardrail block it.</p>
+        <p class="run-note"><b>There are three steps.</b> If the environment is off, press Recreate to bring it up. This takes a couple of minutes. Then press Run the request to send one governed request through all nine layers. Tear it down with Destroy when you are done. Tick the box to inject a poisoned ticket and watch the guardrail block it.</p>
         <div class="run-top">
           <button class="runbtn" id="runbtn">Run the request</button>
           <span class="runstat" id="runstat">Press the button to send one governed request.</span>
@@ -134,7 +134,7 @@
       </div>
 
       <h2>What is actually running</h2>
-      <p>The environment below is the whole nine-layer architecture, not a mock. A request enters at the gateway, the orchestrator plans it, retrieval pulls the relevant tickets, a guardrail screens that retrieved text, the model reads and reasons, a validation checkpoint authorises the action with a policy and a safety check, the tool opens the case, the response is grounded and stripped of personal data, and every hop is written to an immutable audit store. The model is one box of nine.</p>
+      <p>The environment below is the whole nine-layer architecture, not a mock. A request enters at the gateway, the orchestrator plans it, retrieval pulls the relevant tickets, a guardrail screens that retrieved text, the model reads and reasons, a validation checkpoint authorises the action with a policy and a safety check, the tool opens the case, the response is grounded and stripped of personal data, and every hop is written to an immutable audit store. The model is one of the nine layers, not the whole system.</p>
 
       <figure class="diagram">
   <svg viewBox="0 0 960 532" role="img" aria-label="The nine-layer enterprise AI architecture. A top row of primary-flow layers runs left to right: user experience, API gateway and security, AI orchestrator, the LLM, the tool and API calling layer with a validation checkpoint, and the response and action layer. Below sit the retrieval and memory layers feeding the orchestrator, and an audit log. A full-width governance, guardrails and observability band spans everything as a cross-cutting layer.">
@@ -239,16 +239,16 @@
     <text x="54" y="509" class="sub" font-size="10">primary flow</text>
     <line class="conna" x1="160" y1="505" x2="186" y2="505" stroke-dasharray="4 4"/>
     <text x="194" y="509" class="sub" font-size="10">context / support flow</text>
-    <text x="940" y="509" class="num" font-size="11" text-anchor="end">the model is one box of nine</text>
+    <text x="940" y="509" class="num" font-size="11" text-anchor="end">the model is one of the nine layers, not the whole system</text>
   </svg>
         <figcaption>The environment the button brings up. Each numbered step in the live panel above corresponds to a hop through these layers.</figcaption>
       </figure>
 
       <h2>Spin it up, run it, tear it down</h2>
-      <p>Bringing the environment up provisions the retrieval index on S3 Vectors, the orchestrator state machine, the guardrails and the validation policy, and the immutable audit store, then warms the path so your first request is fast. Tearing it down returns the account to a near zero idle baseline. The whole environment is account owned and reproducible, brought into being from infrastructure as code on the button you press.</p>
+      <p>Bringing the environment up provisions the retrieval index on S3 Vectors, the orchestrator state machine, the guardrails and the validation policy, and the immutable audit store, then warms the request path so your first request runs without a cold start. Tearing it down returns the account to a near zero idle baseline. The whole environment is account owned and reproducible. The button provisions it from infrastructure as code.</p>
 
       <h2>The poisoned ticket</h2>
-      <p>Tick the box before you run, and one of the retrieved tickets carries a hidden instruction telling the assistant to ignore its rules and export the customer list. That is a prompt injection, and it arrives through the same retrieval path as any other document. The guardrail screens retrieved content before it reaches the model, recognises the attack, and blocks the run at the retrieval boundary. The trace stops at the guardrail, no tool is called, and the attempt is written to the audit record. Security here is not a perimeter you cross once, it is re-established at every boundary where untrusted text enters the loop.</p>
+      <p>Tick the box before you run, and one of the retrieved tickets carries a hidden instruction telling the assistant to ignore its rules and export the customer list. That is a prompt injection, and it arrives through the same retrieval path as any other document. The guardrail screens retrieved content before it reaches the model, recognises the attack, and blocks the run at the retrieval boundary. The trace stops at the guardrail, no tool is called, and the attempt is written to the audit record. Security here is not a single perimeter. The system re-checks untrusted text at every boundary where it enters the request flow.</p>
 
       <div class="demo-foot">
         <a class="btn primary" href="https://github.com/akanjilal-work/enterprise-ai-arch-demo">Read the code</a>

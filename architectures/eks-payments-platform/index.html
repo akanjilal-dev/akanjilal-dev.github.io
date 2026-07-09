@@ -255,7 +255,7 @@
   <div class="principle"><h4>Private by default</h4><p>No public ingress. Egress is denied unless explicitly allowed. Identity is established before any routing decision is made.</p></div>
   <div class="principle"><h4>Minimize the blast radius</h4><p>Isolate by account, by region, by cell, and by namespace. A failure or a compromise is contained to the smallest possible scope.</p></div>
   <div class="principle"><h4>Everything is reconciled from Git</h4><p>Cluster and application state is declared in Git and reconciled continuously. Drift is detected and corrected. Promotion is auditable.</p></div>
-  <div class="principle"><h4>Prove resilience, do not assume it</h4><p>Failover and partition behavior are exercised regularly with fault injection. A path that is never tested is assumed broken.</p></div>
+  <div class="principle"><h4>Test resilience rather than assume it</h4><p>Failover and partition behavior are exercised regularly with fault injection. A failover path that is never exercised should be treated as broken until proven otherwise.</p></div>
 </div>
 
 <h2 class="sec" id="overview"><span class="num">7.</span> Reference architecture overview</h2>

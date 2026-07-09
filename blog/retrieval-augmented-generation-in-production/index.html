@@ -35,7 +35,7 @@
       <div class="article-head">
         <div class="meta"><span>Applied AI</span><span>April 2, 2026</span><span>12 minute read</span></div>
         <h1>Retrieval augmented generation in production, an architecture that survives contact with real data</h1>
-        <p class="standfirst">The tutorial version of retrieval augmented generation is four boxes and a happy path. The production version is a pipeline where most of the engineering effort goes into the retrieval step, the evaluation harness, and the failure modes, because a fluent answer grounded in the wrong document is worse than no answer at all. This is the architecture I would actually deploy, and the reasons behind each layer.</p>
+        <p class="standfirst">The tutorial version of retrieval augmented generation is a four stage diagram that only covers the case where everything works. The production version is a pipeline where most of the engineering effort goes into the retrieval step, the evaluation harness, and the failure modes, because a fluent answer grounded in the wrong document is worse than no answer at all. This post describes the architecture I would deploy in production and the reasons behind each layer.</p>
       </div>
 
       <div class="prose">
@@ -108,8 +108,8 @@
         <h3>Ingestion and indexing</h3>
         <p>Everything downstream depends on how you cut your documents into passages. Chunks that are too large dilute the signal, and chunks that are too small lose the context that makes them meaningful. You attach metadata to every passage, such as its source, its date, and its access level, because that metadata is what later lets you filter, cite, and govern. The passages are embedded into vectors and also indexed for keyword search, so that you can later combine both kinds of matching.</p>
 
-        <h3>Retrieval, where the naive version breaks</h3>
-        <p>The single most common failure is the semantic gap. A user asks how to cancel a subscription, and the relevant document is titled account termination policy, so a pure vector search that relies on meaning can still miss it, while a pure keyword search misses paraphrases. The fix that the industry has converged on is hybrid retrieval, which runs both semantic and keyword search and combines the results. You deliberately cast a wide net at this stage, pulling far more candidates than you intend to use, because it is cheaper to over retrieve and then filter than to miss the one passage that mattered.</p>
+        <h3>Retrieval, the most common point of failure</h3>
+        <p>The single most common failure is the semantic gap. A user asks how to cancel a subscription, and the relevant document is titled account termination policy, so a pure vector search that relies on meaning can still miss it, while a pure keyword search misses paraphrases. The fix that the industry has converged on is hybrid retrieval, which runs both semantic and keyword search and combines the results. You retrieve far more candidates than you intend to use at this stage, because it is cheaper to over retrieve and then filter than to miss the one passage that matters.</p>
 
         <h3>Reranking and compression</h3>
         <p>Casting a wide net means most of what you retrieve is noise, and a context window full of loosely relevant passages produces a mediocre answer because the model averages across all of it. So a second pass uses a cross encoder, a model that reads the question and a candidate passage together and scores how well they actually match, to push the best handful to the top and discard the rest. Compression then strips the irrelevant sentences out of the passages that remain. These steps add latency, and the accuracy they buy is almost always worth it.</p>
@@ -121,13 +121,13 @@
 
         <p>For questions that require connecting facts that live in different documents, a flat list of passages cannot help, because it has no notion of how passages relate to one another. This is the case for graph based retrieval, where the knowledge is organized as entities and the relationships between them. Microsoft's research on this approach, published as a graph based method for query focused summarization, showed meaningful gains on complex analytical questions that require reasoning across many connected facts. The honest tradeoff is that building and maintaining a graph is more work, and for a straightforward question and answer use case it can add noise rather than value. The guiding principle is to start with the simplest pipeline that could work and add complexity only when your evaluation numbers tell you to.</p>
 
-        <h2>Evaluation is the part you cannot skip</h2>
+        <h2>Evaluation, and why it cannot be skipped</h2>
 
         <p>The reason retrieval failures are dangerous is that they are invisible from the outside. The answer reads well. The only way to know whether your system is reliably correct rather than reliably fluent is to measure it, continuously, against a held out set of questions with known good answers. Open frameworks such as RAGAS score the things that matter, including whether the retrieved passages were actually relevant and whether the final answer is grounded in them rather than in the model's imagination. Treating evaluation as a first class part of the system, built in from the very beginning rather than bolted on at the end, is the single habit that most separates teams who ship reliable retrieval systems from teams who ship demos.</p>
 
         <div class="callout"><p>The security view matters too. Retrieval pipelines are exactly the channel that indirect prompt injection travels through, which the OWASP project tracks under vector and embedding weaknesses. Every passage your system retrieves is untrusted content that the model will read, so the access controls on your sources and the validation of retrieved content are security controls, not just quality controls.</p></div>
 
-        <h2>The architect's summary</h2>
+        <h2>Summary</h2>
 
         <p>Retrieval augmented generation is only as good as the context it can see. The model is downstream of the retriever, the retriever is downstream of the index, and the index is downstream of how well you governed and prepared your knowledge in the first place. If the source is stale, ungoverned, or poorly chunked, no amount of model cleverness will save the output. Spend your engineering effort where the quality actually lives, which is in retrieval, in reranking, and in the evaluation that tells you the truth about both.</p>
       </div>

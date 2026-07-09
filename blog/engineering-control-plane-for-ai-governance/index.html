@@ -35,11 +35,11 @@
       <div class="article-head">
         <div class="meta"><span>AI Governance</span><span>June 1, 2026</span><span>12 minute read</span></div>
         <h1>An engineering control plane for AI governance, across NIST, ISO 42001, and the EU AI Act</h1>
-        <p class="standfirst">Three different instruments now shape how organizations are expected to govern artificial intelligence. They look like three separate compliance burdens, and they are not. Read carefully, they describe substantially the same controls in three different dialects, which means an engineering team can build the controls once and produce the evidence each instrument asks for. This is how I would structure that work.</p>
+        <p class="standfirst">Three different instruments now shape how organizations are expected to govern artificial intelligence. They appear to be three separate compliance burdens, but they largely overlap. Read carefully, they describe substantially the same controls in three different dialects, which means an engineering team can build the controls once and produce the evidence each instrument asks for. This is how I would structure that work.</p>
       </div>
 
       <div class="prose">
-        <p>For most of the last decade, governing artificial intelligence was a matter of voluntary good intentions. That era has ended. The field is moving from optional guidelines to enforceable obligations, and an organization that deploys consequential systems now sits at the intersection of three instruments, each built for a different purpose and none sufficient on its own.</p>
+        <p>For most of the last decade, governing artificial intelligence was largely voluntary. That is no longer the case. The field is moving from optional guidelines to enforceable obligations, and an organization that deploys consequential systems now sits at the intersection of three instruments, each built for a different purpose and none sufficient on its own.</p>
 
         <p>The first is the <a href="https://www.nist.gov/itl/ai-risk-management-framework">Artificial Intelligence Risk Management Framework</a> from the United States National Institute of Standards and Technology. It is a voluntary, risk based methodology organized around four functions, which are to govern, to map, to measure, and to manage. Its companion document, the Generative Artificial Intelligence Profile published as the publication numbered AI 600-1, adapts those functions to the specific risks of generative systems and names twelve risk categories, from confabulation to information security to harmful bias.</p>
 
@@ -49,11 +49,11 @@
 
         <h2>The timeline that makes this urgent</h2>
 
-        <p>The Act applies in phases. The prohibitions on unacceptable uses, together with the obligation to ensure staff have adequate understanding of the technology, took effect in February 2025. The obligations on general purpose models followed in August 2025. The substantial obligations on high risk systems were set to apply from August 2026, although a political agreement reached in May 2026, often referred to as the simplification package, has deferred parts of the high risk timeline. The deadlines moved, but the work required to meet them did not, so the only thing the deferral changes is the length of the runway. The penalties are designed to be felt even by the largest organizations, reaching up to thirty five million euros or seven percent of worldwide annual turnover for the most serious violations.</p>
+        <p>The Act applies in phases. The prohibitions on unacceptable uses, together with the obligation to ensure staff have adequate understanding of the technology, took effect in February 2025. The obligations on general purpose models followed in August 2025. The substantial obligations on high risk systems were set to apply from August 2026, although a political agreement reached in May 2026, often referred to as the simplification package, has deferred parts of the high risk timeline. The deadlines moved, but the work required to meet them did not, so the deferral only changes how much time you have to do it. The penalties are designed to be felt even by the largest organizations, reaching up to thirty five million euros or seven percent of worldwide annual turnover for the most serious violations.</p>
 
-        <h2>The insight, three dialects of the same controls</h2>
+        <h2>Why the three instruments share the same underlying controls</h2>
 
-        <p>Here is the part that turns a daunting compliance picture into a tractable engineering project. These three instruments overlap heavily in substance. The framework from NIST provides the risk management methodology. The standard provides the auditable management system. The Act provides the legally binding obligations. An organization that implements all three, using the published crosswalks to align them, does almost no duplicated work, because the controls underneath are shared. The standard alone maps closely to seven core articles of the Act, covering risk management, data governance, technical documentation, record keeping, transparency, human oversight, and quality management.</p>
+        <p>This is the point that turns a large compliance requirement into a manageable engineering project. These three instruments overlap heavily in substance. The framework from NIST provides the risk management methodology. The standard provides the auditable management system. The Act provides the legally binding obligations. An organization that implements all three, using the published crosswalks to align them, does almost no duplicated work, because the controls underneath are shared. The standard alone maps closely to seven core articles of the Act, covering risk management, data governance, technical documentation, record keeping, transparency, human oversight, and quality management.</p>
 
         <figure class="diagram">
           <svg viewBox="0 0 900 380" role="img" aria-label="Three governance frameworks mapping down into one shared engineering control plane">
@@ -110,7 +110,7 @@
 
         <h2>Turning governance into engineering</h2>
 
-        <p>The mistake that makes governance painful is treating it as a separate compliance checklist that someone fills in after the system is built. The far better approach, and the one that fits how engineering teams actually work, is to express each control as something the system produces as a side effect of being built well. A system inventory becomes a registry that every deployment writes to automatically. A risk assessment becomes a structured document attached to each system and reviewed at defined gates. Data governance becomes lineage and quality metrics captured in the pipeline. Evaluation becomes a test suite that runs continuously, the same discipline I wrote about for retrieval systems. Monitoring and logging become the same observability you already run, extended to record model behaviour. Human oversight becomes an approval step in the workflow. And technical documentation becomes evidence generated as you go, rather than archaeology performed under deadline.</p>
+        <p>The mistake that makes governance painful is treating it as a separate compliance checklist that someone fills in after the system is built. The far better approach, and the one that fits how engineering teams actually work, is to express each control as something the system produces as a side effect of being built well. A system inventory becomes a registry that every deployment writes to automatically. A risk assessment becomes a structured document attached to each system and reviewed at defined gates. Data governance becomes lineage and quality metrics captured in the pipeline. Evaluation becomes a test suite that runs continuously, the same discipline I wrote about for retrieval systems. Monitoring and logging become the same observability you already run, extended to record model behaviour. Human oversight becomes an approval step in the workflow. And technical documentation becomes evidence generated as you go, rather than reconstructed under deadline.</p>
 
         <p>Done this way, the three instruments stop being three projects. They become three views over one body of evidence. When the auditor arrives for the standard, when leadership asks about alignment with the framework, and when the regulator asks about the Act, you are drawing different reports from the same control plane.</p>
 
@@ -120,7 +120,7 @@
 
         <div class="callout"><p>A certification against the management system standard is not the same thing as a conformity assessment under the Act, and neither one is a substitute for advice from a qualified professional about your specific situation. This article describes an engineering approach to organizing the work. It is not legal advice, and the regulatory details continue to move.</p></div>
 
-        <h2>The summary</h2>
+        <h2>Summary</h2>
 
         <p>Treat the three instruments as three dialects describing one set of controls, build those controls into the way your systems are made rather than bolting them on afterwards, and generate the evidence as a by product of good engineering. That turns a frightening compliance picture into something a competent engineering organization already knows how to deliver.</p>
       </div>

@@ -63,7 +63,7 @@
       <div class="page-head" style="padding:0">
         <div class="kicker">Live demo</div>
         <h1>ai-finops-agent, running in your browser</h1>
-        <p class="lead">This is the real agent from the <a href="https://github.com/akanjilal-work/ai-finops-agent">ai-finops-agent</a> repository, running unmodified through Pyodide, which is Python compiled to WebAssembly. There is no server and no API key. The code, the sample billing data, and every answer stay on your machine. Ask it about a sample month of cloud and AI spend in the open FOCUS format.</p>
+        <p class="lead">This is the real agent from the <a href="https://github.com/akanjilal-work/ai-finops-agent">ai-finops-agent</a> repository, running unmodified through Pyodide, which is Python compiled to WebAssembly. There is no server and no API key. The code, the sample billing data, and every answer remain on your machine. Ask it about a sample month of cloud and AI spend in the open FOCUS format.</p>
       </div>
 
       <div class="statbar" id="statbar" hidden>
@@ -90,7 +90,7 @@
 
       <div class="out mono" id="out">The agent will answer here.</div>
 
-      <div class="note">It is read only and hardened. It can only run a fixed set of analytics tools, it refuses questions that carry injected instructions, and the sample data even contains a poisoned billing description that tries to make it report a total of zero. The total above is correct anyway, because billing text is only ever counted, never obeyed.</div>
+      <div class="note">The agent is read only and hardened. It can only run a fixed set of analytics tools, it refuses questions that carry injected instructions, and the sample data even contains a poisoned billing description that tries to make it report a total of zero. The total above is still correct, because the agent treats billing text as data to be counted rather than as instructions to follow.</div>
 
       <div class="demo-foot">
         <a class="btn primary" href="https://github.com/akanjilal-work/ai-finops-agent">Read the code</a>

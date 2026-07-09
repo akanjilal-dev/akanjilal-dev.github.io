@@ -6,7 +6,7 @@
 <title>Enterprise AI architecture, from an LLM demo to a production system, Anirban Kanjilal</title>
 <meta name="description" content="A capstone walk through the nine layers that separate an impressive language model demo from a governed production system on AWS, organised around the failure modes that force each layer into existence.">
 <meta property="og:title" content="Enterprise AI architecture, from an LLM demo to a production system">
-<meta property="og:description" content="An impressive demo is one box on a diagram. A production system is the other eight. A walk through all nine, organised around the failures that force each one into being and mapped to the AWS services that deliver them.">
+<meta property="og:description" content="In a production system, the language model is one component of nine. The other eight are what make it safe to operate. A walk through all nine, organised around the failures that force each one into being and mapped to the AWS services that deliver them.">
 <meta property="og:type" content="article">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -35,12 +35,12 @@
       <div class="article-head">
         <div class="meta"><span>AI architecture</span><span>June 30, 2026</span><span>22 minute read</span></div>
         <h1>Enterprise AI architecture, from an LLM demo to a production system</h1>
-        <p class="standfirst">An impressive demo is one box on a diagram. A production system is the other eight. This is a walk through all nine, organised around the failures that force each one into being, mapped to the services that deliver them on AWS.</p>
+        <p class="standfirst">In a production system, the language model is one component of nine. The other eight are what make it safe to operate. This is a walk through all nine, organised around the failures that force each one into being, mapped to the services that deliver them on AWS.</p>
       </div>
 
       <div class="prose">
 
-<p>The demo always works. You open a notebook, you call a foundation model with a few lines of code, you ask it something hard, and it answers well enough that a room full of people leans in. The distance from that moment to a system you can put in front of customers, auditors, and a finance team is the entire subject of this article. That distance is not a better prompt and it is not a bigger model. It is roughly eight categories of engineering that the demo quietly assumed away.</p>
+<p>The demo always works. You open a notebook, you call a foundation model with a few lines of code, you ask it something hard, and it answers well enough that a room full of people leans in. The distance from that moment to a system you can put in front of customers, auditors, and a finance team is the entire subject of this article. That distance is not a better prompt or a bigger model. It is roughly eight categories of engineering that the demo left out.</p>
 
 <p>The diagram below is the whole argument in one frame. A request enters on the left, moves through orchestration, retrieval, reasoning, and tool action, and leaves on the right as a governed response. The large language model (LLM), the part everyone talks about, is a single box in the middle. Everything around it exists for a reason, and the fastest way to understand each piece is to look at the specific way a demo breaks when that piece is missing.</p>
 
@@ -183,7 +183,7 @@
   <figcaption>The nine layers of a production AI system. The model is layer four. The other eight are why the thing can be trusted, paid for, and explained.</figcaption>
 </figure>
 
-<p>This piece is a capstone. Each layer here has a fuller treatment elsewhere in this portfolio, and I link out to those deep dives as we pass through. The job of this article is the map, not the territory. We will spend it walking one failure at a time.</p>
+<p>This piece is a capstone. Each layer here has a fuller treatment elsewhere in this portfolio, and I link out to those deep dives as we pass through. This article provides the overview, and the linked deep dives cover each layer in detail. We will spend it walking one failure at a time.</p>
 
 <h2>The method, follow the failures</h2>
 
@@ -300,7 +300,7 @@
 
 <h2>Layer 2 · Anyone can call it, and it can be talked into anything</h2>
 
-<blockquote>The demo had no front door. In production, the front door is the product.</blockquote>
+<blockquote>In production, the API gateway and security layer is where every request is authenticated and controlled before it reaches anything else.</blockquote>
 
 <p>The notebook called the model directly with a key on the developer's machine. There was no notion of who was asking, what they were allowed to ask for, or how often they could ask. The first thing reality does to that arrangement is send it ten thousand requests, a few of them hostile, and watch the bill and the blast radius climb together. The fix is not one control but a layer of them, and it sits in front of everything else.</p>
 
@@ -312,7 +312,7 @@
 
 <h2>Layer 5 · It answers confidently about things it was never given</h2>
 
-<blockquote>A model with no access to your data will still answer questions about your data. It will just be wrong.</blockquote>
+<blockquote>A model with no access to your data will still answer questions about it, and those answers will often be wrong.</blockquote>
 
 <p>Ask a foundation model about last quarter's contract terms or a specific customer's open tickets and it will produce a fluent, plausible, and entirely invented answer. The model does not know what it does not know, and confidence is not correlated with correctness. The production answer is to stop asking the model to recall and start giving it the relevant material to read. That is retrieval augmented generation (RAG), and it is the fifth layer.</p>
 
@@ -647,11 +647,11 @@ Properties:
 
 <p>Before any of that retrieved text reaches the model, a guardrail screens it, because a support ticket is untrusted content and could carry an injected instruction. The model then does the one thing only it can do. It reads the three tickets, reasons that one is unresolved, and decides a follow up case is warranted. That decision becomes a tool selection. The agent gateway resolves the open case tool from the registry, and the validation checkpoint runs before anything executes, confirming with a Cedar policy that this manager may open a case for this client and running a safety check on the proposed action.</p>
 
-<p>With authorisation and safety satisfied, the tool executes, opening the case through an approved and audited interface. The response and action layer then confirms the summary is grounded in the actual tickets, redacts any personal data, and returns three things together, a written summary, a link to the new case, and a notification. Through every one of those hops, the observability band has been recording traces, metrics, and cost, and the audit log has been writing an immutable record of the request, the sources, the action, and the response. The model was step seven of twelve. The other eleven are the reason the answer can be trusted.</p>
+<p>With authorisation and safety satisfied, the tool executes, opening the case through an approved and audited interface. The response and action layer then confirms the summary is grounded in the actual tickets, redacts any personal data, and returns three things together, a written summary, a link to the new case, and a notification. Through every one of those hops, the observability band has been recording traces, metrics, and cost, and the audit log has been writing an immutable record of the request, the sources, the action, and the response. The model handled one of the twelve steps. The other eleven are what allow the answer to be trusted.</p>
 
 <h2>What this changes about how you build</h2>
 
-<p>The single most useful shift this map produces is in where you spend your attention. A great deal of energy goes into prompt wording and model choice, and both matter, but neither is where production systems succeed or fail. They succeed or fail at the boundaries, at the gateway that decides who may call, at the retrieval that decides what the model may read, at the validation that decides what it may do, and at the observability that decides whether anyone can ever explain it afterwards. The model is one box. The engineering is the other eight.</p>
+<p>The single most useful shift this map produces is in where you spend your attention. A great deal of energy goes into prompt wording and model choice, and both matter, but neither is where production systems succeed or fail. They succeed or fail at the boundaries, at the gateway that decides who may call, at the retrieval that decides what the model may read, at the validation that decides what it may do, and at the observability that decides whether anyone can ever explain it afterwards. The model is a single layer. The surrounding engineering is where production systems succeed or fail.</p>
 
 <p>A second shift is that none of this is speculative anymore. Each layer in the diagram now maps to a managed service. Amazon Bedrock AgentCore reached general availability with its runtime, memory, gateway, identity, policy, and observability components, and Amazon Bedrock Guardrails ships the prompt attack detection, contextual grounding, PII filtering, and Automated Reasoning checks that the governance band needs. The pattern that was recently a hand built collection of glue code is becoming a set of composable, governed building blocks, which lowers the cost of doing it properly and raises the bar for doing it poorly.</p>
 

@@ -36,7 +36,7 @@
       <div class="article-head">
         <div class="meta"><span>Reference architecture</span><span>Amazon Web Services</span><span>ca-central-1 and ca-west-1</span></div>
         <h1>Zero trust AI gateway</h1>
-        <p class="standfirst">When applications and agents start calling models, tools, and private data, the risk is no longer the model alone. It is the open path between a caller and everything the caller can reach. This reference architecture places a single controlled gateway on that path, so that every call is authenticated, inspected, authorized against an allow list, and recorded, and so that an agent never touches a model or a tool except through it. It runs in two Canadian regions inside the landing zone, in the production segment, and inherits its inspection and identity.</p>
+        <p class="standfirst">When applications and agents call models, tools, and private data, the main risk shifts from the model itself to the open path between a caller and everything that caller can reach. This reference architecture places a single controlled gateway on that path, so that every call is authenticated, inspected, authorized against an allow list, and recorded, and so that an agent never touches a model or a tool except through it. It runs in two Canadian regions inside the landing zone, in the production segment, and inherits its inspection and identity.</p>
       </div>
 
       <div class="prose">
@@ -183,14 +183,14 @@
 
         <h2>The tool boundary</h2>
 
-        <p>The most dangerous thing an agent does is call a tool, because a tool acts on the world. The gateway therefore treats the boundary between the agent and the tools as the place to be strictest. Only tools in the registry can be called, each call is made with a credential scoped to that one tool, the arguments are validated against the tool's declared interface before the call is made, an action that is irreversible waits for a human, and every call is recorded. Third party tools are treated as untrusted by default, which means their responses are inspected on the way back just as a user's input is.</p>
+        <p>A tool call is the highest risk action an agent takes, because a tool acts on external systems. The gateway therefore applies its strictest controls at the boundary between the agent and the tools. Only tools in the registry can be called, each call is made with a credential scoped to that one tool, the arguments are validated against the tool's declared interface before the call is made, an action that is irreversible waits for a human, and every call is recorded. Third party tools are treated as untrusted by default, which means their responses are inspected on the way back just as a user's input is.</p>
 
         <figure class="diagram">
           <img src="/assets/img/aigw-trust.png" alt="The agent reaching internal, third party, and action tools only through the gateway boundary with scoped credentials and validation" loading="lazy">
           <figcaption>The tool boundary. The agent never reaches a tool directly, and the controls are strongest where the tool can change something in the world.</figcaption>
         </figure>
 
-        <p>This is the same discipline a payment network applies to its own integrations, carried over to agents. The agent is allowed to be creative about what it wants to do, and the gateway is responsible for making sure that what it actually does is permitted, scoped, validated, and recorded. That separation is what makes it safe to put an agent in front of real systems.</p>
+        <p>This is the same discipline a payment network applies to its own integrations, carried over to agents. The agent may propose any action, and the gateway ensures that the action it actually performs is permitted, scoped, validated, and recorded. That separation is what makes it acceptable to place an agent in front of production systems.</p>
       </div>
 
       <section class="prose refs">

@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>llm-cost-guardrails, watch the budgets and the kill switch fire, Anirban Kanjilal</title>
-<meta name="description" content="A live, in-browser demo of llm-cost-guardrails. Fire language model requests from different tenants and watch per tenant budgets fill, rate limits refuse, and a spend kill switch trip. Runs client side via Pyodide, no server, no keys.">
+<meta name="description" content="A live, in-browser demo of llm-cost-guardrails. Send language model requests from different tenants and watch per tenant budgets fill, rate limits refuse, and a spend kill switch trip. Runs client side via Pyodide, no server, no keys.">
 <meta property="og:title" content="llm-cost-guardrails, budgets and a kill switch, live">
 <meta property="og:description" content="Fire requests and watch budgets fill, rate limits refuse, and the spend breaker trip. Runs in your browser via Pyodide.">
 <meta property="og:type" content="website">
@@ -59,7 +59,7 @@
       <div class="page-head" style="padding:0">
         <div class="kicker">Live demo</div>
         <h1>Budgets, rate limits, and a spend kill switch</h1>
-        <p class="lead">This is the real middleware from <a href="https://github.com/akanjilal-work/llm-cost-guardrails">llm-cost-guardrails</a>, running in your browser through Pyodide. Fire language model requests from different tenants and watch the controls fire: each tenant has a budget, a rate limit of five requests a minute, and a global breaker that trips if spend crosses two dollars a minute. Every gate fails closed. No server, no keys.</p>
+        <p class="lead">This is the real middleware from <a href="https://github.com/akanjilal-work/llm-cost-guardrails">llm-cost-guardrails</a>, running in your browser through Pyodide. Send language model requests from different tenants and watch the controls respond. Each tenant has a budget and a rate limit of five requests a minute, and a global breaker trips if spend crosses two dollars a minute. Every gate fails closed. The demo runs with no server and no keys.</p>
       </div>
 
       <div class="status" id="status"><span class="pin"></span><span id="status-text">Booting the Python runtime in your browser…</span></div>

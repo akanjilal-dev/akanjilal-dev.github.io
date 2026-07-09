@@ -35,7 +35,7 @@
       <div class="article-head">
         <div class="meta"><span>Agent deployment</span><span>March 27, 2026</span><span>13 minute read</span></div>
         <h1>Production architectures for AI agents, from single agents to supervisor graphs</h1>
-        <p class="standfirst">Most agent projects die in the gap between a working demonstration and a system you can operate. The demonstration runs once on the happy path. The system has to resume after a failure, wait for a human, recover its state, stay within a budget, and leave an audit trail. This is the reference architecture that closes that gap, and the layers that make it work.</p>
+        <p class="standfirst">Most agent projects fail in the gap between a working demonstration and a system you can operate. A demonstration runs once under ideal conditions. A production system has to resume after a failure, wait for a human, recover its state, stay within a budget, and leave an audit trail. This post sets out a reference architecture that closes that gap and describes the layers that make it work.</p>
       </div>
 
       <div class="prose">
@@ -94,7 +94,7 @@
           <figcaption>A reference architecture. Observability is drawn as a column because it is not a layer you add at the end, it is something that must see every other layer.</figcaption>
         </figure>
 
-        <h2>State and durability, the quiet foundation</h2>
+        <h2>State and durability, the foundation layer</h2>
 
         <p>The persistence layer is what makes everything above it possible. When the state of a run is checkpointed at every step, three capabilities fall out almost for free. You can pause a run and resume it later, which is exactly what a human approval step needs. You can recover from a failure by resuming from the last good checkpoint rather than starting over. And you can replay a past run step by step to understand what happened, which is the difference between debugging an agent and merely guessing at it. In a framework like the graph based one that leads this space, compiling the graph with a checkpointer saves a snapshot at every step, organized into threads, and that single mechanism underpins human oversight, memory, recovery, and audit all at once.</p>
 
@@ -106,15 +106,15 @@
 
         <p>For any action that is consequential and hard to reverse, the right design is to stop and ask a person. Because the state is checkpointed, this is clean rather than awkward. The graph reaches the approval node, the state is saved, a notification goes out, the run simply waits, and when the person approves it resumes exactly where it left off. This is the same dual control principle that governs money movement, expressed as a node in a graph.</p>
 
-        <h2>Observability, because you cannot operate what you cannot see</h2>
+        <h2>Observability</h2>
 
         <p>A non deterministic system that takes actions in the world is not something you can run blind. You need a trace of every step, with the token count, the latency, and the cost attached, so that you can see where a run spent its time and its budget. You need evaluations of whole trajectories, not just final answers, so that you can tell whether the agent is reasoning well or simply arriving at the right answer by luck. The industry is standardizing this through the generative AI conventions of the OpenTelemetry project, and several mature platforms exist to capture and analyze the traces. The teams that succeed treat observability as something present from the first day, not bolted on after the first incident.</p>
 
         <h2>Design for the ways agents fail</h2>
 
-        <p>Research into why multi agent systems fail points consistently at coordination, where agents duplicate work, miscommunicate, or drift from the shared goal. The architectural answers are the ones above. Clear task boundaries reduce duplication, checkpointed state makes failures recoverable, the gateway contains the damage a confused agent can do, human gates catch the consequential mistakes, and observability lets you find the rest. You do not prevent every failure. You make failures visible, bounded, and recoverable.</p>
+        <p>Research into why multi agent systems fail points consistently at coordination, where agents duplicate work, miscommunicate, or drift from the shared goal. The architectural answers are the ones above. Clear task boundaries reduce duplication, checkpointed state makes failures recoverable, the gateway contains the damage a confused agent can do, human gates catch the consequential mistakes, and observability lets you find the rest. You cannot prevent every failure, but you can make failures visible, bounded, and recoverable.</p>
 
-        <div class="callout"><p>Strip away the novelty and this is the architecture of any mission critical distributed system. You make operations recoverable, you keep durable state, you require dual control for risky actions, you instrument everything, and you contain the blast radius of any one component. The only genuinely new thing is that one of the components is non deterministic, which raises the importance of observation and human oversight rather than changing the fundamentals.</p></div>
+        <div class="callout"><p>Setting aside the novelty, this is the architecture of any mission critical distributed system. You make operations recoverable, you keep durable state, you require dual control for risky actions, you instrument everything, and you contain the blast radius of any one component. The only genuinely new thing is that one of the components is non deterministic, which raises the importance of observation and human oversight rather than changing the fundamentals.</p></div>
 
         <h2>The summary</h2>
 

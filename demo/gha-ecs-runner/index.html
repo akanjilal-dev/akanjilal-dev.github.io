@@ -141,21 +141,21 @@
       </div>
 
       <h2>How it works, end to end</h2>
-      <p>The whole path is one straight line, from the button you press to the running application you open. A control interface starts a build on GitHub. The private control plane provisions one single use runner. The runner builds the image, pushes it to the registry only it can write to, and signs it in the account. A deploy gate verifies the signature and rolls the application out behind a load balancer.</p>
+      <p>The path runs from the button you press to the running application you open, with no manual steps in between. A control interface starts a build on GitHub. The private control plane provisions one single use runner. The runner builds the image, pushes it to the registry only it can write to, and signs it in the account. A deploy gate verifies the signature and rolls the application out behind a load balancer.</p>
       <figure class="diagram">
         <img src="/assets/img/ghard-overview.svg" alt="A visitor presses the build button on the page, a control interface starts a build on GitHub, the private control plane provisions a single use runner on an account owned instance, the runner builds and pushes to the registry and signs with the in account key, a deploy gate verifies the signature, and the application is served behind a load balancer where the visitor opens it." loading="lazy">
         <figcaption>The complete path, from the button to the running application.</figcaption>
       </figure>
 
       <h2>The runner builds without root and signs in the account</h2>
-      <p>The runner is a single use task on account owned compute, in a private subnet with no inbound access. It builds the image with a rootless engine rather than a shared daemon, so a build step has no root and no host. It pushes the result to the registry that only the runner identity is allowed to write to, signs the image with a key that never leaves the account, and attaches a software bill of materials. Then the task exits, and the next build gets a clean one.</p>
+      <p>The runner is a single use task on account owned compute, in a private subnet with no inbound access. It builds the image with a rootless engine rather than a shared daemon, so a build step runs without root privileges and without access to a shared host. It pushes the result to the registry that only the runner identity is allowed to write to, signs the image with a key that never leaves the account, and attaches a software bill of materials. The task then exits, and the next build starts on a fresh runner.</p>
       <figure class="diagram">
         <img src="/assets/img/ghard-build.svg" alt="The single use runner starts on an account owned instance in a private subnet, builds with a rootless engine, pushes to the registry only the runner can write to, signs with the in account key, attaches the software bill of materials, and exits. The outputs are a signed image, a signature and bill of materials stored beside it, and the in account signing key." loading="lazy">
         <figcaption>What the runner does, start to finish, on one single use task.</figcaption>
       </figure>
 
       <h2>Only a verified image reaches the application</h2>
-      <p>The deploy runs on its own single use runner. It verifies the signature again with the in account key, and only a verified image is allowed to update the service. The application runs behind a public load balancer, where you can open it and read the image fingerprint it is running and the verified state it reports about itself. The registry gate and this deploy gate together mean the deployable set is exactly the images built by the runner and signed in the account.</p>
+      <p>The deploy runs on its own single use runner. It verifies the signature again with the in account key, and only a verified image is allowed to update the service. The application runs behind a public load balancer, where you can open it and read the image fingerprint it is running and the verified state it reports about itself. Together, the registry gate and the deploy gate ensure the only deployable images are those built by the runner and signed in the account.</p>
       <figure class="diagram">
         <img src="/assets/img/ghard-deploy.svg" alt="The deploy gate verifies the signature of the image against the in account key, and only the verified image is allowed to update the load balanced application service, which the visitor opens at a public address to read the provenance the application reports." loading="lazy">
         <figcaption>The deploy gate, and the running application the visitor reaches.</figcaption>

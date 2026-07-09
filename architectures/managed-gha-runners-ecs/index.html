@@ -36,11 +36,11 @@
       <div class="article-head">
         <div class="meta"><span>Reference architecture</span><span>Amazon Web Services</span><span>Self-hosted CI build plane</span></div>
         <h1>Managed GitHub Actions runners on ECS</h1>
-        <p class="standfirst">Continuous integration is where the source, the build environment, and the produced artifact all meet, which makes it the part of delivery a regulated organization most wants under its own control. This reference architecture runs GitHub Actions jobs on ephemeral AWS Fargate tasks inside a private virtual private cloud, builds container images without a Docker daemon, signs them inside the account, and pushes them to Amazon Elastic Container Registry, with the registry locked so that the runner is the only identity permitted to push. One task is one job is one artifact, and then it disappears.</p>
+        <p class="standfirst">Continuous integration is where the source, the build environment, and the produced artifact all meet, which makes it the part of delivery a regulated organization most wants under its own control. This reference architecture runs GitHub Actions jobs on ephemeral AWS Fargate tasks inside a private virtual private cloud, builds container images without a Docker daemon, signs them inside the account, and pushes them to Amazon Elastic Container Registry, with the registry locked so that the runner is the only identity permitted to push. Each task runs one job, produces one artifact, and then exits.</p>
       </div>
 
       <div class="prose">
-        <p>Most teams adopt self-hosted runners for capacity or for access to a private network, and they leave the runner long lived, shared, and broadly privileged. That is the opposite of what a regulated build plane needs. The design here treats the runner as disposable and the registry as a gate, because the control that actually matters is not where a build runs but what is allowed to land in the registry the platform deploys from. Everything else, the ephemerality, the private networking, the in-account signing, exists to make that one guarantee true and provable.</p>
+        <p>Most teams adopt self-hosted runners for capacity or for access to a private network, and they run them long lived, shared, and broadly privileged. A regulated build plane needs the reverse. The design here treats the runner as disposable and the registry as a gate, because the control that actually matters is not where a build runs but what is allowed to land in the registry the platform deploys from. Everything else, including the ephemerality, the private networking, and the in-account signing, exists to make that guarantee true and provable.</p>
 
         <h2>Requirements</h2>
 
@@ -112,7 +112,7 @@
         <h3>5. The registry policy as the enforcement point rather than process or trust</h3>
         <p><strong>Decision.</strong> The ECR repository policy allows the push actions only to the runner task role and explicitly denies every other principal, and deploy targets pull only from this registry.</p>
         <p><strong>Alternatives.</strong> Relying on workflow conventions, branch protection, or reviewer discipline to keep builds on the runner.</p>
-        <p><strong>Rationale.</strong> Enforcement is the requirement most designs hand-wave. Governance in GitHub makes building elsewhere hard to introduce, but only the registry policy makes it impossible to land elsewhere, because even an image built on a laptop cannot be pushed. This serves the enforcement attribute and functional requirement 2.</p>
+        <p><strong>Rationale.</strong> Enforcement is the requirement most designs address only loosely. Governance in GitHub makes building elsewhere hard to introduce, but only the registry policy makes it impossible to land elsewhere, because even an image built on a laptop cannot be pushed. This serves the enforcement attribute and functional requirement 2.</p>
         <p><strong>Consequences.</strong> The runner task role becomes a sensitive identity whose scope must be kept narrow, which the design does by granting it push to named repositories only.</p>
 
         <h3>6. In-account signing with a KMS key rather than keyless Sigstore</h3>

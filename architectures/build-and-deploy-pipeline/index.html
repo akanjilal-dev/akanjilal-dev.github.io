@@ -40,7 +40,7 @@
       </div>
 
       <div class="prose">
-        <p>A pipeline is where good intentions about security and quality either become real or quietly do not. It is easy to agree that code should be scanned, that dependencies should be checked, that images should be signed, and that nothing should reach production without review. It is the pipeline that decides whether those things actually happen on every change or only when someone remembers. The design here makes them happen automatically, makes the checks block rather than merely warn, and produces, as a side effect of how the work is done, a complete record of what was built, what it was scanned for, who approved it, and where it went. The tools named are examples. The shape of the pipeline matters more than any one vendor, and any of the named tools can be swapped for an equivalent without changing the design.</p>
+        <p>A pipeline is where intentions about security and quality are either enforced on every change or left to chance. It is easy to agree that code should be scanned, that dependencies should be checked, that images should be signed, and that nothing should reach production without review. The pipeline determines whether those checks run on every change rather than only when someone remembers to run them. The design here makes them happen automatically, makes the checks block rather than merely warn, and produces, as a side effect of how the work is done, a complete record of what was built, what it was scanned for, who approved it, and where it went. The tools named are examples. The shape of the pipeline matters more than any one vendor, and any of the named tools can be swapped for an equivalent without changing the design.</p>
 
         <h2>Requirements</h2>
 
@@ -147,7 +147,7 @@
 
         <h2>The engineering standards</h2>
 
-        <p>A pipeline only enforces what the team has agreed to. The standards below are the rules of the road, and the point of the pipeline is that it holds every one of them on every change rather than leaving them to memory or good intentions. The right hand column is where each standard stops being a document and becomes something that blocks.</p>
+        <p>A pipeline only enforces what the team has agreed to. The standards below are the agreed engineering rules, and the pipeline enforces every one of them on every change rather than leaving them to memory. The right hand column is where each standard stops being a document and becomes something that blocks.</p>
 
         <table>
           <thead><tr><th>Area</th><th>The standard</th><th>How the pipeline holds it</th></tr></thead>
@@ -236,7 +236,7 @@ jobs:
 
         <h2>The quality gates</h2>
 
-        <p>The gates are the heart of the design, so it is worth setting them out plainly. Each control inspects something specific, and each has a condition that decides whether a change may proceed. The bar is deliberately strict for anything that reaches production, and the conditions are part of the pipeline configuration rather than a document that describes good intentions.</p>
+        <p>The gates are central to the design, so it is worth setting them out plainly. Each control inspects something specific, and each has a condition that decides whether a change may proceed. The bar is deliberately strict for anything that reaches production, and the conditions are part of the pipeline configuration rather than a document that describes good intentions.</p>
 
         <figure class="diagram">
           <img src="/assets/img/cicd-gates.png" alt="A table of nine controls, what each inspects, example tools, and the gate condition that blocks a change" loading="lazy">
