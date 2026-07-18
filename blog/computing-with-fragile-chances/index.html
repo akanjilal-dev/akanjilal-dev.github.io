@@ -267,9 +267,69 @@ Measure q0, q1, q2
 <p class="breath"><strong>In one breath.</strong> A quantum chip is a fingernail-sized sliver of superconducting circuitry hanging at the bottom of a giant thermos, chilled to a hundredth of a degree above absolute zero so that heat cannot flip the qubits by itself. Each qubit is a tiny electrical oscillator with a deliberate flaw — unevenly spaced energy rungs — and that flaw is precisely what lets us talk to its bottom two rungs alone and call them 0 and 1.</p>
 <h3>6.1 The pipeline before the physics</h3>
 <p>Before the device details, here is the whole journey a single program takes, from your circuit to a histogram. The loop on the right of the figure is Rule B made visible: one run yields one bitstring, so the entire sequence repeats for every shot.</p>
-<figure class="qp-fig">
-  <img src="/assets/img/qp-pipeline.svg?v=2" alt="The nine stages of one physical execution: circuit → transpile → pulse schedule → deliver down the refrigerator → unitary evolution → probe the readout resonators → discriminate an" loading="lazy">
-  <figcaption>Figure 6.1 — The nine stages of one physical execution: circuit → transpile → pulse schedule → deliver down the refrigerator → unitary evolution → probe the readout resonators → discriminate and collapse → record one bitstring → repeat and histogram.</figcaption>
+<figure class="diagram">
+  <svg viewBox="0 0 960 862" role="img" aria-label="The nine stages of physically running one quantum program, top to bottom: logical circuit, transpile, compile to pulses, send down the refrigerator, qubits evolve, probe the resonators, discriminate and collapse, record one bitstring, and repeat to build the histogram. A loop arrow returns from the last stage to the first, because each shot starts fresh.">
+    <text x="40" y="34" class="sub" font-size="11" letter-spacing="2">PHYSICAL EXECUTION</text>
+    <text x="40" y="60" class="lbl" font-size="15">How one quantum program actually runs, start to finish</text>
+    <line class="conn" x1="40" y1="74" x2="920" y2="74"/>
+    <rect class="box" x="40" y="104" width="640" height="58" rx="11"/>
+    <text x="62" y="139" class="num" font-size="15">1</text>
+    <text x="90" y="131" class="lbl" font-size="12.5">Quantum circuit — logical gates</text>
+    <text x="90" y="149" class="sub" font-size="10">Hadamard, oracle, diffusion, measure — the program from Chapter 4</text>
+    <line class="conna" x1="360" y1="162" x2="360" y2="180"/>
+    <path class="dot" d="M356 180 L364 180 L360 188 Z"/>
+    <rect class="box" x="40" y="188" width="640" height="58" rx="11"/>
+    <text x="62" y="223" class="num" font-size="15">2</text>
+    <text x="90" y="215" class="lbl" font-size="12.5">Transpile to the hardware</text>
+    <text x="90" y="233" class="sub" font-size="10">rebuild into the five native gates, insert SWAPs for the wiring</text>
+    <line class="conna" x1="360" y1="246" x2="360" y2="264"/>
+    <path class="dot" d="M356 264 L364 264 L360 272 Z"/>
+    <rect class="box" x="40" y="272" width="640" height="58" rx="11"/>
+    <text x="62" y="307" class="num" font-size="15">3</text>
+    <text x="90" y="299" class="lbl" font-size="12.5">Compile to a pulse schedule</text>
+    <text x="90" y="317" class="sub" font-size="10">each native gate becomes a shaped microwave pulse</text>
+    <line class="conna" x1="360" y1="330" x2="360" y2="348"/>
+    <path class="dot" d="M356 348 L364 348 L360 356 Z"/>
+    <rect class="box" x="40" y="356" width="640" height="58" rx="11"/>
+    <text x="62" y="391" class="num" font-size="15">4</text>
+    <text x="90" y="383" class="lbl" font-size="12.5">Send the pulses down the fridge</text>
+    <text x="90" y="401" class="sub" font-size="10">room-temperature electronics down to the 15 mK chip</text>
+    <line class="conna" x1="360" y1="414" x2="360" y2="432"/>
+    <path class="dot" d="M356 432 L364 432 L360 440 Z"/>
+    <rect class="box" x="40" y="440" width="640" height="58" rx="11"/>
+    <text x="62" y="475" class="num" font-size="15">5</text>
+    <text x="90" y="467" class="lbl" font-size="12.5">Qubits evolve — unitary</text>
+    <text x="90" y="485" class="sub" font-size="10">the pulses rotate the amplitudes; nothing is read yet</text>
+    <line class="conna" x1="360" y1="498" x2="360" y2="516"/>
+    <path class="dot" d="M356 516 L364 516 L360 524 Z"/>
+    <rect class="box" x="40" y="524" width="640" height="58" rx="11"/>
+    <text x="62" y="559" class="num" font-size="15">6</text>
+    <text x="90" y="551" class="lbl" font-size="12.5">Probe the readout resonators</text>
+    <text x="90" y="569" class="sub" font-size="10">a microwave tone senses each qubit indirectly</text>
+    <line class="conna" x1="360" y1="582" x2="360" y2="600"/>
+    <path class="dot" d="M356 600 L364 600 L360 608 Z"/>
+    <rect class="boxa" x="40" y="608" width="640" height="58" rx="11"/>
+    <text x="62" y="643" class="num" font-size="15">7</text>
+    <text x="90" y="635" class="lbl" font-size="12.5">Discriminate and collapse</text>
+    <text x="90" y="653" class="sub" font-size="10">the signal lands in the 0 or 1 cluster; the superposition is gone</text>
+    <line class="conna" x1="360" y1="666" x2="360" y2="684"/>
+    <path class="dot" d="M356 684 L364 684 L360 692 Z"/>
+    <rect class="box" x="40" y="692" width="640" height="58" rx="11"/>
+    <text x="62" y="727" class="num" font-size="15">8</text>
+    <text x="90" y="719" class="lbl" font-size="12.5">Record one bitstring</text>
+    <text x="90" y="737" class="sub" font-size="10">one classical result for this single shot</text>
+    <line class="conna" x1="360" y1="750" x2="360" y2="768"/>
+    <path class="dot" d="M356 768 L364 768 L360 776 Z"/>
+    <rect class="box" x="40" y="776" width="640" height="58" rx="11"/>
+    <text x="62" y="811" class="num" font-size="15">9</text>
+    <text x="90" y="803" class="lbl" font-size="12.5">Repeat, then build the histogram</text>
+    <text x="90" y="821" class="sub" font-size="10">the tallest bar names the answer</text>
+    <path class="conna" d="M680 805 H792 V133 H688" fill="none" stroke-dasharray="5 4"/>
+    <path class="dot" d="M688 129 L688 137 L680 133 Z"/>
+    <text x="808" y="469" class="lbl" font-size="11" text-anchor="middle" transform="rotate(-90 808 469)">the shot loop &#183; repeat ~1000&#215;</text>
+    <text x="824" y="469" class="sub" font-size="9.5" text-anchor="middle" transform="rotate(-90 824 469)">each run starts fresh — the last look destroyed the state</text>
+  </svg>
+  <figcaption>Figure 6.1 — The nine stages of one physical execution. The logical circuit is transpiled and compiled to microwave pulses, sent down the refrigerator, evolved, probed, and collapsed into a single bitstring; then the whole run repeats, because the one look destroyed the state, until the histogram fills in.</figcaption>
 </figure>
 <p>In words: (1) your logical gates, exactly as written in Chapter 4; (2) transpilation rebuilds them from the hardware's five native gates and adds SWAPs so every two-qubit gate acts on physically wired neighbors; (3) each native gate is compiled into a specific shaped microwave pulse with a set frequency, envelope, and duration; (4) room-temperature electronics generate those pulses and send them down heavily attenuated coaxial lines through the refrigerator's stages; (5) the pulses steer the qubits through the algorithm — the unitary part, during which nothing is read; (6) a separate probe tone interrogates each qubit's readout resonator; (7) the returned signal is amplified and sorted into a 0 or a 1 — the physical measurement, and the collapse; (8) one bitstring is recorded; (9) the machine resets and the whole run repeats for the next shot.</p>
 <h3>6.2 The refrigerator, and why 15 millikelvin</h3>
