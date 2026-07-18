@@ -1,0 +1,36 @@
+<svg width="100%" viewBox="0 0 680 420" xmlns="http://www.w3.org/2000/svg" role="img" font-family="Segoe UI, Helvetica, Arial, sans-serif">
+<title>Grover rotation geometry for 3 qubits</title>
+<desc>The state vector starts at angle theta above the bad-states axis and rotates by two theta each Grover iteration, reaching near the good-state axis after two iterations.</desc>
+<rect x="0" y="0" width="680" height="420" fill="#faf9f5"/>
+
+<text x="340" y="34" text-anchor="middle" font-size="16" font-weight="500" fill="#26215C">Grover as a rotation in a 2D plane (N = 8, one marked item)</text>
+
+<!-- axes -->
+<line x1="140" y1="340" x2="600" y2="340" stroke="#5F5E5A" stroke-width="1"/>
+<line x1="140" y1="340" x2="140" y2="70" stroke="#5F5E5A" stroke-width="1"/>
+<text x="600" y="362" text-anchor="end" font-size="12" fill="#444441">bad axis: equal mix of the 7 wrong states</text>
+<text x="150" y="78" font-size="12" fill="#0F6E56">good axis: the marked state |101&#8250;</text>
+
+<!-- arc -->
+<path d="M 340 340 A 200 200 0 0 1 140 140" fill="none" stroke="#B4B2A9" stroke-width="0.8" stroke-dasharray="4 4"/>
+
+<!-- k=0 vector, 20.7 deg -->
+<line x1="140" y1="340" x2="327" y2="269" stroke="#888780" stroke-width="2"/>
+<circle cx="327" cy="269" r="4" fill="#888780"/>
+<text x="335" y="266" font-size="12" fill="#444441">k = 0 : angle &#952; , P = 1/8 = 12.5%</text>
+
+<!-- k=1 vector, 62.1 deg -->
+<line x1="140" y1="340" x2="234" y2="163" stroke="#185FA5" stroke-width="2"/>
+<circle cx="234" cy="163" r="4" fill="#185FA5"/>
+<text x="244" y="150" font-size="12" fill="#0C447C">k = 1 : angle 3&#952; , P = 25/32 = 78.1%</text>
+
+<!-- k=2 vector, 103.5 deg -->
+<line x1="140" y1="340" x2="93" y2="145" stroke="#0F6E56" stroke-width="2.5"/>
+<circle cx="93" cy="145" r="4" fill="#0F6E56"/>
+<text x="60" y="120" font-size="12" fill="#0F6E56">k = 2 : angle 5&#952; , P = 121/128 = 94.5%</text>
+
+<!-- theta label near origin -->
+<text x="180" y="330" font-size="12" fill="#444441">&#952; &#8776; 20.7&#176;</text>
+
+<text x="340" y="398" text-anchor="middle" font-size="12" fill="#5F5E5A">Each iteration rotates the state by 2&#952; toward the marked state. Two rotations is optimal.</text>
+</svg>

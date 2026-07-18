@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Computing with fragile chances, how a quantum processor really works, Anirban Kanjilal</title>
+<meta name="description" content="A self-contained teaching walk through quantum computing, from the two rules every quantum computer obeys to the microwave pulses that run a real superconducting chip. Grover's search tracked amplitude by amplitude, the transmon and its readout explained down to the device physics, and a runnable Amazon Braket lab.">
+<meta property="og:title" content="Computing with fragile chances, how a quantum processor really works">
+<meta property="og:description" content="From the two rules that govern every quantum computer to the microwave pulses that run a real chip, with Grover's search tracked by hand and a runnable Braket lab.">
+<meta property="og:type" content="article">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/site.css">
+</head>
+<body>
+
+<header class="bar">
+  <div class="wrap">
+    <a class="brand" href="/">akanjilal<span class="dot">.dev</span></a>
+    <nav class="nav" aria-label="Primary">
+      <a href="/#work">work</a>
+      <a href="/blog/">my blogs</a>
+      <a href="/#background">background</a>
+      <a class="ext" href="https://github.com/akanjilal-work">github</a>
+      <a class="ext" href="https://www.linkedin.com/in/akanjilal/">linkedin</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <article class="article">
+    <div class="wrap">
+      <a class="back" href="/blog/">Back to writing</a>
+      <div class="article-head">
+        <div class="meta"><span>Quantum</span><span>July 17, 2026</span><span>40 minute read</span></div>
+        <h1>Computing with fragile chances, how a quantum processor really works</h1>
+        <p class="standfirst">Every quantum computer lives under two rules: reading a qubit returns a random bit, and the reading destroys the state you looked at. Those sound like fatal flaws. This is the long version of why they are not, layered from plain language to device physics, from the two rules to the microwave pulses that run a real superconducting chip.</p>
+      </div>
+
+      <div class="prose">
+        <p>A while back I published a two qubit <a href="/blog/grover-on-aws-braket/">Grover search you can run on Amazon Braket</a>, and I promised that the interesting part was not that the circuit works, but the gap between the simulator and the real machine. This is the long version of that promise. It is a self contained teaching piece that starts from the two rules every quantum computer obeys and does not stop until it has followed a single program down into a superconducting chip and back out as a histogram. It is written to be read by anyone: every chapter opens in plain language before it descends into the device physics, and no prior quantum mechanics is assumed. If a formula stops you, skip to the next plain sentence; the prose always restates what the math says.</p>
+
+<h2>Abstract</h2>
+<p>Every quantum computer lives under two rules. First, its answers are probabilistic: reading a qubit returns a random 0 or 1, with odds set by hidden numbers called amplitudes. Second, the act of reading destroys the quantum state: one look collapses a rich superposition into a single plain bit, and nothing can bring the superposition back. These rules sound like fatal flaws. This paper explains why they are not, and how an entire technology is engineered around them.</p>
+<p>We build the story in four parts. Part I states the two rules precisely and develops just enough mathematics to work with them. Part II runs one complete algorithm, Grover's search, first on 2 qubits and then on 3 qubits with every amplitude tracked by hand, and compares the execution step by step against a classical computer. Part III opens the machine itself. Using IBM's superconducting Heron processors as the concrete example, it follows a program down through the refrigerator: what a transmon qubit physically is, how a gate is a shaped microwave pulse, how a two qubit gate rides on a tunable coupler, and how the dispersive readout chain performs the measurement, including the physics of why that measurement collapses the state. Part IV turns the theory into a hands-on lab on Amazon Braket's SV1 simulator, with runnable code and the exact outputs to expect, and closes by comparing the ideal simulated histogram with what real hardware produces today.</p>
+<p>Each chapter opens with a plain-language passage that any curious reader can follow, then descends into the full scientific detail, including the device Hamiltonians where they earn their place. No prior quantum mechanics is assumed.</p>
+<hr />
+<h2>How to read this document</h2>
+<p>Every chapter is layered. The opening passage, marked <strong>In one breath</strong>, is written for a reader with no physics background. The sections after it go progressively deeper. If a formula stops you, skip to the next plain sentence; the prose always restates what the math says. Boxed passages marked <strong>Key idea</strong> carry the load-bearing concepts. If you keep only those boxes, you keep the whole argument.</p>
+<p>Readers who want the fastest complete pass: read Chapter 1, the Key idea boxes of Chapters 2 through 5, all of Chapter 8 (measurement is the heart of the matter), and Chapter 10's lab.</p>
+<p>A note on sources. The hardware facts in Part III (qubit counts, native gates, lattice, operating temperatures, coherence numbers) are drawn from IBM's current public documentation and recent peer-reviewed literature, checked at the time of writing, not recalled from memory. The Grover arithmetic is standard and re-derived here from scratch.</p>
+<hr />
+<h2 class="part">Part I — The Two Rules</h2>
+<h2>Chapter 1. The two rules, in plain language</h2>
+<p class="breath"><strong>In one breath.</strong> A normal bit is a light switch, off or on. A qubit is a spinning coin: while it spins, it is a blend of heads and tails at once. You cannot see the blend. When you finally look, the coin lands, showing a plain heads or tails at random, and the blend is gone forever. A quantum computer wins not by peeking cleverly, because peeking is forbidden, but by nudging the blend before the look, so that wrong answers cancel out and the right answer becomes very likely to be the one you see.</p>
+<p>Now the same idea a little more carefully.</p>
+<p><strong>Rule A, the answer is a matter of chance.</strong> A qubit's state is described by two numbers called amplitudes, one attached to the outcome 0 and one to the outcome 1. The amplitudes decide the odds: the probability of each outcome is the square of the size of its amplitude. Measuring the qubit gives you a plain classical bit drawn from those odds. You never see the amplitudes themselves.</p>
+<p><strong>Rule B, looking ruins the blend.</strong> The instant a measurement returns a value, the qubit becomes exactly that value. Whatever delicate mixture existed a moment before is erased, permanently. You get one clean look per run of the machine, and the look is both random and destructive.</p>
+<p>Together the rules force a peculiar style of computation. All the real work happens on amplitudes you can never inspect. The only way to extract an answer is to shape those amplitudes in advance so that, at the single permitted look, the desired outcome is overwhelmingly likely. The shaping tool is interference: amplitudes are signed quantities, so they can cancel like opposing waves in water. A quantum algorithm is a choreography that makes wrong-answer amplitudes cancel and right-answer amplitudes reinforce.</p>
+<p>One more consequence follows immediately. Because each run yields a single random bit-string and destroys the state, a quantum computation is never run once. It is run hundreds or thousands of times. Each full run is called a <strong>shot</strong>. The results are tallied into a bar chart, a histogram, and the tallest bar is the answer. The histogram is not a workaround bolted on afterward; it is the native output format of a machine governed by Rules A and B.</p>
+<blockquote class="keyidea">
+<p><strong>Key idea 1.</strong> A quantum computer hides its work in amplitudes that can never be read. It wins by arranging interference so that the one allowed, destructive, random look lands on the right answer with high probability, and by repeating the look enough times for the answer to stand out in a histogram.</p>
+</blockquote>
+<h3>1.1 The whole story on one page</h3>
+<p>Before any equations, here is the entire argument of this paper as a single illustration. Read it top to bottom. The two rules sit at the top, because everything below is a response to them. The strategy band shows the only winning move the rules allow: blend every possibility, secretly mark the answer with a sign flip no look could ever see, let interference grow the marked one, and only then spend the single permitted look. The machine band shows what physically runs it, and it is deliberately unexciting: a laptop, ordinary control electronics, a very cold refrigerator, and a chip. The loop band shows why the machine runs the same program a thousand times, and the bottom band shows what actually comes out: not a number, but a bar chart whose tallest bar names the answer. Every chapter that follows is one band of this picture, magnified.</p>
+<figure class="qp-fig">
+  <img src="/assets/img/qp-overview.svg" alt="The complete arc of quantum computation in one view: the two governing rules, the interference strategy they force, the physical stack that executes it, the shot loop that repetiti" loading="lazy">
+  <figcaption>Figure 1.1 — The complete arc of quantum computation in one view: the two governing rules, the interference strategy they force, the physical stack that executes it, the shot loop that repetition demands, and the histogram that delivers the answer.</figcaption>
+</figure>
+<p>The rest of this paper unpacks how that choreography is written down (Part I), how a real algorithm performs it (Part II), how metal, microwaves, and refrigeration physically carry it out (Part III), and how you can watch every step in a simulator (Part IV).</p>
+<hr />
+<h2>Chapter 2. The mathematics of a qubit</h2>
+<p class="breath"><strong>In one breath.</strong> A qubit's state is a short list of numbers. Gates are rules that rotate the whole list at once without looking at it. Measurement is a weighted coin flip whose weights come from the list, and the flip wipes the list clean. That is the entire rulebook; everything else is bookkeeping.</p>
+<h3>2.1 States are vectors of amplitudes</h3>
+<p>A single qubit is described by a pair of complex numbers, its amplitudes:</p>
+<p class="eq">|ψ⟩ = α|0⟩ + β|1⟩,  with |α|² + |β|² = 1.</p>
+<p>The funny bracket |·⟩ is just physics notation for a labeled basis direction. The constraint says the probabilities add to one, since |α|² and |β|² will be the outcome probabilities.</p>
+<p>With n qubits the list grows fast. The joint state assigns one amplitude to every possible n-bit string, so it is a list of 2ⁿ complex numbers:</p>
+<p>|ψ⟩ = Σₓ cₓ|x⟩,  x running over all 2ⁿ bitstrings, with Σₓ |cₓ|² = 1.</p>
+<p>Three qubits mean 8 amplitudes. Thirty qubits mean over a billion. Fifty qubits mean more amplitudes than any classical memory can store. This exponential list is the raw material a quantum computer works with. Throughout this paper we write 3-qubit basis states as |q₂q₁q₀⟩ with q₂ the most significant bit, so |101⟩ is the integer 5.</p>
+<h3>2.2 Gates are unitary rotations</h3>
+<p>A quantum gate is a matrix U applied to the amplitude list. The only requirement is that U is <strong>unitary</strong>, written U†U = I, which means it preserves the length of the vector and is perfectly reversible. Preserving length is what keeps the probabilities summing to one. Reversibility means a gate cannot erase information, and, crucially, a gate never reads the state. It rotates all 2ⁿ amplitudes in one stroke, blindly.</p>
+<p>The single most important gate is the Hadamard:</p>
+<p class="eq">H = (1/√2) × [ 1  1 ; 1 −1 ]</p>
+<p>Applied to |0⟩ it produces (|0⟩ + |1⟩)/√2, the perfect fifty-fifty blend. Applied again it undoes itself, since interference between the two paths reassembles |0⟩ exactly. That little cancellation is the seed of everything Grover's algorithm does at scale.</p>
+<h3>2.3 Measurement, the Born rule, and collapse</h3>
+<p>Measuring all n qubits of the state Σₓ cₓ|x⟩ obeys one law, the <strong>Born rule</strong>:</p>
+<p>Pr(outcome x) = |cₓ|²  — this is Rule A made exact,</p>
+<p>and one consequence, <strong>collapse</strong>: the state after the measurement is exactly |x⟩, the outcome you saw. Every other amplitude is gone — Rule B made exact. There is no operation, unitary or otherwise, that recovers the pre-measurement amplitudes from the post-measurement state. A deep theorem, the no-cloning theorem, closes the last loophole: you cannot copy an unknown quantum state first and measure the copy, because no unitary process can duplicate arbitrary states.</p>
+<blockquote class="keyidea">
+<p><strong>Key idea 2.</strong> The whole game has three moves. States: a unit-length list of 2ⁿ signed (complex) amplitudes. Gates: reversible rotations of the whole list, applied blind. Measurement: a destructive sample from the squared amplitudes. Algorithms must do all their cleverness with the middle move.</p>
+</blockquote>
+<h3>2.4 Why signs matter: interference</h3>
+<p>Probabilities are never negative, but amplitudes can be. This is not a technicality; it is the engine. If two computational paths lead to the same outcome with amplitudes +a and −a, the outcome's total amplitude is zero: the paths annihilate. A classical randomized computer can only ever add probabilities, so its paths can never cancel. A quantum computer can steer its paths so that all routes to wrong answers cancel while routes to the right answer add up. Grover's algorithm, next, is the cleanest textbook display of this steering.</p>
+<hr />
+<h2 class="part">Part II — One Algorithm, End to End</h2>
+<h2>Chapter 3. The warm-up: Grover's search on 2 qubits</h2>
+<p class="breath"><strong>In one breath.</strong> Four boxes, one prize. Instead of opening boxes, we blend all four possibilities, secretly flip the sign of the winning one, then reflect every amplitude about their average. The one flipped amplitude gets amplified to certainty while the others cancel to nothing, so the single allowed look reveals the prize every time.</p>
+<p>The problem: among 4 items, labeled by the bitstrings 00, 01, 10, 11, exactly one is marked. An oracle — a subroutine we may call but not inspect — recognizes the marked item. Classically the only strategy is to try items one at a time. We take the marked item to be |11⟩.</p>
+<p>The 2-qubit state carries 4 amplitudes, ordered (c₀₀, c₀₁, c₁₀, c₁₁).</p>
+<p><strong>Step 1, prepare.</strong> Start in |00⟩: amplitudes (1, 0, 0, 0).</p>
+<p><strong>Step 2, superpose.</strong> Apply H to each qubit. Every amplitude becomes ½: state (½, ½, ½, ½). Each outcome now has probability ¼. Measuring here would be pointless, which is exactly why we do not.</p>
+<p><strong>Step 3, oracle.</strong> The oracle flips the sign of the marked amplitude only: (½, ½, ½, −½). Notice the probabilities have not changed, since (−½)² = ¼. The mark is invisible to any measurement at this point. It lives purely in the sign, which only interference can convert into something visible.</p>
+<p><strong>Step 4, diffusion (inversion about the mean).</strong> Compute the average amplitude: μ = (½ + ½ + ½ − ½)/4 = ¼. Replace every amplitude c by 2μ − c, a reflection about the average. The three amplitudes at +½ become 2(¼) − ½ = 0. The flipped amplitude becomes 2(¼) + ½ = 1. The state is now (0, 0, 0, 1).</p>
+<p><strong>Step 5, measure.</strong> The probability of reading 11 is 1² = 100%. The collapse does no harm, because the state was already sculpted into the answer.</p>
+<p>The 2-qubit case is deceptively perfect: one round reaches certainty. That perfection hides Rule A. The 3-qubit case, next, shows the honest picture, where the algorithm reaches a high probability rather than a sure thing, and the histogram earns its keep.</p>
+<hr />
+<h2>Chapter 4. Grover on 3 qubits, every amplitude tracked</h2>
+<p class="breath"><strong>In one breath.</strong> Eight boxes, one prize, hidden at position 101. Two rounds of the same flip-and-reflect dance push the winning chance from 12.5% to 94.5%. A third round would overshoot and make things worse, like pushing a swing after it has already reached its peak. We stop at two, look, and the histogram's tall bar names the prize.</p>
+<p>Now N = 2³ = 8 and the marked item is w = |101⟩, the integer 5.</p>
+<h3>4.1 Uniform superposition</h3>
+<p>|s⟩ = H⊗H⊗H |000⟩ = (1/√8) Σₓ |x⟩, all eight amplitudes equal to 1/(2√2) ≈ 0.3536.</p>
+<p>Every outcome has probability 1/8 = 12.5%.</p>
+<h3>4.2 The oracle as a matrix</h3>
+<p>The oracle is the reflection U_w = I − 2|w⟩⟨w|. Since w is the basis state at index 5, this is simply the diagonal matrix</p>
+<p class="eq">U_w = diag(1, 1, 1, 1, 1, −1, 1, 1),</p>
+<p>which negates amplitude number 5 and touches nothing else. Probabilities are unchanged; the information hides in the sign.</p>
+<h3>4.3 The diffusion operator as a matrix</h3>
+<p>Diffusion is the reflection about the uniform state: D = 2|s⟩⟨s| − I. Because |s⟩ is the uniform vector, |s⟩⟨s| = J/8 with J the all-ones 8×8 matrix, so</p>
+<p>D = J/4 − I:  every diagonal entry is −¾, every off-diagonal entry is +¼.</p>
+<p>Acting on any amplitude list, D sends each entry c to 2μ − c, where μ is the mean of all entries: inversion about the mean, exactly as in the 2-qubit warm-up.</p>
+<h3>4.4 Two iterations, tracked by hand</h3>
+<p>By symmetry the state always has just two distinct amplitude values: a on the marked entry, b shared by the other seven. Start: a₀ = b₀ = 0.353553.</p>
+<p><strong>Iteration 1.</strong> Oracle: a′ = −0.353553, b′ = 0.353553. Mean: μ = (a′ + 7b′)/8 = (−0.353553 + 2.474874)/8 = 0.265165. Diffusion:</p>
+<p>a₁ = 2μ − a′ = 0.530330 + 0.353553 = <strong>0.883883</strong>
+b₁ = 2μ − b′ = 0.530330 − 0.353553 = <strong>0.176777</strong></p>
+<p>Normalization check: a₁² + 7b₁² = 0.781250 + 7(0.031250) = 1. ✓ Success probability so far:</p>
+<p><strong>P₁ = a₁² = 25/32 = 78.1%.</strong></p>
+<p><strong>Iteration 2.</strong> Oracle: a′ = −0.883883, b′ = 0.176777. Mean: μ = (−0.883883 + 1.237437)/8 = 0.044194. Diffusion:</p>
+<p>a₂ = 2μ − a′ = 0.088388 + 0.883883 = <strong>0.972272</strong>
+b₂ = 2μ − b′ = 0.088388 − 0.176777 = <strong>−0.088388</strong></p>
+<p>Check: a₂² + 7b₂² = 0.945312 + 7(0.007813) = 1. ✓ Success probability:</p>
+<p><strong>P₂ = a₂² = 121/128 = 94.5%.</strong></p>
+<h3>4.5 The rotation picture, and why more is worse</h3>
+<p>There is a beautiful geometric reading of these numbers. Define an angle θ by sin θ = 1/√N = 1/√8, so θ ≈ 20.705°. The state always lives in a flat 2-dimensional plane spanned by two directions: the marked state (the "good" axis) and the equal blend of the seven wrong states (the "bad" axis). The starting state |s⟩ sits at angle θ above the bad axis. Each Grover iteration — oracle then diffusion, two reflections — composes into a single rotation by 2θ toward the good axis. After k iterations,</p>
+<p class="eq">P(k) = sin²((2k + 1)θ).</p>
+<table>
+<thead>
+<tr>
+<th>k</th>
+<th>angle (2k+1)θ</th>
+<th>P(k)</th>
+<th>as a fraction</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0</td>
+<td>20.7°</td>
+<td>12.5%</td>
+<td>1/8</td>
+</tr>
+<tr>
+<td>1</td>
+<td>62.1°</td>
+<td>78.1%</td>
+<td>25/32</td>
+</tr>
+<tr>
+<td>2</td>
+<td>103.5°</td>
+<td>94.5%</td>
+<td>121/128</td>
+</tr>
+<tr>
+<td>3</td>
+<td>144.9°</td>
+<td>33.0%</td>
+<td>overshoot</td>
+</tr>
+</tbody>
+</table>
+<p>The optimal stopping point is k = round(π√N/4) = round(2.22) = 2. A third rotation swings the state past the good axis and the success probability falls to 33%. This is the famous Grover subtlety: the algorithm is not "more iterations, more better." It is a rotation you must stop at the top.</p>
+<figure class="qp-fig">
+  <img src="/assets/img/qp-grover-geometry.svg" alt="The state vector starts at angle θ above the bad axis and rotates by 2θ per iteration. After two iterations it sits nearly on the good axis at 94.5%." loading="lazy">
+  <figcaption>Figure 4.1 — The state vector starts at angle θ above the bad axis and rotates by 2θ per iteration. After two iterations it sits nearly on the good axis at 94.5%.</figcaption>
+</figure>
+<blockquote class="keyidea">
+<p><strong>Key idea 3.</strong> Grover never learns the answer during the computation. It rotates an unreadable state vector toward the answer, using the oracle's sign flip as one mirror and the average-reflection as the other. The number of rotations is fixed in advance by geometry, about (π/4)√N, and overshooting is as bad as undershooting.</p>
+</blockquote>
+<h3>4.6 The circuit</h3>
+<p>Written as gates, the whole 3-qubit program is:</p>
+<pre><code>Superpose:   H on q0, q1, q2
+Repeat 2 times:
+    Oracle for |101⟩:   X on q1,  CCZ(q0,q1,q2),  X on q1
+    Diffusion:          H all, X all, CCZ(q0,q1,q2), X all, H all
+Measure q0, q1, q2
+</code></pre>
+<p>A CCZ (controlled-controlled-Z) multiplies the amplitude of |111⟩ by −1 and leaves the other seven basis states alone. The oracle wraps the CCZ in two X gates on q₁ — the qubit that should read 0 in the target — temporarily relabeling |101⟩ as |111⟩ so the CCZ can mark it, then relabeling back.</p>
+<pre><code>Oracle for |101⟩              Diffusion (reflect about |s⟩)
+
+ q0: ----------●--------       q0: --H--X--●--X--H--
+ q1: ---X------●----X---       q1: --H--X--●--X--H--
+ q2: ----------Z--------       q2: --H--X--Z--X--H--
+</code></pre>
+<p>On a simulator these gates run exactly as written. On real hardware every one of them is rebuilt out of the machine's five native operations and rerouted for its physical wiring — the subject of Part III.</p>
+<hr />
+<h2>Chapter 5. The same job on a classical computer</h2>
+<p class="breath"><strong>In one breath.</strong> A classical computer holds one definite state, reads its memory as often as it likes without disturbing anything, and checks boxes one at a time. For eight boxes it needs about four or five peeks on average. Grover needed two rounds. The gap grows as the square root of the problem size, and the reason is not speed of parts but a different relationship with information: the quantum machine trades free, safe reading for the power of cancellation.</p>
+<h3>5.1 How a classical execution actually proceeds</h3>
+<p>A classical processor runs a fetch–decode–execute loop. It fetches an instruction from memory, decodes it, executes it on definite bits held in registers, writes results back, and repeats. Three properties of this loop matter for our comparison:</p>
+<ol>
+<li><strong>Definiteness.</strong> At every tick, every bit in the machine has exactly one value. There is no blend to protect and no blend to exploit.</li>
+<li><strong>Non-destructive readout.</strong> Reading a register or a memory cell is free. The value is still there afterward. A classical program can inspect its own intermediate state as often as it likes, branch on it, print it, copy it.</li>
+<li><strong>Determinism (up to deliberate randomness).</strong> Run the program twice on the same input and you get the same answer. Randomized classical algorithms exist, but their random choices add probabilities; they can never cancel.</li>
+</ol>
+<p>For unstructured search over N items, these properties pin the cost: with no structure to exploit, each probe eliminates one item, so the expected cost is about N/2 probes and the worst case is N. For our N = 8 that is 4 to 5 probes on average, against Grover's 2 iterations reaching 94.5%.</p>
+<h3>5.2 The two execution styles, side by side</h3>
+<table>
+<thead>
+<tr>
+<th>Feature</th>
+<th>Classical machine</th>
+<th>Quantum machine</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>State at any instant</td>
+<td>one definite bitstring</td>
+<td>superposition over all 2ⁿ bitstrings</td>
+</tr>
+<tr>
+<td>Basic operation</td>
+<td>logic gate on definite bits</td>
+<td>unitary rotation of the amplitude list, applied blind</td>
+</tr>
+<tr>
+<td>Reading memory</td>
+<td>free, non-destructive, any time</td>
+<td>one shot only; random result; collapses the state</td>
+</tr>
+<tr>
+<td>Intermediate inspection</td>
+<td>allowed and routine</td>
+<td>impossible; nothing may be read mid-circuit</td>
+</tr>
+<tr>
+<td>Result of a run</td>
+<td>deterministic value</td>
+<td>random bitstring weighted by |cₓ|²</td>
+</tr>
+<tr>
+<td>Unstructured search cost</td>
+<td>about N probes</td>
+<td>about √N iterations</td>
+</tr>
+<tr>
+<td>How the answer is obtained</td>
+<td>read once</td>
+<td>repeat shots, read the histogram</td>
+</tr>
+</tbody>
+</table>
+<h3>5.3 What the square root is really telling you</h3>
+<p>Grover's advantage is quadratic, not exponential, and it is provably optimal for unstructured search: no quantum algorithm can beat about √N oracle calls. That modest-sounding square root is still transformative at scale (a trillion-item search drops from a trillion probes to about a million), but the deeper lesson is structural. The classical machine pays for its luxury of free readout with path-by-path bookkeeping in which probabilities only ever add. The quantum machine gives up readable intermediate state entirely, and in exchange gains signed amplitudes and cancellation. Rules A and B are the price of admission to interference. Everything in Part III is engineering built to pay that price physically: keeping the blend alive (against Rule B firing by accident) right up to the one moment we choose to invoke it.</p>
+<blockquote class="keyidea">
+<p><strong>Key idea 4.</strong> Classical computing: definite state, free readout, additive probabilities. Quantum computing: unreadable state, one destructive readout, cancelable amplitudes. Neither is a faster version of the other; they are different contracts with information, and the square root in Grover is what that contract difference buys on unstructured search.</p>
+</blockquote>
+<hr />
+<h2 class="part">Part III — Inside the Machine</h2>
+<p><em>This part is the heart of the paper. Parts I and II treated gates and measurements as abstract moves. Here we follow one program down through a real machine — IBM's superconducting Heron processors — and watch every abstract move become metal, microwaves, and cold. Heron is IBM's current flagship family: 133 qubits on Heron r1 and 156 on Heron r2 and r3, arranged on IBM's heavy-hexagonal lattice, with a native gate set of I, X, SX, R_Z, and CZ.</em></p>
+<h2>Chapter 6. Anatomy of the machine: the cold stack and the transmon</h2>
+<p class="breath"><strong>In one breath.</strong> A quantum chip is a fingernail-sized sliver of superconducting circuitry hanging at the bottom of a giant thermos, chilled to a hundredth of a degree above absolute zero so that heat cannot flip the qubits by itself. Each qubit is a tiny electrical oscillator with a deliberate flaw — unevenly spaced energy rungs — and that flaw is precisely what lets us talk to its bottom two rungs alone and call them 0 and 1.</p>
+<h3>6.1 The pipeline before the physics</h3>
+<p>Before the device details, here is the whole journey a single program takes, from your circuit to a histogram. The loop on the right of the figure is Rule B made visible: one run yields one bitstring, so the entire sequence repeats for every shot.</p>
+<figure class="qp-fig">
+  <img src="/assets/img/qp-pipeline.svg" alt="The nine stages of one physical execution: circuit → transpile → pulse schedule → deliver down the refrigerator → unitary evolution → probe the readout resonators → discriminate an" loading="lazy">
+  <figcaption>Figure 6.1 — The nine stages of one physical execution: circuit → transpile → pulse schedule → deliver down the refrigerator → unitary evolution → probe the readout resonators → discriminate and collapse → record one bitstring → repeat and histogram.</figcaption>
+</figure>
+<p>In words: (1) your logical gates, exactly as written in Chapter 4; (2) transpilation rebuilds them from the hardware's five native gates and adds SWAPs so every two-qubit gate acts on physically wired neighbors; (3) each native gate is compiled into a specific shaped microwave pulse with a set frequency, envelope, and duration; (4) room-temperature electronics generate those pulses and send them down heavily attenuated coaxial lines through the refrigerator's stages; (5) the pulses steer the qubits through the algorithm — the unitary part, during which nothing is read; (6) a separate probe tone interrogates each qubit's readout resonator; (7) the returned signal is amplified and sorted into a 0 or a 1 — the physical measurement, and the collapse; (8) one bitstring is recorded; (9) the machine resets and the whole run repeats for the next shot.</p>
+<h3>6.2 The refrigerator, and why 15 millikelvin</h3>
+<p>The chip sits at the mixing-chamber plate of a dilution refrigerator, at roughly 10 to 15 millikelvin — colder than interstellar space. The number is not bravado; it comes from one inequality. A qubit's two levels are separated by an energy E = hf with f near 5 GHz. Converting that gap into a temperature, hf/k_B ≈ 240 mK. For the qubit to sit reliably in |0⟩ between runs, the ambient thermal energy k_BT must be far below the gap, so T must be far below 240 mK. At 15 mK the chance of a thermal flip is exponentially tiny, and |0⟩ is a dependable starting point. Warmer, and Rule B's destruction would be pre-empted by something worse: the environment randomly rewriting the state before the algorithm even runs.</p>
+<p>The refrigerator is also a signal ladder. Control pulses enter at room temperature (300 K), pass attenuators at each stage that strip away thermal noise, and arrive at the chip whisper-quiet. Readout signals climb back up the same tower through amplifiers — a quantum-limited amplifier at the coldest stage, a HEMT amplifier at 4 K, more gain at room temperature. Chapter 8 rides that return path in detail.</p>
+<figure class="qp-fig">
+  <img src="/assets/img/qp-heron-stack.svg" alt="The cold stack: room-temperature electronics, the 4 K stage with its HEMT amplifier, and the ~15 mK mixing chamber holding the chip; the transmon&#x27;s cross capacitor and Josephson ju" loading="lazy">
+  <figcaption>Figure 6.2 — The cold stack: room-temperature electronics, the 4 K stage with its HEMT amplifier, and the ~15 mK mixing chamber holding the chip; the transmon's cross capacitor and Josephson junction; its readout resonator; the uneven energy ladder; and the two readout clusters in the I/Q plane.</figcaption>
+</figure>
+<h3>6.3 What a transmon physically is</h3>
+<p>Each qubit is a <strong>transmon</strong>: a superconducting circuit made of two elements, a capacitor (typically a cross-shaped pad) and a <strong>Josephson junction</strong>, a nanoscale sandwich of superconductor–insulator–superconductor through which Cooper pairs of electrons tunnel. An ordinary capacitor plus an ordinary inductor makes a harmonic oscillator — a perfectly even ladder of energy levels, useless as a qubit because a drive that climbs rung one climbs every rung equally. The Josephson junction is the fix: it behaves as a <strong>nonlinear</strong> inductor, and the nonlinearity makes the ladder uneven.</p>
+<p>For readers who want the governing equation, the transmon Hamiltonian is</p>
+<p class="eq">H = 4E_C (n̂ − n_g)² − E_J cos φ̂,</p>
+<p>where n̂ counts tunneled Cooper pairs, φ̂ is the superconducting phase across the junction, E_C is the charging energy set by the capacitor, and E_J is the Josephson energy set by the junction. The "transmon regime" chooses E_J/E_C ≈ 50, which exponentially suppresses the qubit's sensitivity to stray charge noise — the design insight that made superconducting qubits practical. Expanding the cosine for small φ turns the system into a slightly softened oscillator:</p>
+<p class="eq">H ≈ ħω_q b†b + (ħα/2) b†b (b†b − 1),</p>
+<p>an even ladder with frequency ω_q/2π ≈ 5 GHz, corrected by an <strong>anharmonicity</strong> α/2π ≈ −E_C/h ≈ −300 MHz. In plain terms: the step from |0⟩ to |1⟩ costs about 5 GHz, but the step from |1⟩ to |2⟩ costs about 300 MHz less. That mismatch is everything. A microwave tone tuned precisely to the 0→1 gap is off-resonant with the 1→2 gap, so a carefully shaped pulse can drive the bottom two rungs while barely disturbing the third. The bottom two rungs get names — |0⟩ and |1⟩ — and become the qubit.</p>
+<blockquote class="keyidea">
+<p><strong>Key idea 5.</strong> A transmon is an oscillator with a deliberately uneven ladder. The unevenness (anharmonicity) is what carves a two-level qubit out of a many-level circuit, and the extreme cold is what keeps the qubit parked on the bottom rung until the program says otherwise.</p>
+</blockquote>
+<h3>6.4 The lattice: who can talk to whom</h3>
+<p>The 133 or 156 transmons are not wired all-to-all. Heron uses IBM's <strong>heavy-hexagonal lattice</strong>: each qubit couples to only 2 or 3 neighbors, and the lattice contains no triangles. The sparseness is a defense — fewer couplings mean less crosstalk and fewer frequency collisions — but it has an algorithmic price that Chapter 9 collects: any gate between non-neighbors must be routed there with SWAP operations, inflating the physical circuit well beyond the logical one.</p>
+<figure class="qp-fig">
+  <img src="/assets/img/qp-heavy-hex.svg" alt="A patch of the heavy-hex lattice. Each qubit touches 2 or 3 neighbors and no three qubits are mutually adjacent, so the three-qubit CCZ in our Grover circuit cannot be placed direc" loading="lazy">
+  <figcaption>Figure 6.3 — A patch of the heavy-hex lattice. Each qubit touches 2 or 3 neighbors and no three qubits are mutually adjacent, so the three-qubit CCZ in our Grover circuit cannot be placed directly; the transpiler must shuttle qubits together with SWAP chains.</figcaption>
+</figure>
+<hr />
+<h2>Chapter 7. Gates are pulses: how the machine touches a qubit</h2>
+<p class="breath"><strong>In one breath.</strong> There is no lookup table inside a quantum computer. To apply a gate, the machine literally pushes the qubit with a burst of microwaves, the way you push a swing — and how long and how hard you push decides how far the state rotates. Stop the push exactly halfway around and you have flipped 0 to 1. Two-qubit gates work by briefly switching on a bridge between neighboring qubits so their states become entangled, then switching it off.</p>
+<h3>7.1 Single-qubit gates: Rabi's swing</h3>
+<p>Shine a microwave tone at the qubit's frequency down its drive line and the qubit does not simply absorb it. Its state rotates continuously: |0⟩ leans toward |1⟩, reaches it, leans back, returns — a cycle called <strong>Rabi oscillation</strong>. In the frame rotating with the drive, the Hamiltonian is</p>
+<p class="eq">H_d = (ħΩ(t)/2)(cos φ · σ_x + sin φ · σ_y),</p>
+<p>where Ω(t) is the Rabi rate set by the pulse's instantaneous amplitude and φ is the pulse's phase, which chooses the rotation axis. The total rotation angle is the pulse's area, ∫Ω(t)dt. A pulse with area π is an X gate: |0⟩ lands exactly on |1⟩. A pulse with area π/2 is the SX gate (square root of X), which parks the state on the equator of the Bloch sphere — the equal-superposition latitude. On IBM hardware these pulses last a few tens of nanoseconds and are shaped as smooth Gaussians with a <strong>DRAG</strong> correction: a small copy of the pulse's derivative applied on the other quadrature, engineered to cancel accidental leakage into the |2⟩ level that the finite anharmonicity would otherwise allow.</p>
+<figure class="qp-fig">
+  <img src="/assets/img/qp-rabi-decay.svg" alt="Left: the probability of finding the qubit in |1⟩ oscillates with pulse duration; stopping at half a cycle (a π pulse) implements X, and a quarter cycle implements SX. Right: T₁ en" loading="lazy">
+  <figcaption>Figure 7.1 — Left: the probability of finding the qubit in |1⟩ oscillates with pulse duration; stopping at half a cycle (a π pulse) implements X, and a quarter cycle implements SX. Right: T₁ energy decay and T₂ phase decay set the time budget the whole circuit must fit inside.</figcaption>
+</figure>
+<p>One native "gate" costs nothing at all. A rotation about the Z axis, R_Z(θ), is performed <strong>virtually</strong>: the control software simply shifts the phase reference of every subsequent pulse on that qubit. No microwave is sent, no time passes, and the operation is essentially error-free. Every single-qubit rotation the algorithm needs is compiled into the sandwich R_Z · SX · R_Z · SX · R_Z — two real pulses and three free frame shifts. The Hadamard, for instance, becomes R_Z(π/2) · SX · R_Z(π/2) up to an unobservable global phase.</p>
+<h3>7.2 Two-qubit gates: the tunable coupler</h3>
+<p>Entanglement enters through the two-qubit gate, and this is where Heron's design differs from IBM's own earlier chips. Between each pair of neighboring transmons sits a <strong>tunable coupler</strong> — a small intermediate circuit whose bias controls the effective interaction between the pair. With the coupler off, the qubits ignore each other almost completely (the residual "always-on" ZZ interaction that plagued fixed-coupling designs is engineered away). To execute a gate, the control system pulses the coupler on for a precisely calibrated interval. During that interval the doubly-excited state |11⟩ is steered close to an avoided crossing with a higher level (the |20⟩/|02⟩ manifold), where it accumulates phase faster than the other three basis states. Timed exactly, the excess phase is π, which is the definition of the native <strong>CZ</strong> gate:</p>
+<p class="eq">CZ: |11⟩ → −|11⟩, all other basis states unchanged.</p>
+<p>Switch the coupler off and the qubits are independent again, now entangled in state. A CZ takes on the order of 100 to a few hundred nanoseconds. This tunable-coupler CZ replaced the cross-resonance ECR gate of IBM's earlier Eagle and Osprey processors, buying faster gates, lower error, and dramatically reduced crosstalk.</p>
+<figure class="qp-fig">
+  <img src="/assets/img/qp-gate-pulse.svg" alt="Left: a single-qubit gate is a shaped microwave pulse rotating the Bloch vector. Right: a CZ gate is applied by briefly energizing the tunable coupler between two transmons so that" loading="lazy">
+  <figcaption>Figure 7.2 — Left: a single-qubit gate is a shaped microwave pulse rotating the Bloch vector. Right: a CZ gate is applied by briefly energizing the tunable coupler between two transmons so that |11⟩, and only |11⟩, acquires a minus sign.</figcaption>
+</figure>
+<p>So the complete physical vocabulary of a Heron chip is five words: I, X, SX, R_Z, CZ. Every Hadamard, every X-wrap, and every CCZ in the Grover circuit of Chapter 4 is spelled out in those five words before anything runs. Notice the fit: the CZ's minus-sign-on-|11⟩ is precisely the algebraic ingredient Grover's oracle and diffusion are made of. The algorithm's central trick and the hardware's native gate are the same mathematical object at different sizes.</p>
+<blockquote class="keyidea">
+<p><strong>Key idea 6.</strong> A gate is a calibrated physical push: pulse area sets the rotation angle, pulse phase sets the axis, and a coupler switched on for exactly the right interval writes a minus sign onto |11⟩. Nothing is looked up and nothing is read; the state is steered blind, exactly as the unitary formalism demands.</p>
+</blockquote>
+<hr />
+<h2>Chapter 8. Measurement: how the look happens, and why it destroys</h2>
+<p class="breath"><strong>In one breath.</strong> The machine never looks at a qubit directly. It listens to a small echo chamber attached to the qubit, whose pitch shifts slightly depending on the qubit's state. A probe tone bouncing off that chamber comes back subtly changed, gets amplified a billionfold, and lands as a dot in one of two clusters on a screen: cluster 0 or cluster 1. Somewhere in that amplification the fragile blend is torn: turning a whisper of quantum information into a classical signal you can record is exactly the irreversible act that collapses the state. Rule B is not an add-on to the readout; it is the readout.</p>
+<p>This chapter is the heart of the paper, because the two rules in our problem statement both live here.</p>
+<h3>8.1 The dispersive trick: measure the echo, not the qubit</h3>
+<p>Each qubit on the chip is coupled to its own <strong>readout resonator</strong> — a millimeter-scale microwave cavity with a resonant frequency ω_r near 7 GHz, deliberately detuned far from the qubit's ω_q. The joint system is described by the Jaynes–Cummings Hamiltonian of circuit quantum electrodynamics:</p>
+<p class="eq">H/ħ = ω_r a†a + (ω_q/2)σ_z + g(a†σ⁻ + aσ⁺),</p>
+<p>where a†a counts photons in the resonator, σ_z reads ±1 on the qubit, and g is the coupling rate. When the detuning Δ = ω_q − ω_r is much larger than g — the <strong>dispersive regime</strong>, which is where readout operates — the interaction term can be integrated out, leaving an effective Hamiltonian</p>
+<p class="eq">H_disp/ħ ≈ (ω_r + χσ_z) a†a + (ω̃_q/2)σ_z.</p>
+<p>Read that middle term slowly, because it is the entire measurement mechanism: <strong>the resonator's frequency is ω_r + χ if the qubit is |0⟩ and ω_r − χ if the qubit is |1⟩.</strong> The dispersive shift is χ = g²/Δ for an ideal two-level atom; for a real transmon the higher levels correct it to χ = (g²/Δ)·(α/(Δ + α)), with α the anharmonicity from Chapter 6. Typical shifts are a fraction of a megahertz — tiny, but resolvable.</p>
+<p>Two properties of H_disp deserve names. First, it contains σ_z but never σ_x or σ_y: the interaction can distinguish the qubit's basis states but cannot flip them. A measurement with this property is called <strong>quantum non-demolition (QND)</strong> — ideally, measuring twice in a row returns the same answer, because the first collapse leaves a state the second measurement merely confirms. Second, nothing here reads the qubit yet. The shift merely offers the information; extracting it is the next step.</p>
+<h3>8.2 The probe, the entanglement, and the pointer</h3>
+<p>To perform the measurement, the control system fires a microwave <strong>probe tone</strong> at the resonator near ω_r and collects what comes back. Because the resonator's frequency depends on the qubit's state, the reflected tone's phase and amplitude depend on it too. Here is the crucial quantum-mechanical step, stated carefully:</p>
+<p>If the qubit is in the superposition α|0⟩ + β|1⟩, the probe field does not come back carrying an "average" of the two shifts. Instead the joint system evolves into an <strong>entangled state</strong>:</p>
+<p>α |0⟩⊗|probe shifted one way⟩ + β |1⟩⊗|probe shifted the other way⟩.</p>
+<p>The probe field has become a <strong>pointer</strong> — a physical system whose two distinguishable configurations are now correlated with the qubit's two branches. Nothing has collapsed yet. The blend still exists, but it has spread from the qubit into the qubit-plus-field system.</p>
+<h3>8.3 Amplification is the point of no return</h3>
+<p>The returning probe carries only a few photons — far too faint to record. It now climbs the amplifier ladder: first a near-quantum-limited parametric amplifier (a Josephson traveling-wave parametric amplifier, JTWPA) at the 15 mK stage, then a HEMT transistor amplifier at 4 K, then room-temperature stages. By the top of the ladder, the few-photon whisper has become a macroscopic electrical signal — billions of photons, copied into heat, cable modes, and digitizer registers.</p>
+<p>This is where the superposition dies, and it is worth being precise about why. As long as the two pointer configurations differed by a few photons, they were — in principle — still coherent branches of one quantum state. Amplification correlates the pointer with billions of environmental degrees of freedom. The two branches become perfectly distinguishable by the environment, and their relative phase is scattered irretrievably across systems no one controls. This process, <strong>decoherence in the pointer basis</strong>, is physically irreversible in exactly the way scrambling an egg is irreversible: no local operation can gather the phase back. What remains at the digitizer is a classical record: this shot, one definite outcome. The probabilities of the two records are |α|² and |β|² — the Born rule, Rule A — and the qubit, correlated with the surviving record, is left in the corresponding basis state — collapse, Rule B.</p>
+<p>So the answer to "what physically collapses the state?" on this hardware is concrete: <strong>the irreversible, environment-flooding amplification of a state-dependent microwave signal.</strong> The look and the destruction are one and the same physical act.</p>
+<h3>8.4 Discrimination: two clusters, one threshold</h3>
+<p>At room temperature the amplified signal is mixed down and integrated for a few hundred nanoseconds to a microsecond, yielding two numbers — the in-phase and quadrature components, I and Q. Plotted in the I/Q plane, thousands of shots form two blobs: one cluster of dots for qubits that ended in |0⟩, another for |1⟩. A calibrated threshold line between the clusters assigns each shot its bit. Assignment is not perfect — the blobs have finite width from amplifier noise, and a qubit can decay from |1⟩ to |0⟩ during the readout window itself — so real readout carries an assignment error of roughly 1%: occasionally a true 0 is recorded as a 1 or vice versa. All 133 or 156 qubits are read out this way in parallel, each through its own resonator, multiplexed a handful to a feedline.</p>
+<figure class="qp-fig">
+  <img src="/assets/img/qp-measurement.svg" alt="The measurement chain: the qubit&#x27;s state shifts its resonator&#x27;s frequency; a probe tone returns in a state-dependent condition; amplification makes the difference macroscopic and i" loading="lazy">
+  <figcaption>Figure 8.1 — The measurement chain: the qubit's state shifts its resonator's frequency; a probe tone returns in a state-dependent condition; amplification makes the difference macroscopic and irreversible; the signal lands in the 0-cluster or 1-cluster of the I/Q plane; and the qubit is left collapsed onto the corresponding pole, with Born-rule probabilities |α|² and |β|².</figcaption>
+</figure>
+<h3>8.5 Why this forces the shot loop</h3>
+<p>Now the full shape of quantum execution snaps into focus. One physical run produces one bitstring and a destroyed state. To learn the distribution the algorithm prepared, the machine resets every qubit to |0⟩, replays the entire pulse sequence from the top, and measures again — hundreds or thousands of times. Each repetition is one <strong>shot</strong>. The histogram of shot outcomes is the experiment's estimate of the |cₓ|² distribution, and its tallest bar is the algorithm's answer. Nothing about this is a software convenience; it is the direct operational consequence of Rules A and B, enforced by the physics of Sections 8.2 and 8.3.</p>
+<blockquote class="keyidea">
+<p><strong>Key idea 7.</strong> Measurement on a superconducting processor is dispersive: the qubit shifts its resonator's pitch, a probe tone picks up the shift, and irreversible amplification of that tone into a macroscopic record is the collapse. The Born rule sets the odds of which record survives. One shot, one bitstring, one destroyed state — hence the shot loop and the histogram.</p>
+</blockquote>
+<hr />
+<h2>Chapter 9. Imperfection: decoherence, errors, and what transpilation costs</h2>
+<p class="breath"><strong>In one breath.</strong> The environment is always trying to measure the qubits ahead of schedule. Heat, stray fields, and material defects nibble at the blend from the moment it is created, so the machine is racing a clock: finish the whole dance before the environment ruins it. On top of that, the tidy textbook circuit must first be rewritten in the chip's five-word vocabulary and rerouted along its sparse wiring, which makes the physical circuit several times longer than the logical one. Real results are therefore a slightly smudged copy of the ideal ones — recognizably right, measurably imperfect.</p>
+<h3>9.1 The two clocks: T₁ and T₂</h3>
+<p>Rule B says a deliberate look destroys the state. The cruel joke of hardware is that the environment "looks" constantly, without asking. Two timescales quantify the damage:</p>
+<ul>
+<li><strong>T₁, energy relaxation.</strong> A qubit in |1⟩ spontaneously decays to |0⟩, dumping its quantum of energy into material defects or radiation. Survival probability decays as exp(−t/T₁).</li>
+<li><strong>T₂, dephasing.</strong> A superposition's relative phase drifts as the qubit frequency jitters with environmental noise; the off-diagonal coherence decays on timescale T₂. Since losing the excitation also scrambles the phase, T₂ ≤ 2T₁ always.</li>
+</ul>
+<p>On current IBM transmons both times sit in the neighborhood of 100 to 300 microseconds. Against that budget: single-qubit pulses of tens of nanoseconds, CZ gates of one hundred to a few hundred nanoseconds, readout of several hundred nanoseconds to a microsecond. A circuit is viable only if its total wall-clock duration is a small fraction of T₁ and T₂; every gate spends coherence like money.</p>
+<p>Per-operation error rates on Heron-class hardware run roughly: single-qubit gates near 10⁻⁴, CZ gates 10⁻³ to 10⁻², readout assignment near 10⁻². Errors compound multiplicatively across a circuit, which is why the count of two-qubit gates, more than any other number, predicts how faithful a run will be.</p>
+<h3>9.2 What transpilation does to Grover</h3>
+<p>The Chapter 4 circuit is written in gates the chip does not speak (H, CCZ) between qubits the chip may not connect. <strong>Transpilation</strong> translates and routes it:</p>
+<ol>
+<li><strong>Decomposition.</strong> Each H becomes R_Z(π/2)·SX·R_Z(π/2). Each CCZ unfolds into a ladder of two-qubit gates — about six CNOT-equivalents — and each of those becomes CZ dressed with single-qubit rotations.</li>
+<li><strong>Routing.</strong> The CCZ wants three mutually interacting qubits, but the heavy-hex lattice has no triangles (Figure 6.3). The transpiler inserts <strong>SWAP</strong> gates — each costing three CZs — to shuttle qubit states along the lattice until the required pairs are adjacent, then often shuttles them back.</li>
+</ol>
+<p>The result: a logical circuit with a handful of ideal gates becomes a physical pulse schedule with dozens of CZ gates. Multiply dozens of CZs by an error of order 10⁻³ to 10⁻² each, add readout error, and the ideal 94.5% peak of Chapter 4 erodes visibly. The marked state still wins the histogram — that is the algorithm's robustness — but the peak is lower and the seven wrong bars are fatter than SV1 will predict in Part IV.</p>
+<h3>9.3 Fighting back</h3>
+<p>Three standard countermeasures, all used on Heron-class systems, claw back fidelity without new hardware: <strong>dynamical decoupling</strong> (trains of π pulses applied to idle qubits, refocusing slow phase noise the way a spinning top resists tipping), <strong>Pauli twirling</strong> (randomly dressing each CZ with Pauli gates so systematic errors average into tamer random noise), and <strong>qubit selection</strong> (mapping the circuit onto the contiguous patch of the chip with the best calibrated fidelities that morning — chips are recalibrated daily, and the best qubits move). Beyond these lies quantum error correction, which encodes one logical qubit redundantly across many physical ones; it is the roadmap's destination but not yet how utility-scale circuits run today.</p>
+<blockquote class="keyidea">
+<p><strong>Key idea 8.</strong> The environment measures ahead of schedule (decoherence), and the chip's sparse wiring inflates every circuit (transpilation). Together they explain the one honest gap in this whole story: the difference between the simulator's clean histogram and the hardware's smudged one.</p>
+</blockquote>
+<hr />
+<h2 class="part">Part IV — The Simulation Lab</h2>
+<h2>Chapter 10. Watching every step on Amazon Braket SV1</h2>
+<p class="breath"><strong>In one breath.</strong> A simulator is a machine with a superpower no real quantum computer has: it can cheat. Because it stores the amplitude list in ordinary memory, it can either play fair — rolling the dice shot by shot, exactly like hardware — or lift the curtain and print the exact probabilities directly. Using both modes side by side is the best way to see the two rules at work: one mode shows you what nature permits, the other shows you what nature hides.</p>
+<h3>10.1 What SV1 is</h3>
+<p>SV1 is Amazon Braket's on-demand <strong>state-vector simulator</strong>. It holds the full wave function — all 2ⁿ complex amplitudes — and executes each gate as a literal matrix multiplication on that vector, exactly the operation defined in Chapter 2. It keeps every possibility, however unlikely, which is what makes it a faithful model of the formalism. Its ceiling is 34 qubits, and the reason is visible in the arithmetic: every added qubit doubles the vector, and 2³⁴ complex numbers is where the memory budget ends. Pricing for on-demand simulators is by task duration rather than per shot, and the free LocalSimulator bundled with the Braket SDK runs small circuits like ours at no cost.</p>
+<p>Two running modes matter for this lab:</p>
+<ul>
+<li><strong>shots &gt; 0 — the honest mode.</strong> SV1 samples the |cₓ|² distribution and returns one random bitstring per shot, then repeats. This reproduces Rules A and B operationally: random outcomes, one per run, tallied into measurement counts.</li>
+<li><strong>shots = 0 — the cheat mode.</strong> SV1 returns the exact probabilities (or even the raw amplitudes) straight from memory. No physical machine can do this; it is the view Rule A forbids, available only because a simulator is not bound by physics. It is invaluable for verifying a circuit before paying for hardware time.</li>
+</ul>
+<p>One bookkeeping note: Braket orders result strings by ascending qubit index, so a returned string reads q₀q₁q₂. Our target 101 is a palindrome, so the winning bar is labeled 101 in either convention.</p>
+<h3>10.2 The lab code</h3>
+<p>The program below builds the exact Chapter 4 circuit and runs both modes. It needs only the Braket SDK and matplotlib.</p>
+<pre><code class="language-python">from braket.aws import AwsDevice
+from braket.circuits import Circuit
+from braket.devices import LocalSimulator
+import matplotlib.pyplot as plt
+
+def ccz(circ, a, b, c):
+    # Controlled-controlled-Z built as H . Toffoli . H on the target qubit c.
+    circ.h(c); circ.ccnot(a, b, c); circ.h(c)
+    return circ
+
+def oracle_101(circ):
+    # Mark |101&gt; (q0=1, q1=0, q2=1): flip q1 so the target lines up with |111&gt;.
+    circ.x(1); ccz(circ, 0, 1, 2); circ.x(1)
+    return circ
+
+def diffusion(circ):
+    for q in range(3): circ.h(q)
+    for q in range(3): circ.x(q)
+    ccz(circ, 0, 1, 2)
+    for q in range(3): circ.x(q)
+    for q in range(3): circ.h(q)
+    return circ
+
+grover = Circuit()
+for q in range(3): grover.h(q)          # uniform superposition
+for _ in range(2):                      # 2 iterations is optimal for N = 8
+    oracle_101(grover); diffusion(grover)
+
+# ---- Mode 1: honest sampling (Rules A and B in action) ----
+device = AwsDevice(&quot;arn:aws:braket:::device/quantum-simulator/amazon/sv1&quot;)
+# Free local alternative for testing: device = LocalSimulator()
+counts = device.run(grover, shots=2000).result().measurement_counts
+print(&quot;Sampled counts:&quot;, counts)
+
+plt.bar(counts.keys(), counts.values())
+plt.xlabel(&quot;measured bitstring (q0 q1 q2)&quot;)
+plt.ylabel(&quot;shots&quot;)
+plt.title(&quot;3-qubit Grover, target 101, on SV1&quot;)
+plt.show()
+
+# ---- Mode 2: the cheat view (shots = 0, exact probabilities) ----
+exact = Circuit()
+for q in range(3): exact.h(q)
+for _ in range(2):
+    oracle_101(exact); diffusion(exact)
+exact.probability()
+probs = device.run(exact, shots=0).result().values[0]
+print(&quot;Exact probabilities:&quot;, probs)    # index 5 (binary 101) ≈ 0.9453
+</code></pre>
+<h3>10.3 What you should see, and what each output teaches</h3>
+<p><strong>Mode 2 first, the verification.</strong> The printed vector should show probability ≈ 0.9453 at index 5 and ≈ 0.0078 at each of the other seven indices — the fractions 121/128 and 1/128 from Chapter 4, confirmed to the last digit. This is the curtain lifted: the amplitudes the algorithm sculpted, printed as numbers.</p>
+<p><strong>Mode 1, the honest experiment.</strong> With 2000 shots, expect the 101 bar to hold roughly 0.9453 × 2000 ≈ 1890 shots, with the other seven bars sharing about 110 shots, near 15 each — but not exactly. Run it again and every count wobbles by a few shots, because sampling is genuinely random (Rule A). No single shot tells you the answer with certainty; the histogram does. And each of those 2000 shots was a complete rebuild: prepare, superpose, two Grover rounds, one destructive measurement (Rule B), reset, repeat.</p>
+<p>A worthwhile experiment for the reader: change the iteration loop from 2 to 3 and rerun both modes. The exact probability at index 5 drops to about 0.33 and the histogram scatters — the overshoot of Section 4.5, now visible in your own output. No lecture communicates "more iterations is worse" as convincingly as watching your own tall bar collapse.</p>
+<h3>10.4 Simulator versus hardware, honestly</h3>
+<p>SV1's histogram is the ideal: a 94.5% spike with seven whispers. A real Heron run of the same logical circuit — after transpilation multiplies it into dozens of CZ gates and routing SWAPs (Chapter 9) — still crowns 101 as the tallest bar, but visibly lower, with fatter wrong bars, shaped by gate error, decoherence during the longer schedule, and the ~1% readout misassignment of Chapter 8. The distance between the two histograms is not a footnote; it is the single most informative number about where quantum hardware stands today, and techniques like dynamical decoupling and twirling exist precisely to shrink it.</p>
+<blockquote class="keyidea">
+<p><strong>Key idea 9.</strong> Use shots = 0 to verify the mathematics and shots &gt; 0 to rehearse the physics. The simulator's clean histogram is the algorithm's promise; the hardware's smudged histogram is the engineering's progress report; and the shot loop in both is Rules A and B doing exactly what this paper said they would.</p>
+</blockquote>
+<hr />
+<h2>Chapter 11. Closing the loop</h2>
+<p>We began with two rules that sound like a design flaw: the machine's answers are random, and asking for an answer destroys the machine's state. Twenty-odd pages later, those same two rules have revealed themselves as the load-bearing walls of the whole edifice.</p>
+<p>Because amplitudes cannot be read (Rule A), quantum algorithms compute by steering interference — Grover's two mirrors rotating an invisible vector to within 5.5% of certainty. Because reading destroys (Rule B), execution is organized around the shot loop, and the histogram is the native answer format. Because the environment enforces Rule B ahead of schedule, the machine lives at 15 millikelvin, races its T₁ and T₂ clocks, and speaks a five-word gate vocabulary tuned for speed and fidelity. And because the deliberate measurement must convert a whisper into a record, the collapse itself turns out to be a concrete industrial process: a frequency-shifted echo, amplified past the point of no return, falling into one of two clusters on a screen.</p>
+<p>The classical computer, by contrast, never faced these constraints — and never got their reward. Free readout and definite state cost it the power of cancellation, and the gap shows up as the square root in Grover's runtime. Neither machine is the other's replacement. They are different contracts with information, and the near future belongs to systems that hold both contracts at once, classical processors orchestrating quantum ones through exactly the pipeline this paper traced.</p>
+<p>Everything above is checkable by the reader. The arithmetic of Chapter 4 needs a pencil. The code of Chapter 10 needs a free simulator. The hardware claims of Part III need only IBM's public documentation. That, in the end, is the standard a teaching document should meet: nothing taken on faith, every step either derived, runnable, or cited.</p>
+<hr />
+<h2>Appendix A. Glossary</h2>
+<ul>
+<li><strong>Amplitude.</strong> The signed (complex) number a quantum state assigns to each outcome; its squared magnitude is that outcome's probability.</li>
+<li><strong>Anharmonicity.</strong> The unevenness of the transmon's energy ladder (≈ −300 MHz), which lets pulses address the bottom two levels alone.</li>
+<li><strong>Born rule.</strong> Pr(x) = |cₓ|². Rule A in formal dress.</li>
+<li><strong>Collapse.</strong> The replacement of a superposition by the measured basis state. Rule B in formal dress; physically realized by irreversible amplification of the readout signal.</li>
+<li><strong>CZ gate.</strong> Two-qubit gate flipping the sign of |11⟩ only; Heron's native entangling operation, executed via tunable coupler.</li>
+<li><strong>Decoherence.</strong> Uncontrolled entanglement with the environment that destroys superpositions; quantified by T₁ and T₂.</li>
+<li><strong>Diffusion operator.</strong> Grover's reflection about the uniform state, D = 2|s⟩⟨s| − I; acts as inversion about the mean amplitude.</li>
+<li><strong>Dispersive readout.</strong> Measuring a qubit through the state-dependent frequency shift ±χ of its coupled resonator.</li>
+<li><strong>DRAG.</strong> Pulse-shaping correction that cancels leakage into the transmon's |2⟩ level.</li>
+<li><strong>Heavy-hex lattice.</strong> IBM's qubit wiring pattern: each qubit couples to 2 or 3 neighbors, no triangles.</li>
+<li><strong>Josephson junction.</strong> Superconductor–insulator–superconductor element acting as a nonlinear inductor; the ingredient that makes the transmon's ladder uneven.</li>
+<li><strong>Oracle.</strong> The subroutine that marks the searched-for item by flipping its amplitude's sign.</li>
+<li><strong>QND (quantum non-demolition).</strong> A measurement whose interaction commutes with the measured observable, so repeating it confirms rather than disturbs the result.</li>
+<li><strong>Rabi oscillation.</strong> The continuous rotation of a driven qubit's state; pulse area sets the rotation angle.</li>
+<li><strong>Shot.</strong> One complete run: prepare, evolve, measure once. The unit the histogram counts.</li>
+<li><strong>Transmon.</strong> A superconducting qubit: capacitor plus Josephson junction, operated at E_J/E_C ≈ 50 for charge-noise immunity.</li>
+<li><strong>Transpilation.</strong> Rewriting a logical circuit in the hardware's native gates and routing it onto the physical lattice, inserting SWAPs as needed.</li>
+<li><strong>T₁ / T₂.</strong> Energy-relaxation and dephasing timescales; the coherence budget (≈ 100–300 μs on current transmons).</li>
+<li><strong>Virtual R_Z.</strong> A Z-rotation implemented as a software phase-reference shift: zero duration, essentially zero error.</li>
+</ul>
+      </div>
+
+      <section class="prose refs">
+        <h2>References</h2>
+        <ol>
+          <li>Lov K. Grover, A fast quantum mechanical algorithm for database search (1996).<span class="src">https://arxiv.org/abs/quant-ph/9605043</span></li>
+          <li>John Preskill, Quantum Computing in the NISQ era and beyond (2018).<span class="src">https://arxiv.org/abs/1801.00862</span></li>
+          <li>P. Krantz, M. Kjaergaard, F. Yan, T. P. Orlando, S. Gustavsson, W. D. Oliver, A Quantum Engineer's Guide to Superconducting Qubits (2019).<span class="src">https://arxiv.org/abs/1904.06560</span></li>
+          <li>A. Blais, A. L. Grimsmo, S. M. Girvin, A. Wallraff, Circuit Quantum Electrodynamics, Rev. Mod. Phys. 93, 025005 (2021).<span class="src">https://arxiv.org/abs/2005.12667</span></li>
+          <li>IBM Quantum, hardware documentation for the Heron processor family (native gate set, heavy-hex lattice, coherence and error scales).<span class="src">https://docs.quantum.ibm.com/</span></li>
+          <li>Amazon Web Services, Amazon Braket Developer Guide, on-demand simulators including SV1 and the local simulator.<span class="src">https://docs.aws.amazon.com/braket/</span></li>
+        </ol>
+      </section>
+
+      <div class="article-foot">
+        <div class="cta-row">
+          <a class="btn primary" href="https://github.com/akanjilal-work/quantum-on-braket">Open quantum-on-braket</a>
+          <a class="btn" href="/blog/">More writing</a>
+        </div>
+      </div>
+    </div>
+  </article>
+</main>
+
+<footer>
+  <div class="wrap foot">
+    <div class="links">
+      <a href="https://github.com/akanjilal-work">GitHub</a>
+      <a href="https://www.linkedin.com/in/akanjilal/">LinkedIn</a>
+      <a href="mailto:anirban.kanjilal@gmail.com">Email</a>
+    </div>
+    <div class="copy">© 2026 Anirban Kanjilal</div>
+  </div>
+</footer>
+
+</body>
+</html>
