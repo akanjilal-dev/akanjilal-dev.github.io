@@ -1,7 +1,7 @@
 <svg width="100%" viewBox="0 0 680 560" xmlns="http://www.w3.org/2000/svg" role="img" font-family="Segoe UI, Helvetica, Arial, sans-serif">
 <title>IBM transmon qubit, control, and dispersive readout inside a dilution refrigerator</title>
 <desc>Microwave control and readout lines run from room temperature down through cooling stages to a superconducting chip at about 15 millikelvin, where a transmon is read out through a dedicated resonator and amplifier chain.</desc>
-<rect x="0" y="0" width="680" height="560" fill="#faf9f5"/>
+<rect x="0" y="0" width="680" height="560" fill="#ffffff"/>
 <text x="340" y="32" text-anchor="middle" font-size="16" font-weight="500" fill="#26215C">IBM Heron building block: one transmon, its control, and its readout</text>
 
 <!-- fridge stages -->

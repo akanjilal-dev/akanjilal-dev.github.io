@@ -6,7 +6,7 @@
 <path d="M2 1L8 5L2 9" fill="none" stroke="#5C6172" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
 </marker>
 </defs>
-<rect x="0" y="0" width="680" height="940" fill="#faf9f5"/>
+<rect x="0" y="0" width="680" height="940" fill="#ffffff"/>
 <text x="340" y="34" text-anchor="middle" font-size="17" font-weight="600" fill="#1B2240">The whole story on one page</text>
 
 <!-- ======== BAND 1: THE TWO RULES ======== -->

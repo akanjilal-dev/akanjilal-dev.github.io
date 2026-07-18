@@ -1,7 +1,7 @@
 <svg width="100%" viewBox="0 0 680 420" xmlns="http://www.w3.org/2000/svg" role="img" font-family="Segoe UI, Helvetica, Arial, sans-serif">
 <title>Grover rotation geometry for 3 qubits</title>
 <desc>The state vector starts at angle theta above the bad-states axis and rotates by two theta each Grover iteration, reaching near the good-state axis after two iterations.</desc>
-<rect x="0" y="0" width="680" height="420" fill="#faf9f5"/>
+<rect x="0" y="0" width="680" height="420" fill="#ffffff"/>
 
 <text x="340" y="34" text-anchor="middle" font-size="16" font-weight="500" fill="#26215C">Grover as a rotation in a 2D plane (N = 8, one marked item)</text>
 

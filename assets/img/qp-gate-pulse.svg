@@ -1,7 +1,7 @@
 <svg width="100%" viewBox="0 0 680 440" xmlns="http://www.w3.org/2000/svg" role="img" font-family="Segoe UI, Helvetica, Arial, sans-serif">
 <title>How gates are physically applied</title>
 <desc>A single-qubit gate is a shaped microwave pulse that rotates the Bloch vector. A two-qubit CZ gate is applied by briefly switching on a tunable coupler between two transmons so the state 11 picks up a minus sign.</desc>
-<rect x="0" y="0" width="680" height="440" fill="#faf9f5"/>
+<rect x="0" y="0" width="680" height="440" fill="#ffffff"/>
 <text x="340" y="30" text-anchor="middle" font-size="16" font-weight="500" fill="#2C2C2A">Gates are physical operations, not lookups</text>
 
 <!-- left panel: single-qubit gate -->

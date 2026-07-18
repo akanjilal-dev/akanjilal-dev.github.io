@@ -1,7 +1,7 @@
 <svg width="100%" viewBox="0 0 680 540" xmlns="http://www.w3.org/2000/svg" role="img" font-family="Segoe UI, Helvetica, Arial, sans-serif">
 <title>Measurement and state collapse</title>
 <desc>A qubit in superposition shifts its readout resonator frequency depending on its state. A probe tone returns in one of two clusters. Choosing a cluster forces the qubit to one pole and destroys the superposition, which is the collapse.</desc>
-<rect x="0" y="0" width="680" height="540" fill="#faf9f5"/>
+<rect x="0" y="0" width="680" height="540" fill="#ffffff"/>
 <text x="340" y="30" text-anchor="middle" font-size="16" font-weight="500" fill="#2C2C2A">How a qubit is measured, and why the state collapses</text>
 
 <!-- ROW 1: mechanism -->

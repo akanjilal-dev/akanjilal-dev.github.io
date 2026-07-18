@@ -1,7 +1,7 @@
 <svg width="100%" viewBox="0 0 680 440" xmlns="http://www.w3.org/2000/svg" role="img" font-family="Segoe UI, Helvetica, Arial, sans-serif">
 <title>Heavy-hex lattice and Grover mapping</title>
 <desc>The heavy-hex lattice connects each qubit to only two or three neighbors and has no triangles, so a 3-qubit gate must be routed with extra SWAP gates.</desc>
-<rect x="0" y="0" width="680" height="440" fill="#faf9f5"/>
+<rect x="0" y="0" width="680" height="440" fill="#ffffff"/>
 <text x="340" y="32" text-anchor="middle" font-size="16" font-weight="500" fill="#26215C">Heavy-hex lattice: why real circuits get bigger</text>
 
 <!-- edges of a small heavy-hex patch -->

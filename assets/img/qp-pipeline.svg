@@ -6,7 +6,7 @@
 <path d="M2 1L8 5L2 9" fill="none" stroke="#5F5E5A" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
 </marker>
 </defs>
-<rect x="0" y="0" width="680" height="880" fill="#faf9f5"/>
+<rect x="0" y="0" width="680" height="880" fill="#ffffff"/>
 <text x="340" y="34" text-anchor="middle" font-size="16" font-weight="500" fill="#2C2C2A">How one quantum program is physically run, start to finish</text>
 
 <!-- classic prep boxes (gray) -->
