@@ -1,0 +1,51 @@
+<svg width="100%" viewBox="0 0 680 440" xmlns="http://www.w3.org/2000/svg" role="img" font-family="Segoe UI, Helvetica, Arial, sans-serif">
+<title>How gates are physically applied</title>
+<desc>A single-qubit gate is a shaped microwave pulse that rotates the Bloch vector. A two-qubit CZ gate is applied by briefly switching on a tunable coupler between two transmons so the state 11 picks up a minus sign.</desc>
+<rect x="0" y="0" width="680" height="440" fill="#ffffff"/>
+<text x="340" y="30" text-anchor="middle" font-size="16" font-weight="500" fill="#2C2C2A">Gates are physical operations, not lookups</text>
+
+<!-- left panel: single-qubit gate -->
+<rect x="24" y="52" width="320" height="360" rx="10" fill="#ffffff" stroke="#B4B2A9" stroke-width="0.6"/>
+<text x="184" y="78" text-anchor="middle" font-size="14" font-weight="500" fill="#26215C">Single-qubit gate = microwave pulse</text>
+
+<!-- pulse -->
+<text x="48" y="112" font-size="12" fill="#993C1D">drive line delivers a shaped pulse</text>
+<path d="M48 150 q10 -26 20 0 q10 26 20 0 q10 -26 20 0 q10 26 20 0 q10 -26 20 0 q10 26 20 0" fill="none" stroke="#D85A30" stroke-width="1.6"/>
+
+<!-- bloch sphere -->
+<circle cx="184" cy="290" r="86" fill="#EEEDFE" stroke="#7F77DD" stroke-width="0.8"/>
+<ellipse cx="184" cy="290" rx="86" ry="26" fill="none" stroke="#7F77DD" stroke-width="0.6" stroke-dasharray="3 3"/>
+<line x1="184" y1="204" x2="184" y2="376" stroke="#7F77DD" stroke-width="0.5"/>
+<text x="184" y="198" text-anchor="middle" font-size="12" fill="#26215C">|0&#8250;</text>
+<text x="184" y="392" text-anchor="middle" font-size="12" fill="#26215C">|1&#8250;</text>
+<!-- state vector rotating toward equator -->
+<line x1="184" y1="290" x2="250" y2="258" stroke="#26215C" stroke-width="2.4"/>
+<circle cx="250" cy="258" r="4" fill="#26215C"/>
+<path d="M184 224 A 66 66 0 0 1 244 254" fill="none" stroke="#534AB7" stroke-width="1.2" stroke-dasharray="4 3"/>
+<text x="200" y="330" font-size="12" fill="#534AB7">pulse rotates the</text>
+<text x="200" y="346" font-size="12" fill="#534AB7">Bloch vector</text>
+
+<!-- right panel: two-qubit gate -->
+<rect x="360" y="52" width="296" height="360" rx="10" fill="#ffffff" stroke="#B4B2A9" stroke-width="0.6"/>
+<text x="508" y="78" text-anchor="middle" font-size="14" font-weight="500" fill="#0C447C">Two-qubit CZ = tunable coupler</text>
+
+<!-- two transmons -->
+<rect x="400" y="150" width="70" height="60" rx="8" fill="#E6F1FB" stroke="#378ADD" stroke-width="0.8"/>
+<text x="435" y="185" text-anchor="middle" font-size="13" fill="#0C447C">qubit A</text>
+<rect x="546" y="150" width="70" height="60" rx="8" fill="#E6F1FB" stroke="#378ADD" stroke-width="0.8"/>
+<text x="581" y="185" text-anchor="middle" font-size="13" fill="#0C447C">qubit B</text>
+
+<!-- coupler -->
+<rect x="484" y="164" width="48" height="32" rx="6" fill="#FAECE7" stroke="#D85A30" stroke-width="0.8"/>
+<text x="508" y="184" text-anchor="middle" font-size="11" fill="#712B13">coupler</text>
+<line x1="470" y1="180" x2="484" y2="180" stroke="#888780" stroke-width="1.4"/>
+<line x1="532" y1="180" x2="546" y2="180" stroke="#888780" stroke-width="1.4"/>
+
+<text x="400" y="250" font-size="12" fill="#444441">Switch the coupler on for a short time.</text>
+<text x="400" y="270" font-size="12" fill="#444441">The two qubits interact, and only the</text>
+<text x="400" y="290" font-size="12" fill="#444441">state |11&#8250; picks up a minus sign:</text>
+
+<rect x="420" y="312" width="176" height="44" rx="8" fill="#EEEDFE" stroke="#7F77DD" stroke-width="0.6"/>
+<text x="508" y="339" text-anchor="middle" font-size="14" fill="#26215C">CZ : |11&#8250; &#8594; &#8722;|11&#8250;</text>
+<text x="400" y="384" font-size="12" fill="#5F5E5A">Switch it off and the qubits are independent again.</text>
+</svg>

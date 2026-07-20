@@ -1,0 +1,61 @@
+<svg width="100%" viewBox="0 0 680 440" xmlns="http://www.w3.org/2000/svg" role="img" font-family="Segoe UI, Helvetica, Arial, sans-serif">
+<title>Heavy-hex lattice and Grover mapping</title>
+<desc>The heavy-hex lattice connects each qubit to only two or three neighbors and has no triangles, so a 3-qubit gate must be routed with extra SWAP gates.</desc>
+<rect x="0" y="0" width="680" height="440" fill="#ffffff"/>
+<text x="340" y="32" text-anchor="middle" font-size="16" font-weight="500" fill="#26215C">Heavy-hex lattice: why real circuits get bigger</text>
+
+<!-- edges of a small heavy-hex patch -->
+<g stroke="#B4B2A9" stroke-width="1.4">
+<line x1="120" y1="110" x2="220" y2="110"/>
+<line x1="220" y1="110" x2="320" y2="110"/>
+<line x1="320" y1="110" x2="420" y2="110"/>
+<line x1="420" y1="110" x2="520" y2="110"/>
+<line x1="120" y1="110" x2="120" y2="200"/>
+<line x1="320" y1="110" x2="320" y2="200"/>
+<line x1="520" y1="110" x2="520" y2="200"/>
+<line x1="120" y1="200" x2="220" y2="200"/>
+<line x1="220" y1="200" x2="320" y2="200"/>
+<line x1="320" y1="200" x2="420" y2="200"/>
+<line x1="420" y1="200" x2="520" y2="200"/>
+<line x1="220" y1="200" x2="220" y2="290"/>
+<line x1="420" y1="200" x2="420" y2="290"/>
+<line x1="120" y1="290" x2="220" y2="290"/>
+<line x1="220" y1="290" x2="320" y2="290"/>
+<line x1="320" y1="290" x2="420" y2="290"/>
+<line x1="420" y1="290" x2="520" y2="290"/>
+</g>
+
+<!-- generic qubits -->
+<g fill="#D3D1C7" stroke="#888780" stroke-width="0.6">
+<circle cx="220" cy="110" r="11"/>
+<circle cx="420" cy="110" r="11"/>
+<circle cx="120" cy="200" r="11"/>
+<circle cx="520" cy="200" r="11"/>
+<circle cx="120" cy="290" r="11"/>
+<circle cx="320" cy="290" r="11"/>
+<circle cx="520" cy="290" r="11"/>
+</g>
+
+<!-- the three grover qubits highlighted -->
+<circle cx="120" cy="110" r="13" fill="#CECBF6" stroke="#534AB7" stroke-width="1"/>
+<text x="120" y="114" text-anchor="middle" font-size="11" fill="#26215C">q0</text>
+<circle cx="320" cy="110" r="13" fill="#CECBF6" stroke="#534AB7" stroke-width="1"/>
+<text x="320" y="114" text-anchor="middle" font-size="11" fill="#26215C">q1</text>
+<circle cx="520" cy="110" r="13" fill="#CECBF6" stroke="#534AB7" stroke-width="1"/>
+<text x="520" y="114" text-anchor="middle" font-size="11" fill="#26215C">q2</text>
+<circle cx="220" cy="290" r="13" fill="#9FE1CB" stroke="#0F6E56" stroke-width="1"/>
+<text x="220" y="294" text-anchor="middle" font-size="11" fill="#04342C">q1</text>
+
+<text x="120" y="82" text-anchor="middle" font-size="11" fill="#534AB7">chosen</text>
+<text x="320" y="82" text-anchor="middle" font-size="11" fill="#534AB7">chosen</text>
+<text x="520" y="82" text-anchor="middle" font-size="11" fill="#534AB7">chosen</text>
+
+<!-- swap arrow shown as label, no arrow glyph -->
+<line x1="320" y1="123" x2="228" y2="278" stroke="#0F6E56" stroke-width="1.2" stroke-dasharray="5 4"/>
+<text x="250" y="215" font-size="11" fill="#0F6E56">SWAP chain moves q1 next to q2</text>
+
+<text x="60" y="345" font-size="12" fill="#444441">Each qubit touches only 2 or 3 neighbors, and there are no triangles.</text>
+<text x="60" y="364" font-size="12" fill="#444441">A gate on three mutually interacting qubits cannot be placed directly.</text>
+<text x="60" y="383" font-size="12" fill="#444441">The transpiler inserts SWAP gates to shuttle qubits into contact.</text>
+<text x="60" y="402" font-size="12" fill="#993C1D">Every SWAP adds three CZ gates, so the real circuit is deeper and noisier than the ideal one.</text>
+</svg>

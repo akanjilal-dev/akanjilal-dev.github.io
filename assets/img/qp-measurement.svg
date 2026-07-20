@@ -1,0 +1,73 @@
+<svg width="100%" viewBox="0 0 680 540" xmlns="http://www.w3.org/2000/svg" role="img" font-family="Segoe UI, Helvetica, Arial, sans-serif">
+<title>Measurement and state collapse</title>
+<desc>A qubit in superposition shifts its readout resonator frequency depending on its state. A probe tone returns in one of two clusters. Choosing a cluster forces the qubit to one pole and destroys the superposition, which is the collapse.</desc>
+<rect x="0" y="0" width="680" height="540" fill="#ffffff"/>
+<text x="340" y="30" text-anchor="middle" font-size="16" font-weight="500" fill="#2C2C2A">How a qubit is measured, and why the state collapses</text>
+
+<!-- ROW 1: mechanism -->
+<!-- before bloch -->
+<text x="110" y="66" text-anchor="middle" font-size="13" font-weight="500" fill="#26215C">Before: superposition</text>
+<circle cx="110" cy="150" r="64" fill="#EEEDFE" stroke="#7F77DD" stroke-width="0.8"/>
+<ellipse cx="110" cy="150" rx="64" ry="20" fill="none" stroke="#7F77DD" stroke-width="0.5" stroke-dasharray="3 3"/>
+<line x1="110" y1="86" x2="110" y2="214" stroke="#7F77DD" stroke-width="0.5"/>
+<text x="110" y="82" text-anchor="middle" font-size="11" fill="#26215C">|0&#8250;</text>
+<text x="110" y="228" text-anchor="middle" font-size="11" fill="#26215C">|1&#8250;</text>
+<line x1="110" y1="150" x2="158" y2="118" stroke="#26215C" stroke-width="2.4"/>
+<circle cx="158" cy="118" r="4" fill="#26215C"/>
+<text x="110" y="256" text-anchor="middle" font-size="12" fill="#534AB7">&#945;|0&#8250; + &#946;|1&#8250;</text>
+
+<!-- dispersive shift -->
+<rect x="212" y="78" width="232" height="176" rx="10" fill="#ffffff" stroke="#B4B2A9" stroke-width="0.6"/>
+<text x="328" y="100" text-anchor="middle" font-size="13" font-weight="500" fill="#2C2C2A">Resonator frequency shifts</text>
+<line x1="232" y1="210" x2="424" y2="210" stroke="#888780" stroke-width="0.8"/>
+<text x="424" y="228" text-anchor="end" font-size="11" fill="#5F5E5A">frequency</text>
+<!-- peak for |0> blue -->
+<path d="M250 210 Q290 120 310 210" fill="none" stroke="#378ADD" stroke-width="1.8"/>
+<text x="286" y="140" text-anchor="middle" font-size="11" fill="#0C447C">if |0&#8250;</text>
+<!-- peak for |1> red -->
+<path d="M346 210 Q386 120 406 210" fill="none" stroke="#D85A30" stroke-width="1.8"/>
+<text x="382" y="140" text-anchor="middle" font-size="11" fill="#993C1D">if |1&#8250;</text>
+<text x="328" y="246" text-anchor="middle" font-size="11" fill="#5F5E5A">a probe tone reads which peak is present</text>
+
+<!-- amp + IQ -->
+<rect x="472" y="78" width="184" height="176" rx="10" fill="#ffffff" stroke="#B4B2A9" stroke-width="0.6"/>
+<text x="564" y="100" text-anchor="middle" font-size="13" font-weight="500" fill="#2C2C2A">Amplify, then sort</text>
+<line x1="500" y1="230" x2="640" y2="230" stroke="#888780" stroke-width="0.6"/>
+<line x1="510" y1="120" x2="510" y2="240" stroke="#888780" stroke-width="0.6"/>
+<text x="646" y="234" text-anchor="end" font-size="10" fill="#5F5E5A">I</text>
+<circle cx="545" cy="160" r="22" fill="#E6F1FB" stroke="#378ADD" stroke-width="0.6"/>
+<text x="545" y="164" text-anchor="middle" font-size="11" fill="#0C447C">0</text>
+<circle cx="605" cy="200" r="22" fill="#FAECE7" stroke="#D85A30" stroke-width="0.6"/>
+<text x="605" y="204" text-anchor="middle" font-size="11" fill="#993C1D">1</text>
+<text x="564" y="246" text-anchor="middle" font-size="10" fill="#5F5E5A">the tone lands in one cluster</text>
+
+<!-- arrows row1 -->
+<line x1="176" y1="150" x2="210" y2="150" stroke="#5F5E5A" stroke-width="1.4"/>
+<polygon points="210,150 202,146 202,154" fill="#5F5E5A"/>
+<line x1="446" y1="166" x2="470" y2="166" stroke="#5F5E5A" stroke-width="1.4"/>
+<polygon points="470,166 462,162 462,170" fill="#5F5E5A"/>
+
+<!-- divider -->
+<line x1="40" y1="300" x2="640" y2="300" stroke="#D3D1C7" stroke-width="0.6"/>
+<text x="340" y="322" text-anchor="middle" font-size="13" font-weight="500" fill="#712B13">The reading forces one pole. The superposition is destroyed and cannot be recovered. This is the collapse.</text>
+
+<!-- ROW 2: two collapsed outcomes -->
+<!-- outcome 0 -->
+<circle cx="220" cy="430" r="60" fill="#E6F1FB" stroke="#378ADD" stroke-width="0.8"/>
+<line x1="220" y1="370" x2="220" y2="490" stroke="#378ADD" stroke-width="0.5"/>
+<text x="220" y="366" text-anchor="middle" font-size="11" fill="#0C447C">|0&#8250;</text>
+<line x1="220" y1="430" x2="220" y2="374" stroke="#0C447C" stroke-width="3"/>
+<circle cx="220" cy="374" r="4" fill="#0C447C"/>
+<text x="220" y="512" text-anchor="middle" font-size="12" fill="#0C447C">outcome 0, probability |&#945;|&#178;</text>
+
+<!-- outcome 1 -->
+<circle cx="460" cy="430" r="60" fill="#FAECE7" stroke="#D85A30" stroke-width="0.8"/>
+<line x1="460" y1="370" x2="460" y2="490" stroke="#D85A30" stroke-width="0.5"/>
+<text x="460" y="504" text-anchor="middle" font-size="11" fill="#993C1D">|1&#8250;</text>
+<line x1="460" y1="430" x2="460" y2="486" stroke="#993C1D" stroke-width="3"/>
+<circle cx="460" cy="486" r="4" fill="#993C1D"/>
+<text x="460" y="360" text-anchor="middle" font-size="12" fill="#993C1D">outcome 1, probability |&#946;|&#178;</text>
+
+<text x="600" y="420" text-anchor="middle" font-size="12" fill="#5F5E5A">one bit</text>
+<text x="600" y="438" text-anchor="middle" font-size="12" fill="#5F5E5A">per shot</text>
+</svg>

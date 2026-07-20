@@ -66,86 +66,9 @@
 </blockquote>
 <h3>1.1 The whole story on one page</h3>
 <p>Before any equations, here is the entire argument of this paper as a single illustration. Read it top to bottom. The two rules sit at the top, because everything below is a response to them. The strategy band shows the only winning move the rules allow: blend every possibility, secretly mark the answer with a sign flip no look could ever see, let interference grow the marked one, and only then spend the single permitted look. The machine band shows what physically runs it, and it is deliberately unexciting: a laptop, ordinary control electronics, a very cold refrigerator, and a chip. The loop band shows why the machine runs the same program a thousand times, and the bottom band shows what actually comes out: not a number, but a bar chart whose tallest bar names the answer. Every chapter that follows is one band of this picture, magnified.</p>
-<figure class="diagram">
-  <svg viewBox="0 0 960 746" role="img" aria-label="A single-page summary in five stacked bands: the two rules at the top, the four-step interference strategy, the four-box physical machine, the three-step shot loop with a repeat arrow, and at the bottom a histogram of eight bars with the 101 bar towering over the rest.">
-    <text x="40.0" y="34.0" class="sub" font-size="11" text-anchor="start" letter-spacing="2">THE WHOLE STORY ON ONE PAGE</text><text x="40.0" y="60.0" class="lbl" font-size="15" text-anchor="start">Two rules, the strategy they force, the machine, the loop, and the answer</text><line class="conn" x1="40.0" y1="74.0" x2="920.0" y2="74.0"/>
-    <text x="40.0" y="100.0" class="sub" font-size="11" text-anchor="start" letter-spacing="1.5">THE TWO RULES</text>
-    <rect class="boxa" x="40" y="112" width="440" height="66" rx="11"/>
-    <text x="54.0" y="134.0" class="lbl" font-size="11" text-anchor="start">Rule A — answers are chancy</text>
-    <text x="54.0" y="152.0" class="sub" font-size="9" text-anchor="start">reading a qubit gives a random 0 or 1;</text>
-    <text x="54.0" y="166.0" class="sub" font-size="9" text-anchor="start">only hidden numbers set the odds</text>
-    <rect class="boxa" x="500" y="112" width="440" height="66" rx="11"/>
-    <text x="514.0" y="134.0" class="lbl" font-size="11" text-anchor="start">Rule B — looking destroys</text>
-    <text x="514.0" y="152.0" class="sub" font-size="9" text-anchor="start">one look collapses the state to a plain bit;</text>
-    <text x="514.0" y="166.0" class="sub" font-size="9" text-anchor="start">the rich blend is gone for good</text>
-    <text x="40.0" y="214.0" class="sub" font-size="11" text-anchor="start" letter-spacing="1.5">THE STRATEGY — SHAPE THE ODDS BEFORE THE ONE LOOK</text>
-    <rect class="box" x="40" y="226" width="196" height="66" rx="11"/>
-    <text x="54.0" y="248.0" class="lbl" font-size="11" text-anchor="start">1  Blend</text>
-    <text x="54.0" y="266.0" class="sub" font-size="9" text-anchor="start">every option, equal odds</text>
-    <line class="conna" x1="236.0" y1="259.0" x2="264.0" y2="259.0"/><path class="dot" d="M264 255 L264 263 L272 259 Z"/>
-    <rect class="box" x="272" y="226" width="196" height="66" rx="11"/>
-    <text x="286.0" y="248.0" class="lbl" font-size="11" text-anchor="start">2  Mark</text>
-    <text x="286.0" y="266.0" class="sub" font-size="9" text-anchor="start">a hidden sign flip, invisible</text>
-    <line class="conna" x1="468.0" y1="259.0" x2="496.0" y2="259.0"/><path class="dot" d="M496 255 L496 263 L504 259 Z"/>
-    <rect class="box" x="504" y="226" width="196" height="66" rx="11"/>
-    <text x="518.0" y="248.0" class="lbl" font-size="11" text-anchor="start">3  Interfere</text>
-    <text x="518.0" y="266.0" class="sub" font-size="9" text-anchor="start">wrong ones cancel, right grows</text>
-    <line class="conna" x1="700.0" y1="259.0" x2="728.0" y2="259.0"/><path class="dot" d="M728 255 L728 263 L736 259 Z"/>
-    <rect class="boxa" x="736" y="226" width="196" height="66" rx="11"/>
-    <text x="750.0" y="248.0" class="lbl" font-size="11" text-anchor="start">4  Look once</text>
-    <text x="750.0" y="266.0" class="sub" font-size="9" text-anchor="start">one random bitstring, gone</text>
-    <text x="40.0" y="328.0" class="sub" font-size="11" text-anchor="start" letter-spacing="1.5">THE MACHINE — WHAT PHYSICALLY RUNS IT</text>
-    <rect class="box" x="40" y="340" width="196" height="66" rx="11"/>
-    <text x="54.0" y="362.0" class="lbl" font-size="11" text-anchor="start">Your program</text>
-    <text x="54.0" y="380.0" class="sub" font-size="9" text-anchor="start">circuit on a laptop</text>
-    <line class="conna" x1="236.0" y1="373.0" x2="264.0" y2="373.0"/><path class="dot" d="M264 369 L264 377 L272 373 Z"/>
-    <rect class="box" x="272" y="340" width="196" height="66" rx="11"/>
-    <text x="286.0" y="362.0" class="lbl" font-size="11" text-anchor="start">Control electronics</text>
-    <text x="286.0" y="380.0" class="sub" font-size="9" text-anchor="start">gates → microwave pulses</text>
-    <line class="conna" x1="468.0" y1="373.0" x2="496.0" y2="373.0"/><path class="dot" d="M496 369 L496 377 L504 373 Z"/>
-    <rect class="box" x="504" y="340" width="196" height="66" rx="11"/>
-    <text x="518.0" y="362.0" class="lbl" font-size="11" text-anchor="start">Refrigerator</text>
-    <text x="518.0" y="380.0" class="sub" font-size="9" text-anchor="start">shields the chip at 0.015 K</text>
-    <line class="conna" x1="700.0" y1="373.0" x2="728.0" y2="373.0"/><path class="dot" d="M728 369 L728 377 L736 373 Z"/>
-    <rect class="boxa" x="736" y="340" width="196" height="66" rx="11"/>
-    <text x="750.0" y="362.0" class="lbl" font-size="11" text-anchor="start">Quantum chip</text>
-    <text x="750.0" y="380.0" class="sub" font-size="9" text-anchor="start">qubits blend, gates push</text>
-    <text x="40.0" y="442.0" class="sub" font-size="11" text-anchor="start" letter-spacing="1.5">THE LOOP — WHY IT RUNS ~1000 TIMES</text>
-    <rect class="box" x="40" y="454" width="220" height="66" rx="11"/>
-    <text x="54.0" y="476.0" class="lbl" font-size="11" text-anchor="start">Run the circuit</text>
-    <text x="54.0" y="494.0" class="sub" font-size="9" text-anchor="start">blend, mark, interfere</text>
-    <line class="conna" x1="260.0" y1="487.0" x2="292.0" y2="487.0"/><path class="dot" d="M292 483 L292 491 L300 487 Z"/>
-    <rect class="boxa" x="300" y="454" width="220" height="66" rx="11"/>
-    <text x="314.0" y="476.0" class="lbl" font-size="11" text-anchor="start">Look once</text>
-    <text x="314.0" y="494.0" class="sub" font-size="9" text-anchor="start">one random answer out</text>
-    <line class="conna" x1="520.0" y1="487.0" x2="552.0" y2="487.0"/><path class="dot" d="M552 483 L552 491 L560 487 Z"/>
-    <rect class="box" x="560" y="454" width="220" height="66" rx="11"/>
-    <text x="574.0" y="476.0" class="lbl" font-size="11" text-anchor="start">Tally it</text>
-    <text x="574.0" y="494.0" class="sub" font-size="9" text-anchor="start">add one to that bar</text>
-    <path class="conna" d="M670 520 V538 H150 V520" fill="none" stroke-dasharray="5 4"/>
-    <path class="dot" d="M146 528 L154 528 L150 520 Z"/>
-    <text x="360.0" y="554.0" class="sub" font-size="9.5" text-anchor="middle">repeat ~1000× — each run starts fresh, because the look destroyed the last state</text>
-    <text x="40.0" y="596.0" class="sub" font-size="11" text-anchor="start" letter-spacing="1.5">THE ANSWER — A HISTOGRAM, NOT A NUMBER</text>
-    <line class="conn" x1="40.0" y1="716.0" x2="940.0" y2="716.0"/>
-    <rect class="bartrack" x="77.8" y="711.5" width="70" height="4.5" rx="3"/>
-    <text x="112.8" y="732.0" class="sub" font-size="9.5" text-anchor="middle">000</text>
-    <rect class="bartrack" x="185.6" y="709.5" width="70" height="6.5" rx="3"/>
-    <text x="220.6" y="732.0" class="sub" font-size="9.5" text-anchor="middle">001</text>
-    <rect class="bartrack" x="293.3" y="710.5" width="70" height="5.5" rx="3"/>
-    <text x="328.3" y="732.0" class="sub" font-size="9.5" text-anchor="middle">010</text>
-    <rect class="bartrack" x="401.1" y="709.0" width="70" height="7.0" rx="3"/>
-    <text x="436.1" y="732.0" class="sub" font-size="9.5" text-anchor="middle">011</text>
-    <rect class="bar" x="508.9" y="628.5" width="70" height="87.5" rx="3"/>
-    <text x="543.9" y="732.0" class="sub" font-size="9.5" text-anchor="middle">101</text>
-    <rect class="bartrack" x="616.7" y="710.0" width="70" height="6.0" rx="3"/>
-    <text x="651.7" y="732.0" class="sub" font-size="9.5" text-anchor="middle">110</text>
-    <rect class="bartrack" x="724.4" y="708.5" width="70" height="7.5" rx="3"/>
-    <text x="759.4" y="732.0" class="sub" font-size="9.5" text-anchor="middle">111</text>
-    <rect class="bartrack" x="832.2" y="711.0" width="70" height="5.0" rx="3"/>
-    <text x="867.2" y="732.0" class="sub" font-size="9.5" text-anchor="middle">100</text>
-    <text x="543.9" y="621.0" class="lbl" font-size="11" text-anchor="middle">the tall bar names the answer</text>
-  </svg>
-  <figcaption>Figure 1.1 — The whole arc on one page: the two governing rules, the interference strategy they force, the physical stack that runs it, the shot loop repetition demands, and the histogram whose tallest bar is the answer.</figcaption>
+<figure class="qp-fig">
+  <img src="/assets/img/qp-overview.svg?v=2" alt="The complete arc of quantum computation in one view: the two governing rules, the interference strategy they force, the physical stack that executes it, the shot loop that repetiti" loading="lazy">
+  <figcaption>Figure 1.1 — The complete arc of quantum computation in one view: the two governing rules, the interference strategy they force, the physical stack that executes it, the shot loop that repetition demands, and the histogram that delivers the answer.</figcaption>
 </figure>
 <p>The rest of this paper unpacks how that choreography is written down (Part I), how a real algorithm performs it (Part II), how metal, microwaves, and refrigeration physically carry it out (Part III), and how you can watch every step in a simulator (Part IV).</p>
 <hr />
@@ -251,39 +174,9 @@ b₂ = 2μ − b′ = 0.088388 − 0.176777 = <strong>−0.088388</strong></p>
 </tbody>
 </table>
 <p>The optimal stopping point is k = round(π√N/4) = round(2.22) = 2. A third rotation swings the state past the good axis and the success probability falls to 33%. This is the famous Grover subtlety: the algorithm is not "more iterations, more better." It is a rotation you must stop at the top.</p>
-<figure class="diagram">
-  <svg viewBox="0 0 960 560" role="img" aria-label="A 2D plane with a horizontal bad axis and a vertical good axis. Three state vectors rise from the origin at angles 20.7, 62.1 and 103.5 degrees, labelled k=0 at 12.5 percent, k=1 at 78.1 percent, and k=2 at 94.5 percent, showing the state rotating toward the marked answer.">
-    <text x="40.0" y="34.0" class="sub" font-size="11" text-anchor="start" letter-spacing="2">GROVER AS A ROTATION</text><text x="40.0" y="60.0" class="lbl" font-size="15" text-anchor="start">Two mirrors rotate an unreadable vector toward the answer</text><line class="conn" x1="40.0" y1="74.0" x2="920.0" y2="74.0"/>
-    <line class="conn" x1="170.0" y1="470.0" x2="170.0" y2="110.0"/>
-    <path class="dot" d="M166 118 L174 118 L170 110 Z"/>
-    <line class="conn" x1="170.0" y1="470.0" x2="620.0" y2="470.0"/>
-    <path class="dot" d="M612 466 L612 474 L620 470 Z"/>
-    <text x="170.0" y="98.0" class="lbl" font-size="11" text-anchor="middle">good axis — the marked state |101⟩</text>
-    <text x="628.0" y="474.0" class="sub" font-size="10" text-anchor="start">bad axis — equal mix of the 7 wrong states</text>
-    <path class="conn" d="M500 470 A 330 330 0 0 0 170 140" fill="none" stroke-dasharray="4 5"/>
-    <path class="conna" d="M240 470 A 70 70 0 0 0 235.5 445.3" fill="none"/>
-    <text x="252.0" y="456.0" class="sub" font-size="10" text-anchor="start">θ ≈ 20.7°</text>
-    <line class="conna" x1="170.0" y1="470.0" x2="471.2" y2="356.2"/>
-    <path class="dot" d="M478.7 353.3 l-9.0 -0.5 l2.6 6.8 z"/>
-    <circle class="dot" cx="478.7" cy="353.3" r="4"/>
-    <text x="492.7" y="347.3" class="lbl" font-size="11" text-anchor="start">k = 0</text>
-    <text x="492.7" y="362.3" class="sub" font-size="9.5" text-anchor="start">angle θ · P = 12.5%</text>
-    <line class="conna" x1="170.0" y1="470.0" x2="320.6" y2="185.4"/>
-    <path class="dot" d="M324.3 178.3 l-7.1 5.6 l6.5 3.4 z"/>
-    <circle class="dot" cx="324.3" cy="178.3" r="4"/>
-    <text x="338.3" y="172.3" class="lbl" font-size="11" text-anchor="start">k = 1</text>
-    <text x="338.3" y="187.3" class="sub" font-size="9.5" text-anchor="start">angle 3θ · P = 78.1%</text>
-    <line class="conna" x1="170.0" y1="470.0" x2="94.7" y2="156.9"/>
-    <path class="dot" d="M92.8 149.2 l-1.6 8.9 l7.1 -1.7 z"/>
-    <circle class="dot" cx="92.8" cy="149.2" r="4"/>
-    <text x="92.8" y="123.2" class="lbl" font-size="11" text-anchor="middle">k = 2</text>
-    <text x="92.8" y="137.2" class="sub" font-size="9.5" text-anchor="middle">angle 5θ · P = 94.5%</text>
-    <text x="540.0" y="208.0" class="sub" font-size="10" text-anchor="start">Each iteration = oracle then diffusion</text>
-    <text x="540.0" y="224.0" class="sub" font-size="10" text-anchor="start">= one rotation by 2θ toward the good axis.</text>
-    <text x="540.0" y="246.0" class="sub" font-size="10" text-anchor="start">Stop at k = 2. A third rotation overshoots</text>
-    <text x="540.0" y="262.0" class="sub" font-size="10" text-anchor="start">past the good axis, back down to 33%.</text>
-  </svg>
-  <figcaption>Figure 4.1 — The state starts at angle θ above the bad axis and rotates by 2θ each iteration. After two iterations it sits nearly on the good axis at 94.5%; a third would overshoot.</figcaption>
+<figure class="qp-fig">
+  <img src="/assets/img/qp-grover-geometry.svg?v=2" alt="The state vector starts at angle θ above the bad axis and rotates by 2θ per iteration. After two iterations it sits nearly on the good axis at 94.5%." loading="lazy">
+  <figcaption>Figure 4.1 — The state vector starts at angle θ above the bad axis and rotates by 2θ per iteration. After two iterations it sits nearly on the good axis at 94.5%.</figcaption>
 </figure>
 <blockquote class="keyidea">
 <p><strong>Key idea 3.</strong> Grover never learns the answer during the computation. It rotates an unreadable state vector toward the answer, using the oracle's sign flip as one mirror and the average-reflection as the other. The number of rotations is fixed in advance by geometry, about (π/4)√N, and overshooting is as bad as undershooting.</p>
@@ -374,115 +267,17 @@ Measure q0, q1, q2
 <p class="breath"><strong>In one breath.</strong> A quantum chip is a fingernail-sized sliver of superconducting circuitry hanging at the bottom of a giant thermos, chilled to a hundredth of a degree above absolute zero so that heat cannot flip the qubits by itself. Each qubit is a tiny electrical oscillator with a deliberate flaw — unevenly spaced energy rungs — and that flaw is precisely what lets us talk to its bottom two rungs alone and call them 0 and 1.</p>
 <h3>6.1 The pipeline before the physics</h3>
 <p>Before the device details, here is the whole journey a single program takes, from your circuit to a histogram. The loop on the right of the figure is Rule B made visible: one run yields one bitstring, so the entire sequence repeats for every shot.</p>
-<figure class="diagram">
-  <svg viewBox="0 0 960 862" role="img" aria-label="The nine stages of physically running one quantum program, top to bottom: logical circuit, transpile, compile to pulses, send down the refrigerator, qubits evolve, probe the resonators, discriminate and collapse, record one bitstring, and repeat to build the histogram. A loop arrow returns from the last stage to the first, because each shot starts fresh.">
-    <text x="40" y="34" class="sub" font-size="11" letter-spacing="2">PHYSICAL EXECUTION</text>
-    <text x="40" y="60" class="lbl" font-size="15">How one quantum program actually runs, start to finish</text>
-    <line class="conn" x1="40" y1="74" x2="920" y2="74"/>
-    <rect class="box" x="40" y="104" width="640" height="58" rx="11"/>
-    <text x="62" y="139" class="num" font-size="15">1</text>
-    <text x="90" y="131" class="lbl" font-size="12.5">Quantum circuit — logical gates</text>
-    <text x="90" y="149" class="sub" font-size="10">Hadamard, oracle, diffusion, measure — the program from Chapter 4</text>
-    <line class="conna" x1="360" y1="162" x2="360" y2="180"/>
-    <path class="dot" d="M356 180 L364 180 L360 188 Z"/>
-    <rect class="box" x="40" y="188" width="640" height="58" rx="11"/>
-    <text x="62" y="223" class="num" font-size="15">2</text>
-    <text x="90" y="215" class="lbl" font-size="12.5">Transpile to the hardware</text>
-    <text x="90" y="233" class="sub" font-size="10">rebuild into the five native gates, insert SWAPs for the wiring</text>
-    <line class="conna" x1="360" y1="246" x2="360" y2="264"/>
-    <path class="dot" d="M356 264 L364 264 L360 272 Z"/>
-    <rect class="box" x="40" y="272" width="640" height="58" rx="11"/>
-    <text x="62" y="307" class="num" font-size="15">3</text>
-    <text x="90" y="299" class="lbl" font-size="12.5">Compile to a pulse schedule</text>
-    <text x="90" y="317" class="sub" font-size="10">each native gate becomes a shaped microwave pulse</text>
-    <line class="conna" x1="360" y1="330" x2="360" y2="348"/>
-    <path class="dot" d="M356 348 L364 348 L360 356 Z"/>
-    <rect class="box" x="40" y="356" width="640" height="58" rx="11"/>
-    <text x="62" y="391" class="num" font-size="15">4</text>
-    <text x="90" y="383" class="lbl" font-size="12.5">Send the pulses down the fridge</text>
-    <text x="90" y="401" class="sub" font-size="10">room-temperature electronics down to the 15 mK chip</text>
-    <line class="conna" x1="360" y1="414" x2="360" y2="432"/>
-    <path class="dot" d="M356 432 L364 432 L360 440 Z"/>
-    <rect class="box" x="40" y="440" width="640" height="58" rx="11"/>
-    <text x="62" y="475" class="num" font-size="15">5</text>
-    <text x="90" y="467" class="lbl" font-size="12.5">Qubits evolve — unitary</text>
-    <text x="90" y="485" class="sub" font-size="10">the pulses rotate the amplitudes; nothing is read yet</text>
-    <line class="conna" x1="360" y1="498" x2="360" y2="516"/>
-    <path class="dot" d="M356 516 L364 516 L360 524 Z"/>
-    <rect class="box" x="40" y="524" width="640" height="58" rx="11"/>
-    <text x="62" y="559" class="num" font-size="15">6</text>
-    <text x="90" y="551" class="lbl" font-size="12.5">Probe the readout resonators</text>
-    <text x="90" y="569" class="sub" font-size="10">a microwave tone senses each qubit indirectly</text>
-    <line class="conna" x1="360" y1="582" x2="360" y2="600"/>
-    <path class="dot" d="M356 600 L364 600 L360 608 Z"/>
-    <rect class="boxa" x="40" y="608" width="640" height="58" rx="11"/>
-    <text x="62" y="643" class="num" font-size="15">7</text>
-    <text x="90" y="635" class="lbl" font-size="12.5">Discriminate and collapse</text>
-    <text x="90" y="653" class="sub" font-size="10">the signal lands in the 0 or 1 cluster; the superposition is gone</text>
-    <line class="conna" x1="360" y1="666" x2="360" y2="684"/>
-    <path class="dot" d="M356 684 L364 684 L360 692 Z"/>
-    <rect class="box" x="40" y="692" width="640" height="58" rx="11"/>
-    <text x="62" y="727" class="num" font-size="15">8</text>
-    <text x="90" y="719" class="lbl" font-size="12.5">Record one bitstring</text>
-    <text x="90" y="737" class="sub" font-size="10">one classical result for this single shot</text>
-    <line class="conna" x1="360" y1="750" x2="360" y2="768"/>
-    <path class="dot" d="M356 768 L364 768 L360 776 Z"/>
-    <rect class="box" x="40" y="776" width="640" height="58" rx="11"/>
-    <text x="62" y="811" class="num" font-size="15">9</text>
-    <text x="90" y="803" class="lbl" font-size="12.5">Repeat, then build the histogram</text>
-    <text x="90" y="821" class="sub" font-size="10">the tallest bar names the answer</text>
-    <path class="conna" d="M680 805 H792 V133 H688" fill="none" stroke-dasharray="5 4"/>
-    <path class="dot" d="M688 129 L688 137 L680 133 Z"/>
-    <text x="808" y="469" class="lbl" font-size="11" text-anchor="middle" transform="rotate(-90 808 469)">the shot loop &#183; repeat ~1000&#215;</text>
-    <text x="824" y="469" class="sub" font-size="9.5" text-anchor="middle" transform="rotate(-90 824 469)">each run starts fresh — the last look destroyed the state</text>
-  </svg>
-  <figcaption>Figure 6.1 — The nine stages of one physical execution. The logical circuit is transpiled and compiled to microwave pulses, sent down the refrigerator, evolved, probed, and collapsed into a single bitstring; then the whole run repeats, because the one look destroyed the state, until the histogram fills in.</figcaption>
+<figure class="qp-fig">
+  <img src="/assets/img/qp-pipeline.svg?v=2" alt="The nine stages of one physical execution: circuit → transpile → pulse schedule → deliver down the refrigerator → unitary evolution → probe the readout resonators → discriminate an" loading="lazy">
+  <figcaption>Figure 6.1 — The nine stages of one physical execution: circuit → transpile → pulse schedule → deliver down the refrigerator → unitary evolution → probe the readout resonators → discriminate and collapse → record one bitstring → repeat and histogram.</figcaption>
 </figure>
 <p>In words: (1) your logical gates, exactly as written in Chapter 4; (2) transpilation rebuilds them from the hardware's five native gates and adds SWAPs so every two-qubit gate acts on physically wired neighbors; (3) each native gate is compiled into a specific shaped microwave pulse with a set frequency, envelope, and duration; (4) room-temperature electronics generate those pulses and send them down heavily attenuated coaxial lines through the refrigerator's stages; (5) the pulses steer the qubits through the algorithm — the unitary part, during which nothing is read; (6) a separate probe tone interrogates each qubit's readout resonator; (7) the returned signal is amplified and sorted into a 0 or a 1 — the physical measurement, and the collapse; (8) one bitstring is recorded; (9) the machine resets and the whole run repeats for the next shot.</p>
 <h3>6.2 The refrigerator, and why 15 millikelvin</h3>
 <p>The chip sits at the mixing-chamber plate of a dilution refrigerator, at roughly 10 to 15 millikelvin — colder than interstellar space. The number is not bravado; it comes from one inequality. A qubit's two levels are separated by an energy E = hf with f near 5 GHz. Converting that gap into a temperature, hf/k_B ≈ 240 mK. For the qubit to sit reliably in |0⟩ between runs, the ambient thermal energy k_BT must be far below the gap, so T must be far below 240 mK. At 15 mK the chance of a thermal flip is exponentially tiny, and |0⟩ is a dependable starting point. Warmer, and Rule B's destruction would be pre-empted by something worse: the environment randomly rewriting the state before the algorithm even runs.</p>
 <p>The refrigerator is also a signal ladder. Control pulses enter at room temperature (300 K), pass attenuators at each stage that strip away thermal noise, and arrive at the chip whisper-quiet. Readout signals climb back up the same tower through amplifiers — a quantum-limited amplifier at the coldest stage, a HEMT amplifier at 4 K, more gain at room temperature. Chapter 8 rides that return path in detail.</p>
-<figure class="diagram">
-  <svg viewBox="0 0 960 600" role="img" aria-label="Left: a dilution refrigerator drawn as three stacked stages, room temperature at 300 kelvin, a 4 kelvin HEMT amplifier stage, and the 15 millikelvin mixing chamber holding the quantum chip, with arrows for pulses going down and the echo coming up. Right: a magnified transmon showing its cross-shaped capacitor and Josephson junction, its readout resonator, and an uneven energy ladder.">
-    <text x="40.0" y="34.0" class="sub" font-size="11" text-anchor="start" letter-spacing="2">ANATOMY OF THE MACHINE</text><text x="40.0" y="60.0" class="lbl" font-size="15" text-anchor="start">A chip in a very cold thermos, and the transmon inside it</text><line class="conn" x1="40.0" y1="74.0" x2="920.0" y2="74.0"/>
-    <rect class="box" x="60" y="110" width="300" height="70" rx="11"/>
-    <text x="78.0" y="136.0" class="lbl" font-size="12" text-anchor="start">300 K — room temperature</text>
-    <text x="78.0" y="154.0" class="sub" font-size="9.5" text-anchor="start">control electronics generate the pulses</text>
-    <rect class="box" x="60" y="196" width="300" height="70" rx="11"/>
-    <text x="78.0" y="222.0" class="lbl" font-size="12" text-anchor="start">4 K — HEMT amplifier</text>
-    <text x="78.0" y="240.0" class="sub" font-size="9.5" text-anchor="start">first big amplification of the returning echo</text>
-    <rect class="boxa" x="60" y="282" width="300" height="120" rx="11"/>
-    <text x="78.0" y="308.0" class="lbl" font-size="12" text-anchor="start">15 mK — mixing chamber</text>
-    <text x="78.0" y="326.0" class="sub" font-size="9.5" text-anchor="start">the chip lives here; colder than deep space</text>
-    <rect class="box" x="78" y="318" width="264" height="74" rx="11"/>
-    <text x="90.0" y="340.0" class="sub" font-size="9.5" text-anchor="start">quantum chip — 133/156 transmons</text>
-    <text x="90.0" y="362.0" class="sub" font-size="9.5" text-anchor="start">heavy-hex lattice, native I·X·SX·R_Z·CZ</text>
-    <line class="conna" x1="38.0" y1="120.0" x2="38.0" y2="396.0"/><path class="dot" d="M34 396 L42 396 L38 404 Z"/>
-    <line class="conna" x1="20.0" y1="404.0" x2="20.0" y2="120.0"/>
-    <path class="dot" d="M16 128 L24 128 L20 120 Z"/>
-    <text x="8.0" y="262.0" class="sub" font-size="9" text-anchor="middle" transform="rotate(-90 8 262)">pulses down</text>
-    <text x="52.0" y="262.0" class="sub" font-size="9" text-anchor="middle" transform="rotate(-90 52 262)">echo up</text>
-    <text x="430.0" y="110.0" class="sub" font-size="10" text-anchor="start">One transmon, magnified</text>
-    <rect class="box" x="510" y="146" width="20" height="88" rx="4"/>
-    <rect class="box" x="476" y="180" width="88" height="20" rx="4"/>
-    <rect class="boxa" x="512" y="234" width="16" height="12" rx="2"/>
-    <text x="580.0" y="180.0" class="sub" font-size="9.5" text-anchor="start">cross capacitor</text>
-    <text x="580.0" y="246.0" class="sub" font-size="9.5" text-anchor="start">Josephson junction — the nonlinear bit</text>
-    <polyline class="conna" points="430 290 438 310 446 290 454 310 462 290 470 310 478 290 486 310 494 290 502 310" fill="none"/>
-    <text x="520.0" y="304.0" class="sub" font-size="9.5" text-anchor="start">readout resonator (≈7 GHz)</text>
-    <line class="conn" x1="430.0" y1="440.0" x2="500.0" y2="440.0"/>
-    <text x="508.0" y="444.0" class="sub" font-size="9.5" text-anchor="start">|0⟩</text>
-    <line class="conn" x1="430.0" y1="400.0" x2="500.0" y2="400.0"/>
-    <text x="508.0" y="404.0" class="sub" font-size="9.5" text-anchor="start">|1⟩</text>
-    <line class="conn" x1="430.0" y1="368.0" x2="500.0" y2="368.0"/>
-    <text x="508.0" y="372.0" class="sub" font-size="9.5" text-anchor="start">|2⟩</text>
-    <path class="conna" d="M465 440 L465 400" />
-    <path class="dot" d="M461 408 L469 408 L465 400 Z"/>
-    <text x="526.0" y="404.0" class="sub" font-size="9.5" text-anchor="start">the 0→1 gap ≈ 5 GHz; the 1→2 gap is</text>
-    <text x="526.0" y="420.0" class="sub" font-size="9.5" text-anchor="start">≈300 MHz smaller (anharmonicity),</text>
-    <text x="526.0" y="436.0" class="sub" font-size="9.5" text-anchor="start">which is what carves out a clean qubit.</text>
-  </svg>
-  <figcaption>Figure 6.2 — The cold stack: room-temperature electronics, the 4 K HEMT stage, and the 15 mK mixing chamber holding the chip; and one transmon magnified — its cross capacitor and Josephson junction, its readout resonator, and its uneven energy ladder.</figcaption>
+<figure class="qp-fig">
+  <img src="/assets/img/qp-heron-stack.svg?v=2" alt="The cold stack: room-temperature electronics, the 4 K stage with its HEMT amplifier, and the ~15 mK mixing chamber holding the chip; the transmon&#x27;s cross capacitor and Josephson ju" loading="lazy">
+  <figcaption>Figure 6.2 — The cold stack: room-temperature electronics, the 4 K stage with its HEMT amplifier, and the ~15 mK mixing chamber holding the chip; the transmon's cross capacitor and Josephson junction; its readout resonator; the uneven energy ladder; and the two readout clusters in the I/Q plane.</figcaption>
 </figure>
 <h3>6.3 What a transmon physically is</h3>
 <p>Each qubit is a <strong>transmon</strong>: a superconducting circuit made of two elements, a capacitor (typically a cross-shaped pad) and a <strong>Josephson junction</strong>, a nanoscale sandwich of superconductor–insulator–superconductor through which Cooper pairs of electrons tunnel. An ordinary capacitor plus an ordinary inductor makes a harmonic oscillator — a perfectly even ladder of energy levels, useless as a qubit because a drive that climbs rung one climbs every rung equally. The Josephson junction is the fix: it behaves as a <strong>nonlinear</strong> inductor, and the nonlinearity makes the ladder uneven.</p>
@@ -496,58 +291,9 @@ Measure q0, q1, q2
 </blockquote>
 <h3>6.4 The lattice: who can talk to whom</h3>
 <p>The 133 or 156 transmons are not wired all-to-all. Heron uses IBM's <strong>heavy-hexagonal lattice</strong>: each qubit couples to only 2 or 3 neighbors, and the lattice contains no triangles. The sparseness is a defense — fewer couplings mean less crosstalk and fewer frequency collisions — but it has an algorithmic price that Chapter 9 collects: any gate between non-neighbors must be routed there with SWAP operations, inflating the physical circuit well beyond the logical one.</p>
-<figure class="diagram">
-  <svg viewBox="0 0 960 520" role="img" aria-label="A patch of the heavy-hexagonal lattice: large corner qubits each touching two or three neighbours, small edge qubits between them, and no triangles anywhere. Three corner qubits are highlighted as the ones a three-qubit gate needs, with a dashed SWAP chain routing them together.">
-    <text x="40.0" y="34.0" class="sub" font-size="11" text-anchor="start" letter-spacing="2">THE HEAVY-HEX LATTICE</text><text x="40.0" y="60.0" class="lbl" font-size="15" text-anchor="start">Sparse wiring keeps errors low, but inflates every circuit</text><line class="conn" x1="40.0" y1="74.0" x2="920.0" y2="74.0"/>
-    <line class="conn" x1="330.0" y1="170.0" x2="386.3" y2="202.5"/>
-    <line class="conn" x1="386.3" y1="202.5" x2="442.6" y2="235.0"/>
-    <line class="conn" x1="442.6" y1="235.0" x2="442.6" y2="300.0"/>
-    <line class="conn" x1="442.6" y1="300.0" x2="442.6" y2="365.0"/>
-    <line class="conn" x1="442.6" y1="365.0" x2="386.3" y2="397.5"/>
-    <line class="conn" x1="386.3" y1="397.5" x2="330.0" y2="430.0"/>
-    <line class="conn" x1="330.0" y1="430.0" x2="273.7" y2="397.5"/>
-    <line class="conn" x1="273.7" y1="397.5" x2="217.4" y2="365.0"/>
-    <line class="conn" x1="217.4" y1="365.0" x2="217.4" y2="300.0"/>
-    <line class="conn" x1="217.4" y1="300.0" x2="217.4" y2="235.0"/>
-    <line class="conn" x1="217.4" y1="235.0" x2="273.7" y2="202.5"/>
-    <line class="conn" x1="273.7" y1="202.5" x2="330.0" y2="170.0"/>
-    <line class="conn" x1="330.0" y1="170.0" x2="330.0" y2="100.0"/>
-    <line class="conn" x1="442.6" y1="365.0" x2="503.2" y2="400.0"/>
-    <line class="conn" x1="217.4" y1="365.0" x2="156.8" y2="400.0"/>
-    <path class="conna" d="M442.6 365.0 L442.6 300.0 L442.6 235.0 L386.3 202.5 L330.0 170.0" fill="none" stroke-dasharray="5 4"/>
-    <circle class="box" cx="386.3" cy="202.5" r="9"/>
-    <circle class="box" cx="442.6" cy="300.0" r="9"/>
-    <circle class="box" cx="386.3" cy="397.5" r="9"/>
-    <circle class="box" cx="273.7" cy="397.5" r="9"/>
-    <circle class="box" cx="217.4" cy="300.0" r="9"/>
-    <circle class="box" cx="273.7" cy="202.5" r="9"/>
-    <circle class="box" cx="330.0" cy="135.0" r="9"/>
-    <circle class="box" cx="472.9" cy="382.5" r="9"/>
-    <circle class="box" cx="187.1" cy="382.5" r="9"/>
-    <circle class="boxa" cx="330.0" cy="170.0" r="13"/>
-    <circle class="box" cx="442.6" cy="235.0" r="13"/>
-    <circle class="boxa" cx="442.6" cy="365.0" r="13"/>
-    <circle class="box" cx="330.0" cy="430.0" r="13"/>
-    <circle class="boxa" cx="217.4" cy="365.0" r="13"/>
-    <circle class="box" cx="217.4" cy="235.0" r="13"/>
-    <text x="330.0" y="174.0" class="num" font-size="10" text-anchor="middle">q0</text>
-    <text x="442.6" y="369.0" class="num" font-size="10" text-anchor="middle">q1</text>
-    <text x="217.4" y="369.0" class="num" font-size="10" text-anchor="middle">q2</text>
-    <circle class="box" cx="620" cy="150" r="13"/>
-    <text x="646.0" y="154.0" class="sub" font-size="10" text-anchor="start">corner qubit — 3 neighbors</text>
-    <circle class="box" cx="620" cy="188" r="9"/>
-    <text x="646.0" y="192.0" class="sub" font-size="10" text-anchor="start">edge qubit — 2 neighbors</text>
-    <circle class="boxa" cx="620" cy="226" r="13"/>
-    <text x="646.0" y="230.0" class="sub" font-size="10" text-anchor="start">the 3 qubits our CCZ needs</text>
-    <line class="conna" x1="608.0" y1="262.0" x2="632.0" y2="262.0" stroke-dasharray="5 4"/>
-    <text x="646.0" y="266.0" class="sub" font-size="10" text-anchor="start">SWAP chain to bring them adjacent</text>
-    <text x="620.0" y="320.0" class="lbl" font-size="11" text-anchor="start">No three qubits are mutually adjacent</text>
-    <text x="620.0" y="338.0" class="sub" font-size="10" text-anchor="start">— there are no triangles — so a direct</text>
-    <text x="620.0" y="354.0" class="sub" font-size="10" text-anchor="start">three-qubit gate is impossible. Every</text>
-    <text x="620.0" y="370.0" class="sub" font-size="10" text-anchor="start">SWAP costs three CZ gates, and the</text>
-    <text x="620.0" y="386.0" class="sub" font-size="10" text-anchor="start">physical circuit balloons past the ideal.</text>
-  </svg>
-  <figcaption>Figure 6.3 — A patch of the heavy-hex lattice. Each qubit touches 2 or 3 neighbors and there are no triangles, so a three-qubit CCZ must be routed together with SWAP chains, each costing three CZ gates.</figcaption>
+<figure class="qp-fig">
+  <img src="/assets/img/qp-heavy-hex.svg?v=2" alt="A patch of the heavy-hex lattice. Each qubit touches 2 or 3 neighbors and no three qubits are mutually adjacent, so the three-qubit CCZ in our Grover circuit cannot be placed direc" loading="lazy">
+  <figcaption>Figure 6.3 — A patch of the heavy-hex lattice. Each qubit touches 2 or 3 neighbors and no three qubits are mutually adjacent, so the three-qubit CCZ in our Grover circuit cannot be placed directly; the transpiler must shuttle qubits together with SWAP chains.</figcaption>
 </figure>
 <hr />
 <h2>Chapter 7. Gates are pulses: how the machine touches a qubit</h2>
@@ -556,68 +302,18 @@ Measure q0, q1, q2
 <p>Shine a microwave tone at the qubit's frequency down its drive line and the qubit does not simply absorb it. Its state rotates continuously: |0⟩ leans toward |1⟩, reaches it, leans back, returns — a cycle called <strong>Rabi oscillation</strong>. In the frame rotating with the drive, the Hamiltonian is</p>
 <p class="eq">H_d = (ħΩ(t)/2)(cos φ · σ_x + sin φ · σ_y),</p>
 <p>where Ω(t) is the Rabi rate set by the pulse's instantaneous amplitude and φ is the pulse's phase, which chooses the rotation axis. The total rotation angle is the pulse's area, ∫Ω(t)dt. A pulse with area π is an X gate: |0⟩ lands exactly on |1⟩. A pulse with area π/2 is the SX gate (square root of X), which parks the state on the equator of the Bloch sphere — the equal-superposition latitude. On IBM hardware these pulses last a few tens of nanoseconds and are shaped as smooth Gaussians with a <strong>DRAG</strong> correction: a small copy of the pulse's derivative applied on the other quadrature, engineered to cancel accidental leakage into the |2⟩ level that the finite anharmonicity would otherwise allow.</p>
-<figure class="diagram">
-  <svg viewBox="0 0 960 470" role="img" aria-label="Two plots. Left: the probability of the qubit being in state one oscillates with pulse area; a pi pulse reaches the peak as an X gate and a pi over two pulse reaches half height as an SX gate. Right: two decaying curves, T1 energy relaxation and the faster T2 dephasing, marking the coherence budget of roughly 100 to 300 microseconds.">
-    <text x="40.0" y="34.0" class="sub" font-size="11" text-anchor="start" letter-spacing="2">THE TIME BUDGET</text><text x="40.0" y="60.0" class="lbl" font-size="15" text-anchor="start">A gate is a timed push, and coherence is the clock it races</text><line class="conn" x1="40.0" y1="74.0" x2="920.0" y2="74.0"/>
-    <text x="60.0" y="144.0" class="sub" font-size="10" text-anchor="start">Rabi oscillation — drive the qubit and it turns</text>
-    <line class="conn" x1="90.0" y1="366.0" x2="90.0" y2="176.0"/>
-    <line class="conn" x1="90.0" y1="366.0" x2="420.0" y2="366.0"/>
-    <text x="84.0" y="170.0" class="sub" font-size="9.5" text-anchor="end">P(|1⟩)</text>
-    <text x="420.0" y="382.0" class="sub" font-size="9.5" text-anchor="end">pulse area</text>
-    <polyline class="conna" points="90.0 366.0 93.3 365.8 96.6 365.3 99.9 364.3 103.2 363.0 106.5 361.4 109.8 359.3 113.1 357.0 116.4 354.2 119.7 351.2 123.0 347.9 126.3 344.2 129.6 340.3 132.9 336.0 136.2 331.6 139.5 326.8 142.8 321.9 146.1 316.8 149.4 311.4 152.7 306.0 156.0 300.4 159.3 294.6 162.6 288.8 165.9 282.9 169.2 277.0 172.5 271.0 175.8 265.0 179.1 259.1 182.4 253.2 185.7 247.4 189.0 241.6 192.3 236.0 195.6 230.6 198.9 225.2 202.2 220.1 205.5 215.2 208.8 210.4 212.1 206.0 215.4 201.7 218.7 197.8 222.0 194.1 225.3 190.8 228.6 187.8 231.9 185.0 235.2 182.7 238.5 180.6 241.8 179.0 245.1 177.7 248.4 176.7 251.7 176.2 255.0 176.0 258.3 176.2 261.6 176.7 264.9 177.7 268.2 179.0 271.5 180.6 274.8 182.7 278.1 185.0 281.4 187.8 284.7 190.8 288.0 194.1 291.3 197.8 294.6 201.7 297.9 206.0 301.2 210.4 304.5 215.2 307.8 220.1 311.1 225.2 314.4 230.6 317.7 236.0 321.0 241.6 324.3 247.4 327.6 253.2 330.9 259.1 334.2 265.0 337.5 271.0 340.8 277.0 344.1 282.9 347.4 288.8 350.7 294.6 354.0 300.4 357.3 306.0 360.6 311.4 363.9 316.8 367.2 321.9 370.5 326.8 373.8 331.6 377.1 336.0 380.4 340.3 383.7 344.2 387.0 347.9 390.3 351.2 393.6 354.2 396.9 357.0 400.2 359.3 403.5 361.4 406.8 363.0 410.1 364.3 413.4 365.3 416.7 365.8 420.0 366.0" fill="none"/>
-    <line class="conn" x1="255.0" y1="366.0" x2="255.0" y2="176.0" stroke-dasharray="3 3"/>
-    <circle class="dot" cx="255.0" cy="176.0" r="4"/>
-    <text x="255.0" y="166.0" class="lbl" font-size="10" text-anchor="middle">π pulse = X</text>
-    <line class="conn" x1="172.5" y1="366.0" x2="172.5" y2="271.0" stroke-dasharray="3 3"/>
-    <circle class="dot" cx="172.5" cy="271.0" r="4"/>
-    <text x="166.5" y="263.0" class="sub" font-size="9.5" text-anchor="end">π/2 = SX</text>
-    <text x="520.0" y="144.0" class="sub" font-size="10" text-anchor="start">Coherence decay — the environment measures early</text>
-    <line class="conn" x1="550.0" y1="366.0" x2="550.0" y2="176.0"/>
-    <line class="conn" x1="550.0" y1="366.0" x2="880.0" y2="366.0"/>
-    <text x="544.0" y="170.0" class="sub" font-size="9.5" text-anchor="end">signal</text>
-    <text x="880.0" y="382.0" class="sub" font-size="9.5" text-anchor="end">time</text>
-    <polyline class="conna" points="550.0 176.0 553.3 180.7 556.6 185.3 559.9 189.7 563.2 194.1 566.5 198.3 569.8 202.5 573.1 206.5 576.4 210.4 579.7 214.3 583.0 218.0 586.3 221.7 589.6 225.2 592.9 228.7 596.2 232.1 599.5 235.4 602.8 238.6 606.1 241.8 609.4 244.9 612.7 247.8 616.0 250.8 619.3 253.6 622.6 256.4 625.9 259.1 629.2 261.7 632.5 264.3 635.8 266.8 639.1 269.3 642.4 271.6 645.7 274.0 649.0 276.3 652.3 278.5 655.6 280.6 658.9 282.7 662.2 284.8 665.5 286.8 668.8 288.8 672.1 290.7 675.4 292.5 678.7 294.3 682.0 296.1 685.3 297.8 688.6 299.5 691.9 301.2 695.2 302.8 698.5 304.3 701.8 305.8 705.1 307.3 708.4 308.8 711.7 310.2 715.0 311.6 718.3 312.9 721.6 314.2 724.9 315.5 728.2 316.7 731.5 318.0 734.8 319.1 738.1 320.3 741.4 321.4 744.7 322.5 748.0 323.6 751.3 324.7 754.6 325.7 757.9 326.7 761.2 327.6 764.5 328.6 767.8 329.5 771.1 330.4 774.4 331.3 777.7 332.1 781.0 333.0 784.3 333.8 787.6 334.6 790.9 335.4 794.2 336.1 797.5 336.9 800.8 337.6 804.1 338.3 807.4 339.0 810.7 339.6 814.0 340.3 817.3 340.9 820.6 341.5 823.9 342.1 827.2 342.7 830.5 343.3 833.8 343.9 837.1 344.4 840.4 344.9 843.7 345.5 847.0 346.0 850.3 346.5 853.6 347.0 856.9 347.4 860.2 347.9 863.5 348.3 866.8 348.8 870.1 349.2 873.4 349.6 876.7 350.0 880.0 350.4" fill="none"/>
-    <polyline class="conn" points="550.0 176.0 553.3 184.3 556.6 192.2 559.9 199.7 563.2 206.9 566.5 213.9 569.8 220.5 573.1 226.8 576.4 232.9 579.7 238.6 583.0 244.2 586.3 249.5 589.6 254.5 592.9 259.4 596.2 264.0 599.5 268.5 602.8 272.7 606.1 276.7 609.4 280.6 612.7 284.3 616.0 287.9 619.3 291.3 622.6 294.5 625.9 297.6 629.2 300.6 632.5 303.5 635.8 306.2 639.1 308.8 642.4 311.3 645.7 313.6 649.0 315.9 652.3 318.1 655.6 320.2 658.9 322.2 662.2 324.1 665.5 325.9 668.8 327.6 672.1 329.3 675.4 330.9 678.7 332.4 682.0 333.9 685.3 335.3 688.6 336.6 691.9 337.9 695.2 339.1 698.5 340.3 701.8 341.4 705.1 342.5 708.4 343.5 711.7 344.5 715.0 345.4 718.3 346.3 721.6 347.2 724.9 348.0 728.2 348.8 731.5 349.5 734.8 350.2 738.1 350.9 741.4 351.6 744.7 352.2 748.0 352.8 751.3 353.4 754.6 353.9 757.9 354.4 761.2 354.9 764.5 355.4 767.8 355.9 771.1 356.3 774.4 356.7 777.7 357.2 781.0 357.5 784.3 357.9 787.6 358.3 790.9 358.6 794.2 358.9 797.5 359.2 800.8 359.5 804.1 359.8 807.4 360.1 810.7 360.3 814.0 360.6 817.3 360.8 820.6 361.0 823.9 361.3 827.2 361.5 830.5 361.7 833.8 361.8 837.1 362.0 840.4 362.2 843.7 362.4 847.0 362.5 850.3 362.7 853.6 362.8 856.9 363.0 860.2 363.1 863.5 363.2 866.8 363.3 870.1 363.5 873.4 363.6 876.7 363.7 880.0 363.8" fill="none" stroke-dasharray="4 3"/>
-    <text x="731.5" y="310.0" class="lbl" font-size="10" text-anchor="start">T₁ energy decay</text>
-    <text x="655.6" y="313.2" class="sub" font-size="9.5" text-anchor="start">T₂ dephasing</text>
-    <text x="550.0" y="400.0" class="sub" font-size="9.5" text-anchor="start">≈ 100–300 µs — the whole circuit must finish well inside it</text>
-  </svg>
-  <figcaption>Figure 7.1 — Left: P(|1⟩) oscillates with pulse area; a π pulse is X, a π/2 pulse is SX. Right: T₁ and T₂ decay set the coherence budget the whole circuit must fit inside.</figcaption>
+<figure class="qp-fig">
+  <img src="/assets/img/qp-rabi-decay.svg?v=2" alt="Left: the probability of finding the qubit in |1⟩ oscillates with pulse duration; stopping at half a cycle (a π pulse) implements X, and a quarter cycle implements SX. Right: T₁ en" loading="lazy">
+  <figcaption>Figure 7.1 — Left: the probability of finding the qubit in |1⟩ oscillates with pulse duration; stopping at half a cycle (a π pulse) implements X, and a quarter cycle implements SX. Right: T₁ energy decay and T₂ phase decay set the time budget the whole circuit must fit inside.</figcaption>
 </figure>
 <p>One native "gate" costs nothing at all. A rotation about the Z axis, R_Z(θ), is performed <strong>virtually</strong>: the control software simply shifts the phase reference of every subsequent pulse on that qubit. No microwave is sent, no time passes, and the operation is essentially error-free. Every single-qubit rotation the algorithm needs is compiled into the sandwich R_Z · SX · R_Z · SX · R_Z — two real pulses and three free frame shifts. The Hadamard, for instance, becomes R_Z(π/2) · SX · R_Z(π/2) up to an unobservable global phase.</p>
 <h3>7.2 Two-qubit gates: the tunable coupler</h3>
 <p>Entanglement enters through the two-qubit gate, and this is where Heron's design differs from IBM's own earlier chips. Between each pair of neighboring transmons sits a <strong>tunable coupler</strong> — a small intermediate circuit whose bias controls the effective interaction between the pair. With the coupler off, the qubits ignore each other almost completely (the residual "always-on" ZZ interaction that plagued fixed-coupling designs is engineered away). To execute a gate, the control system pulses the coupler on for a precisely calibrated interval. During that interval the doubly-excited state |11⟩ is steered close to an avoided crossing with a higher level (the |20⟩/|02⟩ manifold), where it accumulates phase faster than the other three basis states. Timed exactly, the excess phase is π, which is the definition of the native <strong>CZ</strong> gate:</p>
 <p class="eq">CZ: |11⟩ → −|11⟩, all other basis states unchanged.</p>
 <p>Switch the coupler off and the qubits are independent again, now entangled in state. A CZ takes on the order of 100 to a few hundred nanoseconds. This tunable-coupler CZ replaced the cross-resonance ECR gate of IBM's earlier Eagle and Osprey processors, buying faster gates, lower error, and dramatically reduced crosstalk.</p>
-<figure class="diagram">
-  <svg viewBox="0 0 960 440" role="img" aria-label="Left: a Gaussian microwave pulse drives a rotation of the Bloch vector, with pulse area setting the angle. Right: two transmon qubits with a tunable coupler between them; pulsing the coupler on makes only the eleven state acquire a minus sign, the native CZ gate.">
-    <text x="40.0" y="34.0" class="sub" font-size="11" text-anchor="start" letter-spacing="2">GATES ARE PHYSICAL PUSHES</text><text x="40.0" y="60.0" class="lbl" font-size="15" text-anchor="start">No lookup table — a gate is a shaped pulse, an entangler is a switch</text><line class="conn" x1="40.0" y1="74.0" x2="920.0" y2="74.0"/>
-    <text x="60.0" y="150.0" class="sub" font-size="10" text-anchor="start">Single-qubit gate — a shaped microwave pulse</text>
-    <polyline class="conna" points="80.0 249.5 81.5 249.4 83.0 249.3 84.5 249.1 86.0 249.0 87.5 248.8 89.0 248.6 90.5 248.4 92.0 248.1 93.5 247.8 95.0 247.4 96.5 247.0 98.0 246.6 99.5 246.1 101.0 245.5 102.5 244.9 104.0 244.3 105.5 243.5 107.0 242.7 108.5 241.8 110.0 240.9 111.5 239.9 113.0 238.8 114.5 237.6 116.0 236.4 117.5 235.1 119.0 233.7 120.5 232.2 122.0 230.8 123.5 229.2 125.0 227.6 126.5 226.0 128.0 224.3 129.5 222.7 131.0 221.0 132.5 219.3 134.0 217.7 135.5 216.1 137.0 214.5 138.5 213.0 140.0 211.6 141.5 210.2 143.0 209.0 144.5 207.9 146.0 206.9 147.5 206.0 149.0 205.3 150.5 204.7 152.0 204.3 153.5 204.1 155.0 204.0 156.5 204.1 158.0 204.3 159.5 204.7 161.0 205.3 162.5 206.0 164.0 206.9 165.5 207.9 167.0 209.0 168.5 210.2 170.0 211.6 171.5 213.0 173.0 214.5 174.5 216.1 176.0 217.7 177.5 219.3 179.0 221.0 180.5 222.7 182.0 224.3 183.5 226.0 185.0 227.6 186.5 229.2 188.0 230.8 189.5 232.2 191.0 233.7 192.5 235.1 194.0 236.4 195.5 237.6 197.0 238.8 198.5 239.9 200.0 240.9 201.5 241.8 203.0 242.7 204.5 243.5 206.0 244.3 207.5 244.9 209.0 245.5 210.5 246.1 212.0 246.6 213.5 247.0 215.0 247.4 216.5 247.8 218.0 248.1 219.5 248.4 221.0 248.6 222.5 248.8 224.0 249.0 225.5 249.1 227.0 249.3 228.5 249.4 230.0 249.5" fill="none"/>
-    <line class="conn" x1="80.0" y1="250.0" x2="230.0" y2="250.0"/>
-    <text x="80.0" y="268.0" class="sub" font-size="9.5" text-anchor="start">pulse: area sets the angle, phase sets the axis</text>
-    <line class="conna" x1="236.0" y1="226.0" x2="280.0" y2="226.0"/><path class="dot" d="M280 222 L280 230 L288 226 Z"/>
-    <circle class="box" cx="360" cy="238" r="64"/>
-    <ellipse class="conn" cx="360" cy="238" rx="64" ry="20" fill="none"/>
-    <line class="conn" x1="360.0" y1="302.0" x2="360.0" y2="174.0"/>
-    <path class="conna" d="M360 296 A 40 60 0 0 1 404 210" fill="none"/>
-    <circle class="dot" cx="404" cy="210" r="4"/>
-    <text x="360.0" y="324.0" class="sub" font-size="9.5" text-anchor="middle">the Bloch vector rotates</text>
-    <text x="560.0" y="150.0" class="sub" font-size="10" text-anchor="start">Two-qubit gate — energize the tunable coupler</text>
-    <rect class="box" x="560" y="200" width="120" height="64" rx="11"/>
-    <text x="620.0" y="232.0" class="lbl" font-size="11" text-anchor="middle">transmon</text>
-    <text x="620.0" y="250.0" class="sub" font-size="9.5" text-anchor="middle">qubit A</text>
-    <rect class="box" x="820" y="200" width="120" height="64" rx="11"/>
-    <text x="880.0" y="232.0" class="lbl" font-size="11" text-anchor="middle">transmon</text>
-    <text x="880.0" y="250.0" class="sub" font-size="9.5" text-anchor="middle">qubit B</text>
-    <rect class="boxa" x="680" y="214" width="140" height="36" rx="11"/>
-    <text x="750.0" y="236.0" class="lbl" font-size="10" text-anchor="middle">tunable coupler</text>
-    <line class="conn" x1="680.0" y1="232.0" x2="680.0" y2="232.0"/>
-    <text x="750.0" y="290.0" class="sub" font-size="9.5" text-anchor="middle">pulse it on for exactly the right interval</text>
-    <text x="750.0" y="320.0" class="num" font-size="15" text-anchor="middle">|11⟩ → −|11⟩</text>
-    <text x="750.0" y="340.0" class="sub" font-size="9.5" text-anchor="middle">only the doubly-excited state flips sign — the native CZ</text>
-  </svg>
-  <figcaption>Figure 7.2 — Left: a single-qubit gate is a shaped microwave pulse rotating the Bloch vector. Right: a CZ is applied by briefly energizing the tunable coupler, so only |11⟩ picks up a minus sign.</figcaption>
+<figure class="qp-fig">
+  <img src="/assets/img/qp-gate-pulse.svg?v=2" alt="Left: a single-qubit gate is a shaped microwave pulse rotating the Bloch vector. Right: a CZ gate is applied by briefly energizing the tunable coupler between two transmons so that" loading="lazy">
+  <figcaption>Figure 7.2 — Left: a single-qubit gate is a shaped microwave pulse rotating the Bloch vector. Right: a CZ gate is applied by briefly energizing the tunable coupler between two transmons so that |11⟩, and only |11⟩, acquires a minus sign.</figcaption>
 </figure>
 <p>So the complete physical vocabulary of a Heron chip is five words: I, X, SX, R_Z, CZ. Every Hadamard, every X-wrap, and every CCZ in the Grover circuit of Chapter 4 is spelled out in those five words before anything runs. Notice the fit: the CZ's minus-sign-on-|11⟩ is precisely the algebraic ingredient Grover's oracle and diffusion are made of. The algorithm's central trick and the hardware's native gate are the same mathematical object at different sizes.</p>
 <blockquote class="keyidea">
@@ -645,68 +341,9 @@ Measure q0, q1, q2
 <p>So the answer to "what physically collapses the state?" on this hardware is concrete: <strong>the irreversible, environment-flooding amplification of a state-dependent microwave signal.</strong> The look and the destruction are one and the same physical act.</p>
 <h3>8.4 Discrimination: two clusters, one threshold</h3>
 <p>At room temperature the amplified signal is mixed down and integrated for a few hundred nanoseconds to a microsecond, yielding two numbers — the in-phase and quadrature components, I and Q. Plotted in the I/Q plane, thousands of shots form two blobs: one cluster of dots for qubits that ended in |0⟩, another for |1⟩. A calibrated threshold line between the clusters assigns each shot its bit. Assignment is not perfect — the blobs have finite width from amplifier noise, and a qubit can decay from |1⟩ to |0⟩ during the readout window itself — so real readout carries an assignment error of roughly 1%: occasionally a true 0 is recorded as a 1 or vice versa. All 133 or 156 qubits are read out this way in parallel, each through its own resonator, multiplexed a handful to a feedline.</p>
-<figure class="diagram">
-  <svg viewBox="0 0 960 550" role="img" aria-label="A five-step measurement chain down the left: qubit, readout resonator, returning probe tone, irreversible amplification, and discrimination. On the right, an I/Q plane shows a 0-cluster and a 1-cluster of dots separated by a threshold line, with the qubit collapsing onto one pole.">
-    <text x="40.0" y="34.0" class="sub" font-size="11" text-anchor="start" letter-spacing="2">THE MEASUREMENT, AND WHY IT DESTROYS</text><text x="40.0" y="60.0" class="lbl" font-size="15" text-anchor="start">Listen to the echo, amplify past the point of no return</text><line class="conn" x1="40.0" y1="74.0" x2="920.0" y2="74.0"/>
-    <rect class="box" x="40" y="120" width="470" height="58" rx="11"/>
-    <text x="62.0" y="154.0" class="num" font-size="15" text-anchor="middle">1</text>
-    <text x="80.0" y="144.0" class="lbl" font-size="12" text-anchor="start">Qubit</text>
-    <text x="80.0" y="162.0" class="sub" font-size="9.5" text-anchor="start">α|0⟩ + β|1⟩ — a live superposition</text>
-    <line class="conna" x1="275.0" y1="178.0" x2="275.0" y2="196.0"/><path class="dot" d="M271.0 196 L279.0 196 L275.0 204 Z"/>
-    <rect class="box" x="40" y="204" width="470" height="58" rx="11"/>
-    <text x="62.0" y="238.0" class="num" font-size="15" text-anchor="middle">2</text>
-    <text x="80.0" y="228.0" class="lbl" font-size="12" text-anchor="start">Readout resonator</text>
-    <text x="80.0" y="246.0" class="sub" font-size="9.5" text-anchor="start">its pitch shifts to ω_r ± χ depending on the qubit</text>
-    <line class="conna" x1="275.0" y1="262.0" x2="275.0" y2="280.0"/><path class="dot" d="M271.0 280 L279.0 280 L275.0 288 Z"/>
-    <rect class="box" x="40" y="288" width="470" height="58" rx="11"/>
-    <text x="62.0" y="322.0" class="num" font-size="15" text-anchor="middle">3</text>
-    <text x="80.0" y="312.0" class="lbl" font-size="12" text-anchor="start">Probe tone returns</text>
-    <text x="80.0" y="330.0" class="sub" font-size="9.5" text-anchor="start">now entangled with the qubit: two distinguishable echoes</text>
-    <line class="conna" x1="275.0" y1="346.0" x2="275.0" y2="364.0"/><path class="dot" d="M271.0 364 L279.0 364 L275.0 372 Z"/>
-    <rect class="boxa" x="40" y="372" width="470" height="58" rx="11"/>
-    <text x="62.0" y="406.0" class="num" font-size="15" text-anchor="middle">4</text>
-    <text x="80.0" y="396.0" class="lbl" font-size="12" text-anchor="start">Amplify (JTWPA → HEMT → 300 K)</text>
-    <text x="80.0" y="414.0" class="sub" font-size="9.5" text-anchor="start">few photons become a macroscopic signal — irreversible</text>
-    <line class="conna" x1="275.0" y1="430.0" x2="275.0" y2="448.0"/><path class="dot" d="M271.0 448 L279.0 448 L275.0 456 Z"/>
-    <rect class="box" x="40" y="456" width="470" height="58" rx="11"/>
-    <text x="62.0" y="490.0" class="num" font-size="15" text-anchor="middle">5</text>
-    <text x="80.0" y="480.0" class="lbl" font-size="12" text-anchor="start">Discriminate in the I/Q plane</text>
-    <text x="80.0" y="498.0" class="sub" font-size="9.5" text-anchor="start">the dot lands in the 0-cluster or the 1-cluster</text>
-    <text x="690.0" y="120.0" class="sub" font-size="10" text-anchor="start">The I/Q plane</text>
-    <line class="conn" x1="580.0" y1="250.0" x2="800.0" y2="250.0"/>
-    <line class="conn" x1="690.0" y1="140.0" x2="690.0" y2="360.0"/>
-    <text x="800.0" y="266.0" class="sub" font-size="9.5" text-anchor="start">I</text>
-    <text x="698.0" y="140.0" class="sub" font-size="9.5" text-anchor="start">Q</text>
-    <circle class="box" cx="638" cy="220" r="34"/>
-    <circle class="fillmute" cx="641.0" cy="229.0" r="3"/>
-    <circle class="fillmute" cx="626.0" cy="226.0" r="3"/>
-    <circle class="fillmute" cx="647.0" cy="211.0" r="3"/>
-    <circle class="fillmute" cx="632.0" cy="208.0" r="3"/>
-    <circle class="fillmute" cx="653.0" cy="223.0" r="3"/>
-    <circle class="fillmute" cx="635.0" cy="235.0" r="3"/>
-    <circle class="fillmute" cx="644.0" cy="224.5" r="3"/>
-    <circle class="fillmute" cx="627.5" cy="217.0" r="3"/>
-    <circle class="fillmute" cx="639.5" cy="205.0" r="3"/>
-    <circle class="fillmute" cx="650.0" cy="232.0" r="3"/>
-    <text x="638.0" y="178.0" class="sub" font-size="9.5" text-anchor="middle">0-cluster</text>
-    <circle class="boxa" cx="742" cy="284" r="34"/>
-    <circle class="dot" cx="745.0" cy="293.0" r="3"/>
-    <circle class="dot" cx="730.0" cy="290.0" r="3"/>
-    <circle class="dot" cx="751.0" cy="275.0" r="3"/>
-    <circle class="dot" cx="736.0" cy="272.0" r="3"/>
-    <circle class="dot" cx="757.0" cy="287.0" r="3"/>
-    <circle class="dot" cx="739.0" cy="299.0" r="3"/>
-    <circle class="dot" cx="748.0" cy="288.5" r="3"/>
-    <circle class="dot" cx="731.5" cy="281.0" r="3"/>
-    <circle class="dot" cx="743.5" cy="269.0" r="3"/>
-    <circle class="dot" cx="754.0" cy="296.0" r="3"/>
-    <text x="742.0" y="336.0" class="sub" font-size="9.5" text-anchor="middle">1-cluster</text>
-    <line class="conna" x1="602.0" y1="338.0" x2="778.0" y2="162.0" stroke-dasharray="4 4"/>
-    <text x="690.0" y="394.0" class="sub" font-size="9.5" text-anchor="middle">a threshold assigns each shot its bit</text>
-    <text x="580.0" y="424.0" class="lbl" font-size="10" text-anchor="start">Collapse: the qubit is left at |0⟩ or |1⟩,</text>
-    <text x="580.0" y="440.0" class="sub" font-size="10" text-anchor="start">with Born-rule odds |α|² and |β|².</text>
-  </svg>
-  <figcaption>Figure 8.1 — The qubit shifts its resonator’s pitch; a probe tone returns state-dependent; amplification makes the difference macroscopic and irreversible; the signal lands in the 0- or 1-cluster of the I/Q plane, collapsing the qubit with Born-rule odds |α|² and |β|².</figcaption>
+<figure class="qp-fig">
+  <img src="/assets/img/qp-measurement.svg?v=2" alt="The measurement chain: the qubit&#x27;s state shifts its resonator&#x27;s frequency; a probe tone returns in a state-dependent condition; amplification makes the difference macroscopic and i" loading="lazy">
+  <figcaption>Figure 8.1 — The measurement chain: the qubit's state shifts its resonator's frequency; a probe tone returns in a state-dependent condition; amplification makes the difference macroscopic and irreversible; the signal lands in the 0-cluster or 1-cluster of the I/Q plane; and the qubit is left collapsed onto the corresponding pole, with Born-rule probabilities |α|² and |β|².</figcaption>
 </figure>
 <h3>8.5 Why this forces the shot loop</h3>
 <p>Now the full shape of quantum execution snaps into focus. One physical run produces one bitstring and a destroyed state. To learn the distribution the algorithm prepared, the machine resets every qubit to |0⟩, replays the entire pulse sequence from the top, and measures again — hundreds or thousands of times. Each repetition is one <strong>shot</strong>. The histogram of shot outcomes is the experiment's estimate of the |cₓ|² distribution, and its tallest bar is the algorithm's answer. Nothing about this is a software convenience; it is the direct operational consequence of Rules A and B, enforced by the physics of Sections 8.2 and 8.3.</p>
