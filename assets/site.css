@@ -76,6 +76,13 @@ section{padding:64px 0}
 .tag{font-family:"IBM Plex Mono",monospace;font-size:11px;color:var(--faint)}
 .tag::before{content:"#";opacity:.5}
 .card .go{font-family:"IBM Plex Mono",monospace;font-size:13px;color:var(--accent);margin-top:18px}
+/* Hobby projects: a card with a screenshot running to its edges */
+.card.project{padding:0;overflow:hidden}
+.card.project .shot{display:block;width:100%;height:auto;aspect-ratio:960/504;object-fit:cover;background:#05080f;border-bottom:1px solid var(--hairline);transition:transform .35s}
+.card.project:hover .shot{transform:scale(1.025)}
+.card.project .card-top{margin:20px 24px 0}
+.card.project p{margin:10px 24px 0}
+.card.project .go{margin:16px 24px 22px}
 .roadmap{margin-top:22px;border:1px dashed var(--hairline);border-radius:12px;padding:18px 22px}
 .roadmap .rl{font-family:"IBM Plex Mono",monospace;font-size:11.5px;color:var(--faint);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:12px}
 .roadmap .items{display:flex;gap:10px;flex-wrap:wrap}
@@ -107,6 +114,10 @@ a.t:hover{color:var(--accent)}
 .pub .doi{display:inline-block;margin-top:13px}
 .pub .doi img{display:block;height:21px}
 @media (max-width:560px){
+  .bar .wrap{gap:18px}
+  .nav{min-width:0;overflow-x:auto;gap:16px;scrollbar-width:none}
+  .nav::-webkit-scrollbar{display:none}
+  .nav a{white-space:nowrap}
   .pub{grid-template-columns:1fr;gap:6px}
   .pub-yr{padding-top:0}
 }
@@ -182,7 +193,7 @@ a:focus-visible,.btn:focus-visible{outline:2px solid var(--accent);outline-offse
 .d1{animation-delay:.05s}.d2{animation-delay:.13s}.d3{animation-delay:.21s}
 .d4{animation-delay:.29s}.d5{animation-delay:.37s}.d6{animation-delay:.45s}
 @keyframes rise{to{opacity:1;transform:none}}
-@media (prefers-reduced-motion:reduce){.reveal{animation:none;opacity:1;transform:none}html{scroll-behavior:auto}}
+@media (prefers-reduced-motion:reduce){.reveal{animation:none;opacity:1;transform:none}html{scroll-behavior:auto}.card.project:hover .shot{transform:none}}
 
 /* references section */
 .refs{margin-top:8px}
